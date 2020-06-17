@@ -1,0 +1,7 @@
+node_modules/
+.DS_Store
+dist/
+*.local
+npm-debug.log
+Thumbs.db
+[Dd]esktop.ini
