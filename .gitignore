@@ -1,6 +1,7 @@
 node_modules/
 .DS_Store
 dist/
+public/pyodide/
 *.local
 npm-debug.log
 Thumbs.db
