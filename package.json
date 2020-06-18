@@ -2,12 +2,18 @@
   "name": "quantum-sheet",
   "version": "0.0.1",
   "type": "module",
+  "license": "GPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/stefnotch/quantum-sheet.git"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "download:pyodide": "node ./utils/download-pyodide.js"
   },
   "dependencies": {
+    "mathlive": "^0.53.2",
     "vue": "^3.0.0-beta.15"
   },
   "devDependencies": {
