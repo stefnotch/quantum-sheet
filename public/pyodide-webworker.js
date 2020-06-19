@@ -1,4 +1,6 @@
 // Relative paths are fine here
+console.log("Creating pyodide worker");
+
 self.languagePluginUrl = "./pyodide/";
 importScripts("./pyodide/pyodide.js");
 
