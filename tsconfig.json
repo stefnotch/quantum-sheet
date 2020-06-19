@@ -11,6 +11,7 @@
     "checkJs": true,
     "baseUrl": ".",
     "isolatedModules": true,
+    "resolveJsonModule": true,
     "lib": ["esnext", "dom", "dom.iterable"]
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"],

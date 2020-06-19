@@ -4,12 +4,18 @@
 
 <script>
 import HelloWorld from "./components/HelloWorld.vue";
-import { pyodideWorker } from "./cas/pyodide-loader";
+import { useCas } from "./cas/cas";
+import { defineComponent } from "vue";
+import pkg from "./../package.json";
 
-export default {
+export default defineComponent({
   name: "App",
   components: {
     HelloWorld
+  },
+  setup(props, context) {
+    useCas();
+    return {};
   }
-};
+});
 </script>

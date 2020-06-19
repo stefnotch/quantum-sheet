@@ -41,8 +41,17 @@ const outputDirectory = path.join(path.resolve(), "public/pyodide");
   console.log(`Extracting ${outputPath}`);
 
   const archive = ArchiveFiles.createArchiveByFileExtension(outputPath);
+  const pyodideData = {
+    version: latestRelease.tag_name,
+    identifier: latestRelease.node_id,
+  };
   await archive.read(async (entry) => {
     await entry.extract(path.join(outputDirectory, entry.path));
   });
+  await fse.writeFile(
+    path.join(outputDirectory, "pyodide-data.json"),
+    JSON.stringify(pyodideData),
+    "utf8"
+  );
   console.log("Done");
 })();
