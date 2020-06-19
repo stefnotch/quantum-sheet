@@ -6,7 +6,7 @@ importScripts("./pyodide/pyodide.js");
 
 var onmessage = (e) => {
   languagePluginLoader.then(() => {
-    self.pyodide.loadPackage(["sympy"]).then(() => {
+    self.pyodide.loadPackage(["sympy", "mpmath"]).then(() => {
       const data = e.data;
       const keys = Object.keys(data);
       for (let key of keys) {

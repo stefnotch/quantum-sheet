@@ -7,6 +7,26 @@ import { pipeline } from "stream";
 
 const streamPipeline = util.promisify(pipeline);
 const outputDirectory = path.join(path.resolve(), "public/pyodide");
+const filesWhitelist = [
+  "pyodide.js",
+  "pyodide.asm.wasm",
+  "pyodide.asm.data.js",
+  "pyodide.asm.data",
+  "pyodide.asm.js",
+  "packages.json",
+  "sympy.js",
+  "sympy.data",
+  "mpmath.js",
+  "mpmath.data",
+  "numpy.js",
+  "numpy.data",
+];
+// Maybe:
+// micropip
+// scipy
+// matplotlib
+// Request:
+// gmpy
 
 (async () => {
   const latestReleaseResponse = await fetch(
@@ -33,21 +53,25 @@ const outputDirectory = path.join(path.resolve(), "public/pyodide");
   }
   await fse.remove(outputDirectory);
   await fse.ensureDir(outputDirectory);
-  const outputPath = path.join(outputDirectory, assetToDownload.name);
+  const outputArchivePath = path.join(outputDirectory, assetToDownload.name);
   await streamPipeline(
     downloadResponse.body,
-    fse.createWriteStream(outputPath)
+    fse.createWriteStream(outputArchivePath)
   );
-  console.log(`Extracting ${outputPath}`);
 
-  const archive = ArchiveFiles.createArchiveByFileExtension(outputPath);
+  console.log(`Extracting ${outputArchivePath}`);
+
+  const archive = ArchiveFiles.createArchiveByFileExtension(outputArchivePath);
   const pyodideData = {
     version: latestRelease.tag_name,
     identifier: latestRelease.node_id,
   };
   await archive.read(async (entry) => {
-    await entry.extract(path.join(outputDirectory, entry.path));
+    if (filesWhitelist.includes(entry.path)) {
+      await entry.extract(path.join(outputDirectory, entry.path));
+    }
   });
+  await fse.remove(outputArchivePath);
   await fse.writeFile(
     path.join(outputDirectory, "pyodide-data.json"),
     JSON.stringify(pyodideData),
