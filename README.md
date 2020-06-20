@@ -1,4 +1,4 @@
-# QuantumSheet
+# (WIP) QuantumSheet
 QuantumSheet - A web based computer algebra system aka fancy calculator
 
 ## Used Technology
