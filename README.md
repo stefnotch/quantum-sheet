@@ -1,4 +1,4 @@
-# (WIP) QuantumSheet
+# ([WIP](https://github.com/stefnotch/quantum-sheet/projects)) QuantumSheet
 QuantumSheet - A web based computer algebra system aka fancy calculator
 
 ## Used Technology
