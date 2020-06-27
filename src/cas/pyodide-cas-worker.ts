@@ -1,4 +1,4 @@
-import "vite";
+import type {} from "vite";
 
 export function usePyodideWorker() {
   let worker: Worker = (window as any)["pyodide-worker"];
