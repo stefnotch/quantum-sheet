@@ -6,7 +6,7 @@
 </template>
 
 <script>
-import HelloWorld from "./components/HelloWorld.vue";
+import HelloWorld from "./ui/HelloWorld.vue";
 import { useCas } from "./cas/cas";
 import { defineComponent, ref } from "vue";
 import pkg from "./../package.json";
