@@ -1,38 +1,80 @@
 <template>
-  <div class="quantum-document">
-    <div class="quantum-element" v-for="element in elements" :key="element.id">
-      <component :is="elementTypes[element.type]"></component>
+  <div class="quantum-document" ref="documentElement">
+    <selection-pointer class="selection-pointer"></selection-pointer>
+    <div
+      class="quantum-element"
+      v-for="block in blocks"
+      :key="block.id"
+      :style="{top:(block.position.y * grid.cellSize.y) + 'px'}"
+    >
+      <component :is="elementTypes[block.type]"></component>
     </div>
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, readonly } from "vue";
-import { useDocument } from "../model/document/document";
-import { QuantumElemement } from "../model/document/element";
+import { defineComponent, readonly, ref } from "vue";
+import SelectionPointer from "./SelectionPointer.vue";
+
+import { useDocument, QuantumElementTypes } from "../model/document/document";
 import ExpressionElement, {
-  ElementType as ExpressionElementType
+  ExpressionElementType,
+  ExpressionElementFunctions
 } from "./elements/ExpressionElement.vue";
+import { QuantumElementFunctions } from "../model/document/document-element";
+import { Vec2 } from "../model/document/vectors";
+
+function useGrid() {
+  const cellSize: Vec2 = { x: 20, y: 20 };
+  return { cellSize };
+}
+
+function useSelectionPointer(gridCellSize: Vec2) {}
 
 export default defineComponent({
+  components: {
+    ExpressionElement,
+    SelectionPointer
+  },
   setup() {
-    const elementTypes = readonly({
-      ExpressionElementType: ExpressionElement
+    const elementTypes = readonly<QuantumElementTypes>({
+      ExpressionElementType: {
+        component: ExpressionElement,
+        functions: ExpressionElementFunctions
+      }
     });
 
-    let document = useDocument();
+    const document = useDocument(elementTypes);
+    const documentElement = ref<HTMLElement>();
+    const grid = useGrid();
     return {
-      elements: document.elements,
-      elementTypes
+      documentElement,
+      blocks: document.blocks,
+      elementTypes,
+      grid
     };
   }
 });
 </script>
 <style scoped>
 .quantum-document {
-  background-size: 40px 40px;
-  background-image: linear-gradient(to right, grey 1px, transparent 1px),
-    linear-gradient(to bottom, grey 1px, transparent 1px);
+  --grid-color: rgba(71, 162, 223, 0.26);
+  background-size: 20px 20px;
+  background-image: linear-gradient(
+      to right,
+      var(--grid-color) 1px,
+      transparent 1px
+    ),
+    linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
+  position: relative;
 
-  /*background-image: radial-gradient(circle, #000000 1px, rgba(0, 0, 0, 0) 1px);*/
+  height: 500px;
+}
+
+.quantum-element {
+  position: absolute;
+}
+
+.selection-pointer {
+  position: absolute;
 }
 </style>

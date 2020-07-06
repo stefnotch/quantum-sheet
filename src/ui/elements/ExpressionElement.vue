@@ -5,10 +5,14 @@
 import { defineComponent } from "vue";
 import {
   ExpressionElement,
-  ElementType
+  ElementType,
+  ElementFunctions
 } from "../../model/document/elements/expression-element";
 
-export { ElementType };
+export {
+  ElementType as ExpressionElementType,
+  ElementFunctions as ExpressionElementFunctions
+};
 
 export default defineComponent({
   setup() {
