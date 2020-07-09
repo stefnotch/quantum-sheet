@@ -2,20 +2,28 @@
 
 import { QuantumElemement, QuantumElementFunctions } from "./document-element";
 import { useVector2, Vec2 } from "./vectors";
-import { ref, Ref, reactive, readonly, shallowRef } from "vue";
+import { ref, Ref, reactive, readonly, shallowReactive } from "vue";
 import { v4 as uuidv4 } from "uuid";
 
 export interface QuantumDocument {
+  readonly gridCellSize: Readonly<Vec2>;
   readonly elementTypes: Readonly<QuantumElementTypes>;
 
-  readonly blocks: Ref<QuantumBlock<QuantumElemement>[]>;
+  /**
+   * Shallow reactive blocks array
+   */
+  readonly blocks: ReadonlyArray<QuantumBlock<QuantumElemement>>;
+
+  /**
+   * Shallow reactive selected blocks array
+   */
+  readonly selectedBlocks: Set<QuantumBlock<QuantumElemement>>;
+
   createBlock(
     type: string,
     options: QuantumBlockCreationOptions
   ): QuantumBlock<QuantumElemement>;
   deleteBlock(block: QuantumBlock<QuantumElemement>): void;
-
-  // TODO: Figure out how to *display* scopes sometime later
 }
 
 export type QuantumElementTypes = {
@@ -31,9 +39,11 @@ export interface QuantumBlock<T extends QuantumElemement> {
   readonly position: Readonly<Vec2>;
   readonly size: Readonly<Vec2>;
   readonly resizeable: boolean;
+  readonly selected: boolean;
 
-  setPosition: (value: Vec2) => void;
-  setSize: (value: Vec2) => void;
+  setPosition(value: Vec2): void;
+  setSize(value: Vec2): void;
+  setSelected(value: boolean): void;
 
   element: T;
 }
@@ -44,6 +54,41 @@ type QuantumBlockCreationOptions = {
   serializedElement?: string;
 };
 
+function useBinarySearch() {
+  /**
+   * Finds the position where a new element should be inserted
+   * @param array Target array
+   * @param element Element to insert
+   * @param compareFunction Comparision function
+   */
+  function getBinaryInsertIndex<T>(
+    array: T[],
+    element: T,
+    compareFunction: (a: T, b: T) => number
+  ) {
+    // https://stackoverflow.com/a/29018745
+    let low = 0;
+    let high = array.length - 1;
+    while (low <= high) {
+      let middle = low + Math.floor((high - low) / 2);
+      let comparison = compareFunction(array[middle], element);
+      if (comparison > 0) {
+        low = middle + 1;
+      } else if (comparison < 0) {
+        high = middle - 1;
+      } else {
+        return middle;
+      }
+    }
+
+    return -low - 1;
+  }
+
+  return {
+    getBinaryInsertIndex,
+  };
+}
+
 /**
  * Create a document
  * @param elementTypes Element types in the document
@@ -51,8 +96,13 @@ type QuantumBlockCreationOptions = {
 export function useDocument(
   elementTypes: QuantumElementTypes
 ): QuantumDocument {
-  const blocks = shallowRef<QuantumBlock<QuantumElemement>[]>([]);
-  const compareVector2 = useVector2().compare;
+  const gridCellSize = readonly({ x: 20, y: 20 });
+  const blocks = shallowReactive<QuantumBlock<QuantumElemement>[]>([]);
+  const selectedBlocks = shallowReactive<Set<QuantumBlock<QuantumElemement>>>(
+    new Set()
+  );
+  const vector2 = useVector2();
+  const { getBinaryInsertIndex } = useBinarySearch();
 
   /**
    * Creates a block with a given element type
@@ -75,19 +125,35 @@ export function useDocument(
     let block: QuantumBlock<QuantumElemement> = reactive({
       id: uuidv4(),
       type: type,
-      position: options.position ?? { x: 0, y: 0 },
+      position: vector2.clone(options.position ?? { x: 0, y: 0 }),
       size: { x: 10, y: 10 },
       resizeable: options.resizeable ?? true,
-      setPosition: () => {}, // TODO:
-      setSize: function (value: Vec2) {
+      selected: false as boolean,
+      setPosition: function (value) {}, // TODO:
+      setSize: function (value) {
         this.size = value;
+      },
+      setSelected: function (value) {
+        if (value) {
+          selectedBlocks.add(this);
+          this.selected = true;
+        } else {
+          selectedBlocks.delete(this);
+          this.selected = false;
+        }
       },
       element: element,
     });
 
+    let insertPosition = getBinaryInsertIndex(blocks, block, (a, b) =>
+      vector2.compare(a.position, b.position)
+    );
+    blocks.splice(
+      insertPosition < 0 ? -(insertPosition + 1) : insertPosition,
+      0,
+      block
+    );
     // TODO: Some position changed callback or so
-    blocks.value.push(block);
-    blocks.value.sort((a, b) => compareVector2(a.position, b.position));
 
     return block;
   }
@@ -98,9 +164,9 @@ export function useDocument(
    */
   function deleteBlock(block: QuantumBlock<QuantumElemement>) {
     // TODO: A deleted callback. The element should be notified, so that it can do its thingy
-    const index = blocks.value.indexOf(block);
+    const index = blocks.indexOf(block);
     if (index && index >= 0) {
-      blocks.value.splice(index, 1);
+      blocks.splice(index, 1);
     }
   }
 
@@ -112,6 +178,8 @@ export function useDocument(
 
   return {
     blocks,
+    selectedBlocks,
+    gridCellSize,
     createBlock,
     deleteBlock,
     elementTypes: readonly(elementTypes),

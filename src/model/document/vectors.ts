@@ -4,6 +4,10 @@ export interface Vec2 {
 }
 
 export function useVector2() {
+  function clone(a: Vec2) {
+    return { x: a.x, y: a.y };
+  }
+
   function compare(a: Vec2, b: Vec2) {
     if (a.y == b.y) return b.x - a.x;
     return b.y - a.y;
@@ -11,5 +15,6 @@ export function useVector2() {
 
   return {
     compare,
+    clone,
   };
 }
