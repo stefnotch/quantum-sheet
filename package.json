@@ -16,12 +16,12 @@
   "dependencies": {
     "mathlive": "^0.54.1",
     "uuid": "^8.2.0",
-    "vue": "^3.0.0-beta.18"
+    "vue": "^3.0.0-beta.20"
   },
   "devDependencies": {
     "@shockpkg/archive-files": "^1.9.1",
     "@types/uuid": "^8.0.0",
-    "@vue/compiler-sfc": "^3.0.0-beta.18",
+    "@vue/compiler-sfc": "^3.0.0-beta.20",
     "fs-extra": "^9.0.1",
     "gh-pages": "^3.1.0",
     "node-fetch": "3.0.0-beta.7",
