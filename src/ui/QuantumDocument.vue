@@ -3,9 +3,9 @@
     class="quantum-document"
     ref="documentElement"
     tabindex="-1"
-    v-on:pointerdown="selection.pointerDown($event)"
-    v-on:paste="clipboard.paste"
-    v-on:focus="documentInputElement.focus()"
+    @pointerdown="grid.pointerDown($event)"
+    @paste="clipboard.paste"
+    @focus="documentInputElement.focus()"
   >
     <textarea
       class="input-element"
@@ -14,27 +14,37 @@
       autocomplete="off"
       autocorrect="off"
       spellcheck="false"
-      v-on:input="createElement.input($event)"
-      v-on:focus="selection.setSelection(); selection.showCrosshair = true"
-      v-on:blur="selection.showCrosshair = false"
+      @input="createElement.input($event)"
+      @focus="grid.setSelection(); grid.showCrosshair = true"
+      @blur="grid.showCrosshair = false"
     ></textarea>
     <div
-      class="selection-crosshair"
-      :style="grid.gridToStyle(selection.crosshairPosition)"
-      v-show="selection.showCrosshair"
+      class="grid-crosshair"
+      :style="grid.gridToStyle(grid.crosshairPosition)"
+      v-show="grid.showCrosshair"
+      ref="documentCrosshairElement"
     >+</div>
     <div
-      class="quantum-element"
+      class="quantum-block"
       v-for="block in blocks"
       :key="block.id"
       :style="grid.gridToStyle(block.position)"
       :class="{'selected': block.selected }"
-      tabindex="-1"
-      v-bind:block-id="block.id"
-      v-on:pointerdown="selection.setSelection(block)"
+      :block-id="block.id"
+      @pointerdown="grid.setSelection(block)"
     >
       <!--TODO: Only set the selection ^^ when I'm clicking on the border-->
-      <component :is="elementTypes[block.type].component"></component>
+      <component
+        :is="elementTypes[block.type].component"
+        class="quantum-element"
+        :model-value="block.element"
+        @update:model-value="value => block.element = value"
+        :focused="block.focused"
+        @update:focused="value => block.setFocused(value)"
+        @focused-element-commands="value => focusedElementCommands.commands = value"
+        @move-cursor-out="value => grid.moveCrosshairOut(block, value)"
+        @delete-element="deleteBlock(block)"
+      ></component>
     </div>
   </div>
 </template>
@@ -48,9 +58,10 @@ import {
   onUnmounted,
   watch,
   shallowReadonly,
-  nextTick
+  nextTick,
+  watchEffect,
+  computed
 } from "vue";
-
 import {
   useDocument,
   QuantumElementTypes,
@@ -67,21 +78,10 @@ import {
 } from "../model/document/document-element";
 import { Vec2 } from "../model/document/vectors";
 
-function useGrid(document: QuantumDocument) {
-  function gridToStyle(gridPosition: Vec2) {
-    return {
-      left: gridPosition.x * document.gridCellSize.x + "px",
-      top: gridPosition.y * document.gridCellSize.y + "px"
-    };
-  }
-
-  return { gridToStyle };
-}
-
 function useCreateElement(
   document: QuantumDocument,
-  crosshairPosition: Ref<Vec2>,
-  documentElement: Ref<HTMLElement | undefined>
+  crosshairPosition: Readonly<Ref<Vec2>>,
+  focusedElementCommands: Ref<any>
 ) {
   function input(ev: InputEvent) {
     if (ev.isComposing) return;
@@ -94,16 +94,13 @@ function useCreateElement(
         position: crosshairPosition.value,
         resizeable: false
       });
-
+      block.setFocused(true);
+      // TODO:
+      // - cursor coming up on your left, please focus
+      // - insert the following character (just deal with it!) (that just needs to be a simple function which modifies the state...)
+      //   - however, if it should handle inserting characters in an element that already has focus, it's not that simple
       nextTick(() => {
-        if (documentElement?.value) {
-          for (let element of documentElement?.value.children) {
-            if (element.getAttribute("block-id") == block.id) {
-              (element as HTMLElement)?.focus();
-              break;
-            }
-          }
-        }
+        focusedElementCommands.value["moveToStart"]();
       });
     }
 
@@ -128,9 +125,19 @@ function useClipboard(document: QuantumDocument) {
   };
 }
 
-function useSelection(document: QuantumDocument) {
+function useGrid(
+  document: QuantumDocument,
+  crosshairElement: Ref<HTMLElement | undefined>
+) {
   const crosshairPosition = ref<Vec2>({ x: 0, y: 0 });
   const showCrosshair = ref(true);
+
+  function gridToStyle(gridPosition: Vec2) {
+    return {
+      left: gridPosition.x * document.gridCellSize.x + "px",
+      top: gridPosition.y * document.gridCellSize.y + "px"
+    };
+  }
 
   function pointerDown(ev: PointerEvent) {
     if (ev.target == ev.currentTarget) {
@@ -146,11 +153,47 @@ function useSelection(document: QuantumDocument) {
     blocks.forEach(v => v.setSelected(true));
   }
 
+  function moveCrosshairOut(
+    block: QuantumBlock<QuantumElemement>,
+    direction: Vec2
+  ) {
+    let pos = {
+      x: block.position.x + (direction.x > 0 ? block.size.x : 0),
+      y: block.position.y + (direction.y > 0 ? block.size.y : 0)
+    };
+
+    crosshairPosition.value = {
+      x: pos.x + direction.x,
+      y: pos.y + direction.y
+    };
+
+    focusUnderCrosshair();
+  }
+
+  // TODO: Moving the crosshair with the arrow keys and also that check ^
+
+  function focusUnderCrosshair() {
+    // TODO: Focus on the textarea (so that the crosshair is guaranteed to show up)
+    // TODO: Ask document which element is here and .setFocused(true)
+    // If there is no element here, take away focus from everyone document.focusedElement.setFocused(false)
+  }
+
   return {
-    crosshairPosition,
+    crosshairPosition: readonly(crosshairPosition),
     showCrosshair,
+    gridToStyle,
+    pointerDown,
     setSelection,
-    pointerDown
+    moveCrosshairOut,
+    focusUnderCrosshair
+  };
+}
+
+function useFocusedElementCommands(document: QuantumDocument) {
+  const commands = ref<any>({});
+
+  return {
+    commands
   };
 }
 
@@ -169,15 +212,15 @@ export default defineComponent({
     const document = useDocument(elementTypes);
     const documentElement = ref<HTMLElement>();
     const documentInputElement = ref<HTMLElement>();
+    const documentCrosshairElement = ref<HTMLElement>();
 
-    const grid = useGrid(document);
-    const selection = useSelection(document);
-
+    const grid = useGrid(document, documentCrosshairElement);
     const clipboard = useClipboard(document);
+    const focusedElementCommands = useFocusedElementCommands(document);
     const createElement = useCreateElement(
       document,
-      selection.crosshairPosition,
-      documentElement
+      grid.crosshairPosition,
+      focusedElementCommands.commands
     );
 
     function log(ev: any) {
@@ -186,15 +229,17 @@ export default defineComponent({
     return {
       documentElement,
       documentInputElement,
+      documentCrosshairElement,
 
       elementTypes,
 
       blocks: document.blocks,
+      deleteBlock: document.deleteBlock,
 
       grid,
-      selection,
       clipboard,
       createElement,
+      focusedElementCommands,
 
       log
     };
@@ -219,20 +264,32 @@ export default defineComponent({
   height: 500px;
 }
 
-.quantum-element {
+.quantum-block {
   position: absolute;
+  min-width: 50px;
+  padding: 2px;
+  margin: -2px;
 }
 /* TODO: Nicer styles*/
-.quantum-element:hover {
-  outline: 1px solid var(--selected-color);
+.quantum-block:hover {
+  border: 1px solid var(--selected-color);
+  margin: -3px;
+  /*cursor: move;*/
 }
-.quantum-element.selected {
-  outline: 1px solid var(--selected-color);
+.quantum-block > *:hover {
+  /*cursor: initial;*/
+}
+/*
+.quantum-block.selected {
+  border: 1px solid var(--selected-color);
+  margin: 1px;
   background: var(--selected-background-color);
 }
-.quantum-element:focus {
-  outline: 1px dashed var(--selected-color);
-}
+.quantum-block:focus,
+.quantum-block:focus-within {
+  border: 1px dashed var(--selected-color);
+  margin: 1px;
+}*/
 
 .quantum-document .input-element {
   transform: scale(0);
@@ -243,7 +300,7 @@ export default defineComponent({
   height: 0px;
 }
 
-.selection-crosshair {
+.grid-crosshair {
   position: absolute;
   user-select: none;
   transform: translate(-50%, -50%);

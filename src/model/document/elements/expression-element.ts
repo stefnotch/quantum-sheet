@@ -1,6 +1,5 @@
 import { QuantumElemement, QuantumElementFunctions } from "../document-element";
 import { readonly, reactive, Ref } from "vue";
-import { v4 as uuidv4 } from "uuid";
 
 export const ElementType = "expression-element";
 
@@ -8,7 +7,6 @@ type MathJSON = Readonly<any>;
 
 export interface ExpressionElement extends QuantumElemement {
   expression: MathJSON;
-  result: MathJSON;
 }
 
 export const ElementFunctions: QuantumElementFunctions = {

@@ -2,7 +2,7 @@
 
 import { QuantumElemement, QuantumElementFunctions } from "./document-element";
 import { useVector2, Vec2 } from "./vectors";
-import { ref, Ref, reactive, readonly, shallowReactive } from "vue";
+import { ref, Ref, reactive, readonly, shallowReactive, shallowRef } from "vue";
 import { v4 as uuidv4 } from "uuid";
 
 export interface QuantumDocument {
@@ -17,7 +17,14 @@ export interface QuantumDocument {
   /**
    * Shallow reactive selected blocks array
    */
-  readonly selectedBlocks: Set<QuantumBlock<QuantumElemement>>;
+  readonly selectedBlocks: ReadonlySet<QuantumBlock<QuantumElemement>>;
+
+  /**
+   * Shallow ref focused block
+   */
+  readonly focusedBlock: Readonly<
+    Ref<QuantumBlock<QuantumElemement> | undefined>
+  >;
 
   createBlock(
     type: string,
@@ -37,13 +44,15 @@ export interface QuantumBlock<T extends QuantumElemement> {
   readonly id: string;
   readonly type: string;
   readonly position: Readonly<Vec2>;
-  readonly size: Readonly<Vec2>;
+  readonly size: Readonly<Vec2>; // can include a fractional part
   readonly resizeable: boolean;
   readonly selected: boolean;
+  readonly focused: boolean;
 
   setPosition(value: Vec2): void;
   setSize(value: Vec2): void;
   setSelected(value: boolean): void;
+  setFocused(value: boolean): void;
 
   element: T;
 }
@@ -101,6 +110,7 @@ export function useDocument(
   const selectedBlocks = shallowReactive<Set<QuantumBlock<QuantumElemement>>>(
     new Set()
   );
+  const focusedBlock = shallowRef<QuantumBlock<QuantumElemement>>();
   const vector2 = useVector2();
   const { getBinaryInsertIndex } = useBinarySearch();
 
@@ -129,6 +139,7 @@ export function useDocument(
       size: { x: 10, y: 10 },
       resizeable: options.resizeable ?? true,
       selected: false as boolean,
+      focused: false as boolean,
       setPosition: function (value) {}, // TODO:
       setSize: function (value) {
         this.size = value;
@@ -140,6 +151,21 @@ export function useDocument(
         } else {
           selectedBlocks.delete(this);
           this.selected = false;
+        }
+      },
+      setFocused: function (value) {
+        if (value) {
+          if (focusedBlock.value?.focused) {
+            focusedBlock.value.setFocused(false);
+          }
+
+          this.focused = true;
+          focusedBlock.value = this;
+        } else {
+          this.focused = false;
+          if (focusedBlock.value == this) {
+            focusedBlock.value = undefined;
+          }
         }
       },
       element: element,
@@ -165,7 +191,7 @@ export function useDocument(
   function deleteBlock(block: QuantumBlock<QuantumElemement>) {
     // TODO: A deleted callback. The element should be notified, so that it can do its thingy
     const index = blocks.indexOf(block);
-    if (index && index >= 0) {
+    if (index >= 0) {
       blocks.splice(index, 1);
     }
   }
@@ -177,11 +203,12 @@ export function useDocument(
   // well, not actually callbacks, the functions can stay entirely local. They're just needed to update the expression tree/scope variables
 
   return {
+    gridCellSize,
+    elementTypes: readonly(elementTypes),
     blocks,
     selectedBlocks,
-    gridCellSize,
+    focusedBlock,
     createBlock,
     deleteBlock,
-    elementTypes: readonly(elementTypes),
   };
 }
