@@ -38,12 +38,12 @@ const filesWhitelist = [
     );
   }
   const latestRelease = await latestReleaseResponse.json();
-  const assetToDownload = latestRelease.assets.find((asset) =>
+  const latestReleaseAsset = latestRelease.assets.find((asset) =>
     asset.name.startsWith("pyodide-build")
   );
-  console.log(`Downloading: ${assetToDownload.url}`);
+  console.log(`Downloading: ${latestReleaseAsset.url}`);
 
-  const downloadResponse = await fetch(assetToDownload.url, {
+  const downloadResponse = await fetch(latestReleaseAsset.url, {
     headers: { Accept: "application/octet-stream" },
   });
   if (!downloadResponse.ok) {
@@ -53,7 +53,7 @@ const filesWhitelist = [
   }
   await fse.remove(outputDirectory);
   await fse.ensureDir(outputDirectory);
-  const outputArchivePath = path.join(outputDirectory, assetToDownload.name);
+  const outputArchivePath = path.join(outputDirectory, latestReleaseAsset.name);
   await streamPipeline(
     downloadResponse.body,
     fse.createWriteStream(outputArchivePath)
