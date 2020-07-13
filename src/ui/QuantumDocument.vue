@@ -32,7 +32,7 @@
       :style="grid.gridToStyle(block.position)"
       :class="{'selected': block.selected }"
       :block-id="block.id"
-      @pointerdown="grid.setSelection(block)"
+      @pointerdown=";"
     >
       <!--TODO: Only set the selection ^^ when I'm clicking on the border-->
       <component
@@ -271,29 +271,26 @@ export default defineComponent({
 .quantum-block {
   position: absolute;
   min-width: 50px;
-  padding: 2px;
-  margin: -2px;
+  padding: 4px;
+  margin: 1px;
 }
-/* TODO: Nicer styles*/
+
 .quantum-block:hover {
   border: 1px solid var(--selected-color);
-  margin: -3px;
-  /*cursor: move;*/
+  margin: 0px;
 }
-.quantum-block > *:hover {
-  /*cursor: initial;*/
-}
-/*
-.quantum-block.selected {
-  border: 1px solid var(--selected-color);
-  margin: 1px;
-  background: var(--selected-background-color);
-}
-.quantum-block:focus,
 .quantum-block:focus-within {
   border: 1px dashed var(--selected-color);
-  margin: 1px;
-}*/
+  margin: 0px;
+}
+.quantum-block.selected {
+  border: 1px solid var(--selected-color);
+  margin: 0px;
+  background: var(--selected-background-color);
+}
+.quantum-block.selected:hover {
+  cursor: move;
+}
 
 .quantum-document .input-element {
   transform: scale(0);
