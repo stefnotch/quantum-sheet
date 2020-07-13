@@ -13,8 +13,16 @@ export function useVector2() {
     return b.y - a.y;
   }
 
+  function add(a: Vec2, b: Vec2) {
+    return {
+      x: a.x + b.x,
+      y: a.y + b.y,
+    };
+  }
+
   return {
-    compare,
     clone,
+    compare,
+    add,
   };
 }

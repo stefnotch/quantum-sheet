@@ -2,7 +2,7 @@
 
 import { QuantumElemement, QuantumElementFunctions } from "./document-element";
 import { useVector2, Vec2 } from "./vectors";
-import { ref, Ref, reactive, readonly, shallowReactive, shallowRef } from "vue";
+import { Ref, reactive, readonly, shallowReactive, shallowRef } from "vue";
 import { v4 as uuidv4 } from "uuid";
 
 export interface QuantumDocument {
@@ -31,6 +31,7 @@ export interface QuantumDocument {
     options: QuantumBlockCreationOptions
   ): QuantumBlock<QuantumElemement>;
   deleteBlock(block: QuantumBlock<QuantumElemement>): void;
+  getBlockAt(position: Vec2): QuantumBlock<QuantumElemement> | undefined;
 }
 
 export type QuantumElementTypes = {
@@ -196,6 +197,26 @@ export function useDocument(
     }
   }
 
+  function getBlockAt(position: Vec2) {
+    let posX = position.x;
+    let posY = position.y;
+    for (let i = blocks.length - 1; i >= 0; i--) {
+      let block = blocks[i];
+      let blockX = block.position.x;
+      let blockY = block.position.y;
+      if (
+        blockY <= posY &&
+        posY <= blockY + block.size.y &&
+        blockX <= posX &&
+        posX <= blockX + block.size.x
+      ) {
+        return block;
+      }
+    }
+
+    return undefined;
+  }
+
   // TODO: Callbacks for
   // - Added
   // - Removed
@@ -210,5 +231,6 @@ export function useDocument(
     focusedBlock,
     createBlock,
     deleteBlock,
+    getBlockAt,
   };
 }

@@ -14,7 +14,9 @@
       autocomplete="off"
       autocorrect="off"
       spellcheck="false"
-      @input="createElement.input($event)"
+      @input="grid.textInput($event)"
+      @keydown="grid.keydown($event)"
+      @keyup="grid.keyup($event)"
       @focus="grid.setSelection(); grid.showCrosshair = true"
       @blur="grid.showCrosshair = false"
     ></textarea>
@@ -22,7 +24,6 @@
       class="grid-crosshair"
       :style="grid.gridToStyle(grid.crosshairPosition)"
       v-show="grid.showCrosshair"
-      ref="documentCrosshairElement"
     >+</div>
     <div
       class="quantum-block"
@@ -72,47 +73,12 @@ import ExpressionElement, {
   ExpressionElementType,
   ExpressionElementFunctions
 } from "./elements/ExpressionElement.vue";
+import { QuantumElemement } from "../model/document/document-element";
 import {
-  QuantumElementFunctions,
-  QuantumElemement
-} from "../model/document/document-element";
-import { Vec2 } from "../model/document/vectors";
-
-function useCreateElement(
-  document: QuantumDocument,
-  crosshairPosition: Readonly<Ref<Vec2>>,
-  focusedElementCommands: Ref<any>
-) {
-  function input(ev: InputEvent) {
-    if (ev.isComposing) return;
-
-    let data = ev.data;
-    let inputType = ev.inputType;
-
-    if (data) {
-      let block = document.createBlock(ExpressionElementType, {
-        position: crosshairPosition.value,
-        resizeable: false
-      });
-      block.setFocused(true);
-      // TODO:
-      // - cursor coming up on your left, please focus
-      // - insert the following character (just deal with it!) (that just needs to be a simple function which modifies the state...)
-      //   - however, if it should handle inserting characters in an element that already has focus, it's not that simple
-      nextTick(() => {
-        focusedElementCommands.value["moveToStart"]();
-      });
-    }
-
-    if (ev.currentTarget) {
-      (ev.currentTarget as HTMLTextAreaElement).value = "";
-    }
-  }
-
-  return {
-    input
-  };
-}
+  useFocusedElementCommands,
+  ElementCommands
+} from "./elements/element-commands";
+import { Vec2, useVector2 } from "../model/document/vectors";
 
 function useClipboard(document: QuantumDocument) {
   function cut(ev: ClipboardEvent) {}
@@ -127,10 +93,12 @@ function useClipboard(document: QuantumDocument) {
 
 function useGrid(
   document: QuantumDocument,
-  crosshairElement: Ref<HTMLElement | undefined>
+  inputElement: Ref<HTMLElement | undefined>,
+  focusedElementCommands: Ref<ElementCommands | undefined>
 ) {
   const crosshairPosition = ref<Vec2>({ x: 0, y: 0 });
   const showCrosshair = ref(true);
+  const vector2 = useVector2();
 
   function gridToStyle(gridPosition: Vec2) {
     return {
@@ -148,6 +116,50 @@ function useGrid(
     }
   }
 
+  function textInput(ev: InputEvent) {
+    if (ev.isComposing) return;
+
+    let inputType = ev.inputType;
+
+    if (ev.data) {
+      let block = document.createBlock(ExpressionElementType, {
+        position: crosshairPosition.value,
+        resizeable: false
+      });
+      block.setFocused(true);
+      nextTick(() => {
+        focusedElementCommands.value?.moveToStart();
+        focusedElementCommands.value?.insert(ev.data + "");
+      });
+    }
+
+    if (ev.currentTarget) {
+      (ev.currentTarget as HTMLTextAreaElement).value = "";
+    }
+  }
+
+  function keydown(ev: KeyboardEvent) {
+    if (ev.isComposing) return;
+
+    let direction: Vec2 = { x: 0, y: 0 };
+    if (ev.key == "ArrowLeft") {
+      direction.x = -1;
+    } else if (ev.key == "ArrowRight") {
+      direction.x = 1;
+    } else if (ev.key == "ArrowUp") {
+      direction.y = -1;
+    } else if (ev.key == "ArrowDown") {
+      direction.y = 1;
+    }
+
+    crosshairPosition.value = vector2.add(crosshairPosition.value, direction);
+    focusUnderCrosshair();
+  }
+
+  function keyup(ev: KeyboardEvent) {
+    if (ev.isComposing) return;
+  }
+
   function setSelection(...blocks: QuantumBlock<QuantumElemement>[]) {
     document.selectedBlocks.forEach(v => v.setSelected(false));
     blocks.forEach(v => v.setSelected(true));
@@ -162,20 +174,21 @@ function useGrid(
       y: block.position.y + (direction.y > 0 ? block.size.y : 0)
     };
 
-    crosshairPosition.value = {
-      x: pos.x + direction.x,
-      y: pos.y + direction.y
-    };
-
+    crosshairPosition.value = vector2.add(pos, direction);
     focusUnderCrosshair();
   }
 
-  // TODO: Moving the crosshair with the arrow keys and also that check ^
-
   function focusUnderCrosshair() {
-    // TODO: Focus on the textarea (so that the crosshair is guaranteed to show up)
-    // TODO: Ask document which element is here and .setFocused(true)
-    // If there is no element here, take away focus from everyone document.focusedElement.setFocused(false)
+    // Focus crosshair
+    inputElement.value?.focus();
+
+    // Focus element under crosshair
+    let blockToFocus = document.getBlockAt(crosshairPosition.value);
+    if (blockToFocus) {
+      blockToFocus.setFocused(true);
+    } else {
+      document.focusedBlock.value?.setFocused(false);
+    }
   }
 
   return {
@@ -183,17 +196,12 @@ function useGrid(
     showCrosshair,
     gridToStyle,
     pointerDown,
+    textInput,
+    keydown,
+    keyup,
     setSelection,
     moveCrosshairOut,
     focusUnderCrosshair
-  };
-}
-
-function useFocusedElementCommands(document: QuantumDocument) {
-  const commands = ref<any>({});
-
-  return {
-    commands
   };
 }
 
@@ -212,16 +220,14 @@ export default defineComponent({
     const document = useDocument(elementTypes);
     const documentElement = ref<HTMLElement>();
     const documentInputElement = ref<HTMLElement>();
-    const documentCrosshairElement = ref<HTMLElement>();
 
-    const grid = useGrid(document, documentCrosshairElement);
-    const clipboard = useClipboard(document);
-    const focusedElementCommands = useFocusedElementCommands(document);
-    const createElement = useCreateElement(
+    const focusedElementCommands = useFocusedElementCommands();
+    const grid = useGrid(
       document,
-      grid.crosshairPosition,
+      documentInputElement,
       focusedElementCommands.commands
     );
+    const clipboard = useClipboard(document);
 
     function log(ev: any) {
       console.log(ev);
@@ -229,17 +235,15 @@ export default defineComponent({
     return {
       documentElement,
       documentInputElement,
-      documentCrosshairElement,
 
       elementTypes,
 
       blocks: document.blocks,
       deleteBlock: document.deleteBlock,
 
+      focusedElementCommands,
       grid,
       clipboard,
-      createElement,
-      focusedElementCommands,
 
       log
     };
