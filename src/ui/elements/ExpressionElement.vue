@@ -11,6 +11,7 @@ import {
   ElementFunctions
 } from "../../model/document/elements/expression-element";
 import MathLive from "mathlive";
+import { ElementCommands } from "./element-commands";
 import { Vec2 } from "src/model/document/vectors";
 
 export {
@@ -32,7 +33,7 @@ export default defineComponent({
   emits: {
     "update:model-value": (value: ExpressionElement) => true,
     "update:focused": (value: boolean) => true,
-    "focused-element-commands": (value: any | {}) => true,
+    "focused-element-commands": (value: ElementCommands | undefined) => true,
     "move-cursor-out": (direction: Vec2) => true,
     "delete-element": () => true
   },
@@ -73,7 +74,7 @@ export default defineComponent({
           },
           onBlur: (mathfield: MathLive.Mathfield) => {
             context.emit("update:focused", false);
-            context.emit("focused-element-commands", {});
+            context.emit("focused-element-commands", undefined);
 
             if (mathfield.$text("latex").length == 0) {
               context.emit("delete-element");
