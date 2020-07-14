@@ -34,7 +34,6 @@
       :block-id="block.id"
       @pointerdown=";"
     >
-      <!--TODO: Only set the selection ^^ when I'm clicking on the border-->
       <component
         :is="elementTypes[block.type].component"
         class="quantum-element"
@@ -55,13 +54,8 @@ import {
   readonly,
   ref,
   Ref,
-  onMounted,
-  onUnmounted,
-  watch,
   shallowReadonly,
-  nextTick,
-  watchEffect,
-  computed
+  nextTick
 } from "vue";
 import {
   useDocument,
@@ -118,8 +112,6 @@ function useGrid(
 
   function textInput(ev: InputEvent) {
     if (ev.isComposing) return;
-
-    let inputType = ev.inputType;
 
     if (ev.data) {
       let block = document.createBlock(ExpressionElementType, {

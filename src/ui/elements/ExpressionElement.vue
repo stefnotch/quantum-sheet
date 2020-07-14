@@ -4,7 +4,7 @@
   <!--Though, you gotta figure out the whole listeners and attributes stuff-->
 </template>
 <script lang="ts">
-import { defineComponent, PropType, ref, watch, shallowRef, toRef } from "vue";
+import { defineComponent, PropType, ref, watch, shallowRef } from "vue";
 import {
   ExpressionElement,
   ElementType,
