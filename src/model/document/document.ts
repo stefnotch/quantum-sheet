@@ -1,101 +1,173 @@
 // Not recursive! The expression tree on the other hand will be recursive.
 
-import { QuantumElemement, QuantumElementFunctions } from "./document-element";
-import { useVector2, Vec2 } from "./vectors";
-import { Ref, reactive, readonly, shallowReactive, shallowRef } from "vue";
+import {
+  UseQuantumElementType,
+  UseQuantumElement,
+  QuantumElementCreationOptions,
+} from "./document-element";
+import {
+  clone as cloneVector2,
+  compare as compareVector2,
+  Vec2,
+} from "../vectors";
+import { readonly, shallowReactive, shallowRef, ref, watch } from "vue";
 import { v4 as uuidv4 } from "uuid";
+import { getBinaryInsertIndex } from "../utils";
 
-export interface QuantumDocument {
+// TODO: Make stuff readonly
+// TODO: Variables and scopes are a property of the document itself!
+export interface UseQuantumDocument<
+  TElements extends { [key: string]: UseQuantumElementType<UseQuantumElement> }
+> {
   readonly gridCellSize: Readonly<Vec2>;
-  readonly elementTypes: Readonly<QuantumElementTypes>;
+  readonly elementTypes: Readonly<TElements>;
 
   /**
-   * Shallow reactive blocks array
+   * Shallow reactive elements array
    */
-  readonly blocks: ReadonlyArray<QuantumBlock<QuantumElemement>>;
+  readonly elements: ReadonlyArray<UseQuantumElement>;
 
   /**
-   * Shallow reactive selected blocks array
+   * Creates an element with a given type
+   * @param type Element type
+   * @param options Element options
    */
-  readonly selectedBlocks: ReadonlySet<QuantumBlock<QuantumElemement>>;
+  createElement<T extends keyof TElements>(
+    type: T,
+    options: QuantumElementCreationOptions
+  ): ReturnType<TElements[T]["useElement"]>;
 
   /**
-   * Shallow ref focused block
+   * Deletes an element
+   * @param element Element
    */
-  readonly focusedBlock: Readonly<
-    Ref<QuantumBlock<QuantumElemement> | undefined>
-  >;
+  deleteElement(element: UseQuantumElement): void;
 
-  createBlock(
-    type: string,
-    options: QuantumBlockCreationOptions
-  ): QuantumBlock<QuantumElemement>;
-  deleteBlock(block: QuantumBlock<QuantumElemement>): void;
-  getBlockAt(position: Vec2): QuantumBlock<QuantumElemement> | undefined;
+  /**
+   * Gets the element at a given position
+   * @param position Position
+   */
+  getElementAt(position: Vec2): UseQuantumElement | undefined;
+
+  /**
+   * Gets the element with the given id
+   * @param id Element id
+   * @param type Element type
+   */
+  getElementById<T extends keyof TElements>(
+    id: string,
+    type: T
+  ): ReturnType<TElements[T]["useElement"]> | undefined;
+
+  /**
+   * Set the element selection
+   * @param elements Elements to select
+   */
+  setSelection(...elements: UseQuantumElement[]): void;
 }
 
-export type QuantumElementTypes = {
-  [name: string]: {
-    component: any;
-    functions: QuantumElementFunctions;
-  };
-};
+function useElementSelection() {
+  const selectedElements = shallowReactive<Set<UseQuantumElement>>(new Set());
 
-export interface QuantumBlock<T extends QuantumElemement> {
-  readonly id: string;
-  readonly type: string;
-  readonly position: Readonly<Vec2>;
-  readonly size: Readonly<Vec2>; // can include a fractional part
-  readonly resizeable: boolean;
-  readonly selected: boolean;
-  readonly focused: boolean;
-
-  setPosition(value: Vec2): void;
-  setSize(value: Vec2): void;
-  setSelected(value: boolean): void;
-  setFocused(value: boolean): void;
-
-  element: T;
-}
-
-type QuantumBlockCreationOptions = {
-  position?: Vec2;
-  resizeable?: boolean;
-  serializedElement?: string;
-};
-
-function useBinarySearch() {
-  /**
-   * Finds the position where a new element should be inserted
-   * @param array Target array
-   * @param element Element to insert
-   * @param compareFunction Comparision function
-   */
-  function getBinaryInsertIndex<T>(
-    array: T[],
-    element: T,
-    compareFunction: (a: T, b: T) => number
-  ) {
-    // https://stackoverflow.com/a/29018745
-    let low = 0;
-    let high = array.length - 1;
-    while (low <= high) {
-      let middle = low + Math.floor((high - low) / 2);
-      let comparison = compareFunction(array[middle], element);
-      if (comparison > 0) {
-        low = middle + 1;
-      } else if (comparison < 0) {
-        high = middle - 1;
-      } else {
-        return middle;
+  // TODO: Watch-trigger order. Does it get triggered after everything? Instantly? What about nested ones?
+  function watchElement(element: UseQuantumElement) {
+    return watch(
+      element.selected,
+      (value) => {
+        if (value) {
+          selectedElements.add(element);
+        } else {
+          selectedElements.delete(element);
+        }
+      },
+      {
+        immediate: true,
+        flush: "sync",
       }
-    }
+    );
+  }
 
-    return -low - 1;
+  function setSelection(...elements: UseQuantumElement[]) {
+    selectedElements.forEach((e) => e.setSelected(false));
+    elements.forEach((e) => e.setSelected(true));
   }
 
   return {
-    getBinaryInsertIndex,
+    selectedElements,
+    setSelection,
+    watchElement,
+  };
+}
+
+function useElementFocus() {
+  const focusedElement = shallowRef<UseQuantumElement>();
+
+  // TODO: Watch-trigger order. Does it get triggered after the...
+  // This is fine, because it nicely decouples the elements from each other.
+  function watchElement(element: UseQuantumElement) {
+    return watch(
+      element.focused,
+      (value) => {
+        if (value) {
+          if (focusedElement.value?.focused) {
+            focusedElement.value.setFocused(false);
+          }
+          focusedElement.value = element;
+        } else {
+          if (focusedElement.value == element) {
+            focusedElement.value = undefined;
+          }
+        }
+      },
+      {
+        immediate: true,
+        flush: "sync",
+      }
+    );
+  }
+
+  return {
+    focusedElement,
+    watchElement,
+  };
+}
+
+function useQuantumElement(
+  type: string,
+  options: QuantumElementCreationOptions
+  /* Here internal document stuff can be passed */
+): UseQuantumElement {
+  const position = ref(cloneVector2(options.position ?? { x: 0, y: 0 }));
+  const size = ref({ x: 20, y: 20 }); // TODO: Size stuff
+  const resizeable = ref(options.resizeable ?? false);
+  const selected = ref(false);
+  const focused = ref(false);
+
+  function setPosition(value: Vec2) {
+    position.value = cloneVector2(value);
+  }
+  function setSize(value: Vec2) {
+    size.value = cloneVector2(value);
+  }
+  function setSelected(value: boolean) {
+    selected.value = value;
+  }
+  function setFocused(value: boolean) {
+    focused.value = value;
+  }
+
+  return {
+    id: uuidv4(),
+    type: type,
+    position,
+    size,
+    resizeable,
+    selected,
+    focused,
+    setPosition,
+    setSize,
+    setSelected,
+    setFocused,
   };
 }
 
@@ -103,134 +175,148 @@ function useBinarySearch() {
  * Create a document
  * @param elementTypes Element types in the document
  */
-export function useDocument(
-  elementTypes: QuantumElementTypes
-): QuantumDocument {
+export function useDocument<
+  TElements extends { [key: string]: UseQuantumElementType<UseQuantumElement> }
+>(elementTypes: TElements): UseQuantumDocument<TElements> {
   const gridCellSize = readonly({ x: 20, y: 20 });
-  const blocks = shallowReactive<QuantumBlock<QuantumElemement>[]>([]);
-  const selectedBlocks = shallowReactive<Set<QuantumBlock<QuantumElemement>>>(
-    new Set()
-  );
-  const focusedBlock = shallowRef<QuantumBlock<QuantumElemement>>();
-  const vector2 = useVector2();
-  const { getBinaryInsertIndex } = useBinarySearch();
+  const elements = shallowReactive<UseQuantumElement[]>([]);
 
-  /**
-   * Creates a block with a given element type
-   * @param type Element type
-   * @param options Element options
-   */
-  function createBlock(type: string, options: QuantumBlockCreationOptions) {
+  // watches all blocks for focus or just passes the internal focusedBlock to the useBlock function, also has methods that we can expose to the outside
+  const elementSelection = useElementSelection();
+  const elementFocus = useElementFocus();
+
+  function createElement<T extends keyof TElements>(
+    type: T,
+    options: QuantumElementCreationOptions
+  ): ReturnType<TElements[T]["useElement"]> {
     let elementType = elementTypes[type];
     if (!elementType) throw new Error(`Unknown element type ${type}`);
 
-    // TODO: Implement serialization
-    if (options.serializedElement) {
-      throw new Error(`Serialization not implemented yet`);
-      // element = elementType.functions.deserializeElement(options.serializedElement);
-    }
+    const element = elementType.useElement(
+      useQuantumElement("" + type, options)
+    );
 
-    let element = elementType.functions.createElement();
+    elementSelection.watchElement(element);
+    elementFocus.watchElement(element);
+
+    /* When moving a block, we know its target index. Therefore we know what neighbors the block has after insertion. (And the "scope start/getters" and "scope end/setters" nicely guarantee that the neighbor stuff will always be correct. ((If we do not have getters in the tree, in case of a getter, we could increment the index until we find a setter but then the whole blocks stuff becomes relevant and honestly, that's not fun anymore)))
+^ Therefore, we can totally keep track of which scope every block is in. It's super cheap. (Block --> scope)
+*/
+    /*
+variableManager: shallowReadonly(
+        scopeVariables.getVariableManager(computed(() => block.position))
+      ),*/
+
+    let insertPosition = getBinaryInsertIndex(elements, element, (a, b) =>
+      compareVector2(a.position.value, b.position.value)
+    );
 
     // TODO: A block added callback
-    let block: QuantumBlock<QuantumElemement> = reactive({
-      id: uuidv4(),
-      type: type,
-      position: vector2.clone(options.position ?? { x: 0, y: 0 }),
-      size: { x: 10, y: 10 },
-      resizeable: options.resizeable ?? true,
-      selected: false as boolean,
-      focused: false as boolean,
-      setPosition: function (value) {}, // TODO:
-      setSize: function (value) {
-        this.size = value;
-      },
-      setSelected: function (value) {
-        if (value) {
-          selectedBlocks.add(this);
-          this.selected = true;
-        } else {
-          selectedBlocks.delete(this);
-          this.selected = false;
-        }
-      },
-      setFocused: function (value) {
-        if (value) {
-          if (focusedBlock.value?.focused) {
-            focusedBlock.value.setFocused(false);
-          }
 
-          this.focused = true;
-          focusedBlock.value = this;
-        } else {
-          this.focused = false;
-          if (focusedBlock.value == this) {
-            focusedBlock.value = undefined;
-          }
-        }
-      },
-      element: element,
-    });
-
-    let insertPosition = getBinaryInsertIndex(blocks, block, (a, b) =>
-      vector2.compare(a.position, b.position)
-    );
-    blocks.splice(
+    elements.splice(
       insertPosition < 0 ? -(insertPosition + 1) : insertPosition,
       0,
-      block
+      element
     );
-    // TODO: Some position changed callback or so
 
-    return block;
+    // Weird, Typescript doesn't like whatever I cooked up
+    return element as any;
   }
 
-  /**
-   * Deletes a block
-   * @param type
-   */
-  function deleteBlock(block: QuantumBlock<QuantumElemement>) {
+  function deleteElement(element: UseQuantumElement) {
     // TODO: A deleted callback. The element should be notified, so that it can do its thingy
-    const index = blocks.indexOf(block);
+    const index = elements.indexOf(element);
     if (index >= 0) {
-      blocks.splice(index, 1);
+      elements.splice(index, 1);
     }
   }
 
-  function getBlockAt(position: Vec2) {
+  function getElementAt(position: Vec2) {
     let posX = position.x;
     let posY = position.y;
-    for (let i = blocks.length - 1; i >= 0; i--) {
-      let block = blocks[i];
-      let blockX = block.position.x;
-      let blockY = block.position.y;
+    for (let i = elements.length - 1; i >= 0; i--) {
+      let element = elements[i];
+      let x = element.position.value.x;
+      let y = element.position.value.y;
       if (
-        blockY <= posY &&
-        posY <= blockY + block.size.y &&
-        blockX <= posX &&
-        posX <= blockX + block.size.x
+        y <= posY &&
+        posY <= y + element.size.value.y &&
+        x <= posX &&
+        posX <= x + element.size.value.x
       ) {
-        return block;
+        return element;
       }
     }
 
     return undefined;
   }
 
-  // TODO: Callbacks for
+  function getElementById<T extends keyof TElements>(
+    id: string,
+    type?: T
+  ): ReturnType<TElements[T]["useElement"]> | undefined {
+    let element = elements.find((e) => e.id == id);
+    if (element && type && element.type != type) {
+      throw new Error(
+        `Wrong type, passed ${type} but element has ${element.type}`
+      );
+    }
+
+    // Yeah, Typescript really does dislike this XD
+    return element as any;
+  }
+
+  // TODO: Callbacks with (block or element, index: number, oldIndex?: number) for
   // - Added
   // - Removed
-  // - Sorted/Moved (ideally in reverse order)
+  // And a special optimization for moving:
+  // - When moving elements, iterate over them in reverse order (yep, that heuristic works for every case)
+  // - If their siblings are the same, don't do anything
+  // - else, remove and add the element from the syntax tree
   // well, not actually callbacks, the functions can stay entirely local. They're just needed to update the expression tree/scope variables
 
   return {
     gridCellSize,
-    elementTypes: readonly(elementTypes),
-    blocks,
-    selectedBlocks,
-    focusedBlock,
-    createBlock,
-    deleteBlock,
-    getBlockAt,
+    elementTypes: elementTypes,
+    elements,
+    createElement,
+    deleteElement,
+    getElementAt,
+    getElementById,
+    setSelection: elementSelection.setSelection,
   };
+}
+
+// Delete:
+{
+  // Restructuring ideas so that modifying a deeply nested property stops being a pain in the butt
+  // - Flatten everything? (e.g. and then call useBlock(document, elementId))
+  // - shallowRef(useSomething())
+  // - No more readonly
+  // - Not exposing the actual model but rather a copy of it to the outside world
+  // - Lots of watchEffect() (e.g. when adding a block to the document, the document watchEffects the block's .focused)
+  // The issue here is that I'm using this "readonly" stuff as an internal type as well...
+  // (e.g. passing it to internal functions)
+  /* interface QuantumBlock<T extends QuantumElemement> {
+    readonly variableManager: VariableManager; // variables (does not deal with expression computing!)
+
+    // variables, cas, block, element, scope, expression computing
+    // Not sure where I should store stuff like the variable references...
+    // (BTW, elements have to be updated, regardless of their block being visible or their component existing)
+  }
+
+  interface QuantumScope {
+    readonly startPosition: Readonly<Vec2>;
+    readonly endPosition: Readonly<Vec2>;
+    readonly childScopes: ReadonlyArray<QuantumScope>;
+    readonly variables: ReadonlyArray<ScopedVariable>; // Make sure to keep this sorted
+  }
+
+  interface ScopedVariable {
+    readonly position: Readonly<Vec2>;
+    readonly value: Readonly<any>;
+    readonly getters: ReadonlyArray<ScopedVariableGetter>;
+  }
+
+  type ScopedVariableGetter = (newValue: Readonly<any>) => void;*/
 }
