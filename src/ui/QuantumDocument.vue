@@ -30,7 +30,7 @@
       class="quantum-block"
       v-for="element in document.elements"
       :key="element.id"
-      :style="grid.gridToStyle(element.position.value)"
+      :style="grid.gridToStyle(element.position)"
       :class="{'selected': element.selected.value }"
       @pointerdown=";"
     >
@@ -46,7 +46,7 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, readonly, ref, Ref, nextTick } from "vue";
+import { defineComponent, readonly, ref, Ref, nextTick, unref } from "vue";
 import {
   useDocument,
   UseQuantumDocument,
@@ -84,10 +84,11 @@ function useGrid<T extends QuantumDocumentElementTypes>(
   const crosshairPosition = ref<Vec2>({ x: 0, y: 0 });
   const showCrosshair = ref(true);
 
-  function gridToStyle(gridPosition: Vec2) {
+  function gridToStyle(gridPosition: Vec2 | Ref<Vec2>) {
+    let pos = unref(gridPosition);
     return {
-      left: gridPosition.x * document.gridCellSize.x + "px",
-      top: gridPosition.y * document.gridCellSize.y + "px"
+      left: pos.x * document.gridCellSize.x + "px",
+      top: pos.y * document.gridCellSize.y + "px"
     };
   }
 
@@ -132,6 +133,8 @@ function useGrid<T extends QuantumDocumentElementTypes>(
       direction.y = -1;
     } else if (ev.key == "ArrowDown") {
       direction.y = 1;
+    } else {
+      return;
     }
 
     crosshairPosition.value = addVector2(crosshairPosition.value, direction);
