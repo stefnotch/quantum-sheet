@@ -6,33 +6,24 @@
 <script lang="ts">
 import { defineComponent, PropType, ref, watch, shallowRef } from "vue";
 import {
-  ExpressionElement,
+  UseExpressionElement,
   ElementType,
-  ElementFunctions
+  useExpressionElementType
 } from "../../model/document/elements/expression-element";
 import MathLive from "mathlive";
 import { ElementCommands } from "./element-commands";
-import { Vec2 } from "src/model/document/vectors";
+import { Vec2 } from "../../model/vectors";
 
-export {
-  ElementType as ExpressionElementType,
-  ElementFunctions as ExpressionElementFunctions
-};
+export { ElementType as ExpressionElementType, useExpressionElementType };
 
 export default defineComponent({
   props: {
-    modelValue: {
-      type: Object as PropType<ExpressionElement>,
-      default: () => ({} as ExpressionElement)
-    },
-    focused: {
-      type: Boolean,
-      default: () => false
+    modelGetter: {
+      type: Function as PropType<() => UseExpressionElement>,
+      required: true
     }
   },
   emits: {
-    "update:model-value": (value: ExpressionElement) => true,
-    "update:focused": (value: boolean) => true,
     "focused-element-commands": (value: ElementCommands | undefined) => true,
     "move-cursor-out": (direction: Vec2) => true,
     "delete-element": () => true
@@ -40,17 +31,18 @@ export default defineComponent({
   setup(props, context) {
     const mathfieldElement = ref<HTMLElement>();
     const mathfield = shallowRef<MathLive.Mathfield>();
+    const expressionElement = props.modelGetter();
 
     watch(
-      () => props.modelValue,
+      () => expressionElement.expression.value,
       (value, oldValue) => {
-        let latex = "" + value.expression;
+        let latex = "" + value;
         mathfield.value?.$latex(latex, { suppressChangeNotifications: true });
       }
     );
 
     watch(
-      () => props.focused,
+      () => expressionElement.focused.value,
       value => (value ? mathfield.value?.$focus() : mathfield.value?.$blur())
     );
 
@@ -59,12 +51,10 @@ export default defineComponent({
         mathfield.value = MathLive.makeMathField(value, {
           fontsDirectory: "http://localhost:3000/@modules/mathlive/dist/fonts", // TODO: Remove this horrible hack
           onContentDidChange: _ => {
-            context.emit("update:model-value", {
-              expression: mathfield.value?.$text("latex") as any
-            });
+            expressionElement.setExpression(mathfield.value?.$text("latex"));
           },
           onFocus: (mathfield: MathLive.Mathfield) => {
-            context.emit("update:focused", true);
+            expressionElement.setFocused(true);
             context.emit("focused-element-commands", {
               elementType: ElementType,
               moveToStart: () => mathfield.$perform("moveToMathFieldStart"),
@@ -73,7 +63,7 @@ export default defineComponent({
             });
           },
           onBlur: (mathfield: MathLive.Mathfield) => {
-            context.emit("update:focused", false);
+            expressionElement.setFocused(false);
             context.emit("focused-element-commands", undefined);
 
             if (mathfield.$text("latex").length == 0) {
@@ -96,7 +86,7 @@ export default defineComponent({
           }
         });
 
-        if (props.focused) {
+        if (expressionElement.focused) {
           mathfield.value.$focus();
         }
       }

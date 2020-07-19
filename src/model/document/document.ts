@@ -16,11 +16,21 @@ import { getBinaryInsertIndex } from "../utils";
 
 // TODO: Make stuff readonly
 // TODO: Variables and scopes are a property of the document itself!
+export type QuantumDocumentElementTypes = {
+  [key: string]: UseQuantumElementType<UseQuantumElement>;
+};
+
 export interface UseQuantumDocument<
-  TElements extends { [key: string]: UseQuantumElementType<UseQuantumElement> }
+  TElements extends QuantumDocumentElementTypes
 > {
   readonly gridCellSize: Readonly<Vec2>;
   readonly elementTypes: Readonly<TElements>;
+
+  /**
+   * Gets the component associated with an element type
+   * @param type Element type
+   */
+  getTypeComponent<T extends keyof TElements>(type: T): any;
 
   /**
    * Shallow reactive elements array
@@ -64,6 +74,11 @@ export interface UseQuantumDocument<
    * @param elements Elements to select
    */
   setSelection(...elements: UseQuantumElement[]): void;
+
+  /**
+   * Sets the element focus
+   */
+  setFocus(element?: UseQuantumElement): void;
 }
 
 function useElementSelection() {
@@ -126,9 +141,18 @@ function useElementFocus() {
     );
   }
 
+  function setFocus(element?: UseQuantumElement) {
+    if (element) {
+      element.setFocused(true);
+    } else {
+      focusedElement.value?.setFocused(false);
+    }
+  }
+
   return {
     focusedElement,
     watchElement,
+    setFocus,
   };
 }
 
@@ -175,15 +199,19 @@ function useQuantumElement(
  * Create a document
  * @param elementTypes Element types in the document
  */
-export function useDocument<
-  TElements extends { [key: string]: UseQuantumElementType<UseQuantumElement> }
->(elementTypes: TElements): UseQuantumDocument<TElements> {
+export function useDocument<TElements extends QuantumDocumentElementTypes>(
+  elementTypes: TElements
+): UseQuantumDocument<TElements> {
   const gridCellSize = readonly({ x: 20, y: 20 });
   const elements = shallowReactive<UseQuantumElement[]>([]);
 
   // watches all blocks for focus or just passes the internal focusedBlock to the useBlock function, also has methods that we can expose to the outside
   const elementSelection = useElementSelection();
   const elementFocus = useElementFocus();
+
+  function getTypeComponent<T extends keyof TElements>(type: T) {
+    return elementTypes[type].component;
+  }
 
   function createElement<T extends keyof TElements>(
     type: T,
@@ -278,12 +306,14 @@ variableManager: shallowReadonly(
   return {
     gridCellSize,
     elementTypes: elementTypes,
+    getTypeComponent,
     elements,
     createElement,
     deleteElement,
     getElementAt,
     getElementById,
     setSelection: elementSelection.setSelection,
+    setFocus: elementFocus.setFocus,
   };
 }
 

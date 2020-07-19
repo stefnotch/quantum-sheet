@@ -7,6 +7,7 @@
     @paste="clipboard.paste"
     @focus="documentInputElement.focus()"
   >
+    <!--TODO: Print the expression tree (indented JSON?)-->
     <textarea
       class="input-element"
       ref="documentInputElement"
@@ -17,7 +18,7 @@
       @input="grid.textInput($event)"
       @keydown="grid.keydown($event)"
       @keyup="grid.keyup($event)"
-      @focus="grid.setSelection(); grid.showCrosshair = true"
+      @focus="document.setSelection(); grid.showCrosshair = true"
       @blur="grid.showCrosshair = false"
     ></textarea>
     <div
@@ -27,54 +28,44 @@
     >+</div>
     <div
       class="quantum-block"
-      v-for="block in blocks"
-      :key="block.id"
-      :style="grid.gridToStyle(block.position)"
-      :class="{'selected': block.selected }"
-      :block-id="block.id"
+      v-for="element in document.elements"
+      :key="element.id"
+      :style="grid.gridToStyle(element.position.value)"
+      :class="{'selected': element.selected.value }"
       @pointerdown=";"
     >
       <component
-        :is="elementTypes[block.type].component"
+        :is="document.getTypeComponent(element.type)"
         class="quantum-element"
-        :model-value="block.element"
-        @update:model-value="value => block.element = value"
-        :focused="block.focused"
-        @update:focused="value => block.setFocused(value)"
+        :modelGetter="() => element"
         @focused-element-commands="value => focusedElementCommands.commands = value"
-        @move-cursor-out="value => grid.moveCrosshairOut(block, value)"
-        @delete-element="deleteBlock(block)"
+        @move-cursor-out="value => grid.moveCrosshairOut(element, value)"
+        @delete-element="document.deleteElement(element)"
       ></component>
     </div>
   </div>
 </template>
 <script lang="ts">
-import {
-  defineComponent,
-  readonly,
-  ref,
-  Ref,
-  shallowReadonly,
-  nextTick
-} from "vue";
+import { defineComponent, readonly, ref, Ref, nextTick } from "vue";
 import {
   useDocument,
-  QuantumElementTypes,
-  QuantumDocument,
-  QuantumBlock
+  UseQuantumDocument,
+  QuantumDocumentElementTypes
 } from "../model/document/document";
 import ExpressionElement, {
   ExpressionElementType,
-  ExpressionElementFunctions
+  useExpressionElementType
 } from "./elements/ExpressionElement.vue";
-import { QuantumElemement } from "../model/document/document-element";
 import {
   useFocusedElementCommands,
   ElementCommands
 } from "./elements/element-commands";
-import { Vec2, useVector2 } from "../model/document/vectors";
+import { Vec2, add as addVector2 } from "../model/vectors";
+import { UseQuantumElement } from "../model/document/document-element";
 
-function useClipboard(document: QuantumDocument) {
+function useClipboard<T extends QuantumDocumentElementTypes>(
+  document: UseQuantumDocument<T>
+) {
   function cut(ev: ClipboardEvent) {}
   function copy(ev: ClipboardEvent) {}
   function paste(ev: ClipboardEvent) {}
@@ -85,14 +76,13 @@ function useClipboard(document: QuantumDocument) {
   };
 }
 
-function useGrid(
-  document: QuantumDocument,
+function useGrid<T extends QuantumDocumentElementTypes>(
+  document: UseQuantumDocument<T>,
   inputElement: Ref<HTMLElement | undefined>,
   focusedElementCommands: Ref<ElementCommands | undefined>
 ) {
   const crosshairPosition = ref<Vec2>({ x: 0, y: 0 });
   const showCrosshair = ref(true);
-  const vector2 = useVector2();
 
   function gridToStyle(gridPosition: Vec2) {
     return {
@@ -114,11 +104,11 @@ function useGrid(
     if (ev.isComposing) return;
 
     if (ev.data) {
-      let block = document.createBlock(ExpressionElementType, {
+      let element = document.createElement(ExpressionElementType, {
         position: crosshairPosition.value,
         resizeable: false
       });
-      block.setFocused(true);
+      document.setFocus(element);
       nextTick(() => {
         focusedElementCommands.value?.moveToStart();
         focusedElementCommands.value?.insert(ev.data + "");
@@ -144,7 +134,7 @@ function useGrid(
       direction.y = 1;
     }
 
-    crosshairPosition.value = vector2.add(crosshairPosition.value, direction);
+    crosshairPosition.value = addVector2(crosshairPosition.value, direction);
     focusUnderCrosshair();
   }
 
@@ -152,21 +142,14 @@ function useGrid(
     if (ev.isComposing) return;
   }
 
-  function setSelection(...blocks: QuantumBlock<QuantumElemement>[]) {
-    document.selectedBlocks.forEach(v => v.setSelected(false));
-    blocks.forEach(v => v.setSelected(true));
-  }
-
-  function moveCrosshairOut(
-    block: QuantumBlock<QuantumElemement>,
-    direction: Vec2
-  ) {
+  function moveCrosshairOut(element: UseQuantumElement, direction: Vec2) {
     let pos = {
-      x: block.position.x + (direction.x > 0 ? block.size.x : 0),
-      y: block.position.y + (direction.y > 0 ? block.size.y : 0)
+      x:
+        element.position.value.x + (direction.x > 0 ? element.size.value.x : 0),
+      y: element.position.value.y + (direction.y > 0 ? element.size.value.y : 0)
     };
 
-    crosshairPosition.value = vector2.add(pos, direction);
+    crosshairPosition.value = addVector2(pos, direction);
     focusUnderCrosshair();
   }
 
@@ -175,12 +158,8 @@ function useGrid(
     inputElement.value?.focus();
 
     // Focus element under crosshair
-    let blockToFocus = document.getBlockAt(crosshairPosition.value);
-    if (blockToFocus) {
-      blockToFocus.setFocused(true);
-    } else {
-      document.focusedBlock.value?.setFocused(false);
-    }
+    let blockToFocus = document.getElementAt(crosshairPosition.value);
+    document.setFocus(blockToFocus);
   }
 
   return {
@@ -191,7 +170,7 @@ function useGrid(
     textInput,
     keydown,
     keyup,
-    setSelection,
+
     moveCrosshairOut,
     focusUnderCrosshair
   };
@@ -202,14 +181,10 @@ export default defineComponent({
     ExpressionElement
   },
   setup() {
-    const elementTypes = shallowReadonly<QuantumElementTypes>({
-      [ExpressionElementType]: {
-        component: ExpressionElement,
-        functions: ExpressionElementFunctions
-      }
+    const document = useDocument({
+      [ExpressionElementType]: useExpressionElementType(ExpressionElement)
     });
 
-    const document = useDocument(elementTypes);
     const documentElement = ref<HTMLElement>();
     const documentInputElement = ref<HTMLElement>();
 
@@ -224,14 +199,11 @@ export default defineComponent({
     function log(ev: any) {
       console.log(ev);
     }
+
     return {
+      document,
       documentElement,
       documentInputElement,
-
-      elementTypes,
-
-      blocks: document.blocks,
-      deleteBlock: document.deleteBlock,
 
       focusedElementCommands,
       grid,
@@ -242,7 +214,9 @@ export default defineComponent({
   }
 });
 </script>
-<style scoped>
+
+<!-- TODO: Grid size variable -->
+<style scoped :vars="{  }">
 .quantum-document {
   --grid-color: rgba(71, 162, 223, 0.26);
   --selected-background-color: rgba(68, 148, 202, 0.24);
