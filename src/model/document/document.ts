@@ -81,12 +81,71 @@ export interface UseQuantumDocument<
   setFocus(element?: UseQuantumElement): void;
 }
 
+function useElementList() {
+  const elements = shallowReactive<UseQuantumElement[]>([]);
+
+  function watchElement(element: UseQuantumElement) {
+    const stopHandle = watch(
+      element.position,
+      (value, oldValue) => {
+        let insertPosition = getBinaryInsertIndex(elements, (a) =>
+          compareVector2(a.position.value, value)
+        );
+
+        // TODO: A block added callback
+
+        elements.splice(
+          insertPosition < 0 ? -(insertPosition + 1) : insertPosition,
+          0,
+          element
+        );
+      },
+      {
+        immediate: true,
+      }
+    );
+
+    return () => {
+      stopHandle();
+      const index = elements.indexOf(element);
+      if (index >= 0) {
+        elements.splice(index, 1);
+      }
+    };
+  }
+
+  function getElementAt(position: Vec2) {
+    const posX = position.x;
+    const posY = position.y;
+    for (let i = elements.length - 1; i >= 0; i--) {
+      let element = elements[i];
+      let x = element.position.value.x;
+      let y = element.position.value.y;
+      if (
+        y <= posY &&
+        posY <= y + element.size.value.y &&
+        x <= posX &&
+        posX <= x + element.size.value.x
+      ) {
+        return element;
+      }
+    }
+
+    return undefined;
+  }
+
+  return {
+    elements,
+    watchElement,
+    getElementAt,
+  };
+}
+
 function useElementSelection() {
   const selectedElements = shallowReactive<Set<UseQuantumElement>>(new Set());
 
-  // TODO: Watch-trigger order. Does it get triggered after everything? Instantly? What about nested ones?
   function watchElement(element: UseQuantumElement) {
-    return watch(
+    const stopHandle = watch(
       element.selected,
       (value) => {
         if (value) {
@@ -97,9 +156,13 @@ function useElementSelection() {
       },
       {
         immediate: true,
-        flush: "sync",
       }
     );
+
+    return () => {
+      element.selected.value = false;
+      stopHandle();
+    };
   }
 
   function setSelection(...elements: UseQuantumElement[]) {
@@ -117,10 +180,8 @@ function useElementSelection() {
 function useElementFocus() {
   const focusedElement = shallowRef<UseQuantumElement>();
 
-  // TODO: Watch-trigger order. Does it get triggered after the...
-  // This is fine, because it nicely decouples the elements from each other.
   function watchElement(element: UseQuantumElement) {
-    return watch(
+    const stopHandle = watch(
       element.focused,
       (value) => {
         if (value) {
@@ -136,9 +197,13 @@ function useElementFocus() {
       },
       {
         immediate: true,
-        flush: "sync",
       }
     );
+
+    return () => {
+      element.focused.value = false;
+      stopHandle();
+    };
   }
 
   function setFocus(element?: UseQuantumElement) {
@@ -203,9 +268,9 @@ export function useDocument<TElements extends QuantumDocumentElementTypes>(
   elementTypes: TElements
 ): UseQuantumDocument<TElements> {
   const gridCellSize = readonly({ x: 20, y: 20 });
-  const elements = shallowReactive<UseQuantumElement[]>([]);
 
-  // watches all blocks for focus or just passes the internal focusedBlock to the useBlock function, also has methods that we can expose to the outside
+  const elementRemoveCallbacks = new Map<string, () => void>();
+  const elementList = useElementList();
   const elementSelection = useElementSelection();
   const elementFocus = useElementFocus();
 
@@ -224,8 +289,14 @@ export function useDocument<TElements extends QuantumDocumentElementTypes>(
       useQuantumElement("" + type, options)
     );
 
-    elementSelection.watchElement(element);
-    elementFocus.watchElement(element);
+    let stopHandles = [
+      elementList.watchElement(element),
+      elementSelection.watchElement(element),
+      elementFocus.watchElement(element),
+    ];
+    elementRemoveCallbacks.set(element.id, () => {
+      stopHandles.forEach((stopHandle) => stopHandle());
+    });
 
     /* When moving a block, we know its target index. Therefore we know what neighbors the block has after insertion. (And the "scope start/getters" and "scope end/setters" nicely guarantee that the neighbor stuff will always be correct. ((If we do not have getters in the tree, in case of a getter, we could increment the index until we find a setter but then the whole blocks stuff becomes relevant and honestly, that's not fun anymore)))
 ^ Therefore, we can totally keep track of which scope every block is in. It's super cheap. (Block --> scope)
@@ -235,55 +306,23 @@ variableManager: shallowReadonly(
         scopeVariables.getVariableManager(computed(() => block.position))
       ),*/
 
-    let insertPosition = getBinaryInsertIndex(elements, element, (a, b) =>
-      compareVector2(a.position.value, b.position.value)
-    );
-
-    // TODO: A block added callback
-
-    elements.splice(
-      insertPosition < 0 ? -(insertPosition + 1) : insertPosition,
-      0,
-      element
-    );
-
     // Weird, Typescript doesn't like whatever I cooked up
     return element as any;
   }
 
   function deleteElement(element: UseQuantumElement) {
-    // TODO: A deleted callback. The element should be notified, so that it can do its thingy
-    const index = elements.indexOf(element);
-    if (index >= 0) {
-      elements.splice(index, 1);
+    let removeCallback = elementRemoveCallbacks.get(element.id);
+    if (removeCallback) {
+      removeCallback();
+      elementRemoveCallbacks.delete(element.id);
     }
-  }
-
-  function getElementAt(position: Vec2) {
-    let posX = position.x;
-    let posY = position.y;
-    for (let i = elements.length - 1; i >= 0; i--) {
-      let element = elements[i];
-      let x = element.position.value.x;
-      let y = element.position.value.y;
-      if (
-        y <= posY &&
-        posY <= y + element.size.value.y &&
-        x <= posX &&
-        posX <= x + element.size.value.x
-      ) {
-        return element;
-      }
-    }
-
-    return undefined;
   }
 
   function getElementById<T extends keyof TElements>(
     id: string,
     type?: T
   ): ReturnType<TElements[T]["useElement"]> | undefined {
-    let element = elements.find((e) => e.id == id);
+    let element = elementList.elements.find((e) => e.id == id);
     if (element && type && element.type != type) {
       throw new Error(
         `Wrong type, passed ${type} but element has ${element.type}`
@@ -297,6 +336,7 @@ variableManager: shallowReadonly(
   // TODO: Callbacks with (block or element, index: number, oldIndex?: number) for
   // - Added
   // - Removed
+  // - Moved (and which elements are inbetween prev and new position)
   // And a special optimization for moving:
   // - When moving elements, iterate over them in reverse order (yep, that heuristic works for every case)
   // - If their siblings are the same, don't do anything
@@ -307,10 +347,10 @@ variableManager: shallowReadonly(
     gridCellSize,
     elementTypes: elementTypes,
     getTypeComponent,
-    elements,
+    elements: elementList.elements,
     createElement,
     deleteElement,
-    getElementAt,
+    getElementAt: elementList.getElementAt,
     getElementById,
     setSelection: elementSelection.setSelection,
     setFocus: elementFocus.setFocus,
