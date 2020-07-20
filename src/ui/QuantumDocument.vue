@@ -3,6 +3,7 @@
     class="quantum-document"
     ref="documentElement"
     tabindex="-1"
+    :style="{ '--grid-cell-size-x': `${document.gridCellSize.x}px`, '--grid-cell-size-y': `${document.gridCellSize.y}px` }"
     @pointerdown="grid.pointerDown($event)"
     @paste="clipboard.paste"
     @focus="documentInputElement.focus()"
@@ -219,12 +220,13 @@ export default defineComponent({
 </script>
 
 <!-- TODO: Grid size variable -->
-<style scoped :vars="{  }">
+<style scoped>
 .quantum-document {
+  background-color: var(--color);
   --grid-color: rgba(71, 162, 223, 0.26);
   --selected-background-color: rgba(68, 148, 202, 0.24);
   --selected-color: rgba(57, 131, 180, 0.459);
-  background-size: 20px 20px;
+  background-size: var(--grid-cell-size-x) var(--grid-cell-size-y);
   background-image: linear-gradient(
       to right,
       var(--grid-color) 1px,
