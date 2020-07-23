@@ -27,15 +27,15 @@ export interface UseQuantumDocument<
   readonly elementTypes: Readonly<TElements>;
 
   /**
+   * Shallow reactive elements array
+   */
+  readonly elements: ReadonlyArray<UseQuantumElement>;
+
+  /**
    * Gets the component associated with an element type
    * @param type Element type
    */
   getTypeComponent<T extends keyof TElements>(type: T): any;
-
-  /**
-   * Shallow reactive elements array
-   */
-  readonly elements: ReadonlyArray<UseQuantumElement>;
 
   /**
    * Creates an element with a given type

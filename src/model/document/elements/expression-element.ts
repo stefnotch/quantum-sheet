@@ -41,8 +41,3 @@ export function useExpressionElementType(
     deserializeElement: deserializeElement,
   };
 }
-
-// TODO: Function to connect it to a variable/expression tree
-// - computed(() => []) // Array of variables that this expression references
-// - clear result after the expression gets changed
-// - (darkning/blurring the result can be done in the .vue component)

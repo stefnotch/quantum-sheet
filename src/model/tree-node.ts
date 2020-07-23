@@ -1,10 +1,9 @@
-import { shallowRef, shallowReactive } from "vue";
-import { ShallowRef } from "./types";
+import { shallowRef, shallowReactive, Ref } from "vue";
 
 export interface TreeNode<T> {
   value: T;
   children: ReadonlyArray<TreeNode<T>>;
-  parent: ShallowRef<TreeNode<T> | undefined>;
+  parent: Ref<TreeNode<T> | undefined>;
   setParent(value: TreeNode<T> | undefined): void;
   addChild(value: TreeNode<T>): void;
   removeChild(value: TreeNode<T>): void;
