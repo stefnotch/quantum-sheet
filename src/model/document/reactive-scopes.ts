@@ -1,7 +1,9 @@
-import { reactive, Ref } from "vue";
+import { reactive, Ref, shallowRef, watch } from "vue";
 import { Vec2 } from "../vectors";
 import { exposeState, getState, ReadonlyState } from "../expose-state";
-import { compare as compareVector2 } from "../vectors";
+import * as vector2 from "../vectors";
+import { getDepHash } from "vite";
+import { getBinaryInsertIndex } from "../utils";
 
 export interface UseQuantumScopes {
   /**
@@ -14,6 +16,22 @@ export interface UseQuantumScopes {
   setEndPosition(scope: ReadonlyState<QuantumScope>, value: Vec2): void;
 
   getScope(value: Vec2): QuantumScope;
+
+  addVariable(
+    scope: ReadonlyState<QuantumScope>,
+    name: string,
+    position: Vec2
+  ): ReadonlyState<Variable>;
+  removeVariable(
+    scope: ReadonlyState<QuantumScope>,
+    name: string,
+    variable: ReadonlyState<Variable>
+  ): void;
+  setVariablePosition(variable: ReadonlyState<Variable>, value: Vec2): void;
+  setVariableValue(
+    variable: ReadonlyState<Variable>,
+    value: Readonly<any> | undefined
+  ): void;
 }
 
 export interface QuantumScope {
@@ -62,7 +80,7 @@ export interface Variable {
   /**
    * Shallow ref variable value
    */
-  value: Ref<Readonly<any>>;
+  value: Readonly<any> | undefined;
 
   /**
    * Callback whenever the variable or value changes
@@ -111,6 +129,74 @@ export function useReactiveScopes(): UseQuantumScopes {
     }
     return currentScope;
   }
+
+  // TODO: While I'm not handling nested scopes,
+  //  I do have to auto-magically add variables with a value = undefined at the scope root when someone is trying to get an undefined variable
+  // Otherwise, things like "simply get a few getters of the previous variable when adding a new one" won't work
+  function addVariable(
+    scope: ReadonlyState<QuantumScope>,
+    name: string,
+    position: Vec2
+  ): ReadonlyState<Variable> {
+    const existingVariables = getState(scope).variables.get(name) ?? [];
+    const insertPosition = getBinaryInsertIndex(existingVariables, (v) =>
+      vector2.compare(v.position, position)
+    );
+
+    // Add setter
+    // TODO: Handle the grabbing of existing getters from the previous variable
+    const variable = reactive<Variable>({
+      position: position,
+      value: shallowRef(),
+      getters: [],
+    });
+
+    watch(
+      () => variable.value,
+      (value) => {
+        variable.getters.forEach((getter) => getter(variable));
+      }
+    );
+
+    existingVariables.splice(
+      insertPosition < 0 ? -(insertPosition + 1) : insertPosition,
+      0,
+      variable
+    );
+
+    return exposeState(variable);
+  }
+
+  function removeVariable(
+    scope: ReadonlyState<QuantumScope>,
+    name: string,
+    variable: ReadonlyState<Variable>
+  ) {
+    const existingVariables = getState(scope).variables.get(name) ?? [];
+
+    const variableIndex = existingVariables.indexOf(getState(variable));
+
+    if (variableIndex >= 0) {
+      // Remove setter
+      // TODO: Give all getters to the previous setter
+      existingVariables.splice(variableIndex, 1);
+    }
+  }
+
+  function setVariablePosition(variable: ReadonlyState<Variable>, value: Vec2) {
+    getState(variable).position = value;
+  }
+
+  function setVariableValue(
+    variable: ReadonlyState<Variable>,
+    value: Readonly<any> | undefined
+  ) {
+    getState(variable).value = value;
+  }
+
+  // TODO: Add getter (find variable and add getter, then call the getter callback once) GetVariableValue(): ((variable) => void)
+  // TODO: Remove getter (find variable and remove getter)
+
   // TODO: Child scopes
 
   return {
@@ -118,6 +204,10 @@ export function useReactiveScopes(): UseQuantumScopes {
     setName,
     setStartPosition,
     setEndPosition,
+    addVariable,
+    removeVariable,
+    setVariablePosition,
+    setVariableValue,
     getScope,
   };
 }
