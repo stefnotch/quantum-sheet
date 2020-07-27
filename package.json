@@ -19,7 +19,7 @@
     "vue": "^3.0.0-rc.4"
   },
   "devDependencies": {
-    "@shockpkg/archive-files": "^1.9.1",
+    "@shockpkg/archive-files": "^1.10.0",
     "@types/uuid": "^8.0.0",
     "@vue/compiler-sfc": "^3.0.0-rc.4",
     "fs-extra": "^9.0.1",
