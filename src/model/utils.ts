@@ -13,9 +13,9 @@ export function getBinaryInsertIndex<T>(
   while (low <= high) {
     let middle = low + Math.floor((high - low) / 2);
     let comparison = compareFunction(array[middle]);
-    if (comparison > 0) {
+    if (comparison < 0) {
       low = middle + 1;
-    } else if (comparison < 0) {
+    } else if (comparison > 0) {
       high = middle - 1;
     } else {
       return middle;

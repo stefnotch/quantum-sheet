@@ -8,8 +8,8 @@ export function clone(a: Vec2) {
 }
 
 export function compare(a: Vec2, b: Vec2) {
-  if (a.y == b.y) return b.x - a.x;
-  return b.y - a.y;
+  if (a.y == b.y) return a.x - b.x;
+  return a.y - b.y;
 }
 
 export function add(a: Vec2, b: Vec2) {
