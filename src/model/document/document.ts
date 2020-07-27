@@ -234,6 +234,16 @@ function useElementFocus() {
 function useElementScopes() {
   const scopes = useReactiveScopes();
 
+  // TODO: Callbacks with (block or element, index: number, oldIndex?: number) for
+  // - Added
+  // - Removed
+  // - Moved (and which elements are inbetween prev and new position)
+  // And a special optimization for moving:
+  // - When moving elements, iterate over them in reverse order (yep, that heuristic works for every case)
+  // - If their siblings are the same, don't do anything
+  // - else, remove and add the element from the syntax tree
+  // well, not actually callbacks, the functions can stay entirely local. They're just needed to update the expression tree/scope variables
+
   function watchElement(element: UseQuantumElement) {
     const stopHandle = watch(
       element.position,
@@ -377,16 +387,6 @@ variableManager: shallowReadonly(
     return element as any;
   }
 
-  // TODO: Callbacks with (block or element, index: number, oldIndex?: number) for
-  // - Added
-  // - Removed
-  // - Moved (and which elements are inbetween prev and new position)
-  // And a special optimization for moving:
-  // - When moving elements, iterate over them in reverse order (yep, that heuristic works for every case)
-  // - If their siblings are the same, don't do anything
-  // - else, remove and add the element from the syntax tree
-  // well, not actually callbacks, the functions can stay entirely local. They're just needed to update the expression tree/scope variables
-
   return {
     gridCellSize,
     elementTypes: elementTypes,
@@ -400,38 +400,4 @@ variableManager: shallowReadonly(
     setSelection: elementSelection.setSelection,
     setFocus: elementFocus.setFocus,
   };
-}
-
-// Delete:
-{
-  // Restructuring ideas so that modifying a deeply nested property stops being a pain in the butt
-  // - Flatten everything? (e.g. and then call useBlock(document, elementId))
-  // - shallowRef(useSomething())
-  // - No more readonly
-  // - Not exposing the actual model but rather a copy of it to the outside world
-  // - Lots of watchEffect() (e.g. when adding a block to the document, the document watchEffects the block's .focused)
-  // The issue here is that I'm using this "readonly" stuff as an internal type as well...
-  // (e.g. passing it to internal functions)
-  /* interface QuantumBlock<T extends QuantumElemement> {
-    readonly variableManager: VariableManager; // variables (does not deal with expression computing!)
-
-    // variables, cas, block, element, scope, expression computing
-    // Not sure where I should store stuff like the variable references...
-    // (BTW, elements have to be updated, regardless of their block being visible or their component existing)
-  }
-
-  interface QuantumScope {
-    readonly startPosition: Readonly<Vec2>;
-    readonly endPosition: Readonly<Vec2>;
-    readonly childScopes: ReadonlyArray<QuantumScope>;
-    readonly variables: ReadonlyArray<ScopedVariable>; // Make sure to keep this sorted
-  }
-
-  interface ScopedVariable {
-    readonly position: Readonly<Vec2>;
-    readonly value: Readonly<any>;
-    readonly getters: ReadonlyArray<ScopedVariableGetter>;
-  }
-
-  type ScopedVariableGetter = (newValue: Readonly<any>) => void;*/
 }
