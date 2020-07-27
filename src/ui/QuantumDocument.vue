@@ -51,15 +51,15 @@ import { defineComponent, readonly, ref, Ref, nextTick, unref } from "vue";
 import {
   useDocument,
   UseQuantumDocument,
-  QuantumDocumentElementTypes
+  QuantumDocumentElementTypes,
 } from "../model/document/document";
 import ExpressionElement, {
   ExpressionElementType,
-  useExpressionElementType
+  useExpressionElementType,
 } from "./elements/ExpressionElement.vue";
 import {
   useFocusedElementCommands,
-  ElementCommands
+  ElementCommands,
 } from "./elements/element-commands";
 import { Vec2, add as addVector2 } from "../model/vectors";
 import { UseQuantumElement } from "../model/document/document-element";
@@ -73,7 +73,7 @@ function useClipboard<T extends QuantumDocumentElementTypes>(
   return {
     cut,
     copy,
-    paste
+    paste,
   };
 }
 
@@ -89,7 +89,7 @@ function useGrid<T extends QuantumDocumentElementTypes>(
     let pos = unref(gridPosition);
     return {
       left: pos.x * document.gridCellSize.x + "px",
-      top: pos.y * document.gridCellSize.y + "px"
+      top: pos.y * document.gridCellSize.y + "px",
     };
   }
 
@@ -97,7 +97,7 @@ function useGrid<T extends QuantumDocumentElementTypes>(
     if (ev.target == ev.currentTarget) {
       crosshairPosition.value = {
         x: Math.round(ev.offsetX / document.gridCellSize.x),
-        y: Math.round(ev.offsetY / document.gridCellSize.y)
+        y: Math.round(ev.offsetY / document.gridCellSize.y),
       };
     }
   }
@@ -108,7 +108,7 @@ function useGrid<T extends QuantumDocumentElementTypes>(
     if (ev.data) {
       let element = document.createElement(ExpressionElementType, {
         position: crosshairPosition.value,
-        resizeable: false
+        resizeable: false,
       });
       document.setFocus(element);
       nextTick(() => {
@@ -150,7 +150,8 @@ function useGrid<T extends QuantumDocumentElementTypes>(
     let pos = {
       x:
         element.position.value.x + (direction.x > 0 ? element.size.value.x : 0),
-      y: element.position.value.y + (direction.y > 0 ? element.size.value.y : 0)
+      y:
+        element.position.value.y + (direction.y > 0 ? element.size.value.y : 0),
     };
 
     crosshairPosition.value = addVector2(pos, direction);
@@ -176,17 +177,17 @@ function useGrid<T extends QuantumDocumentElementTypes>(
     keyup,
 
     moveCrosshairOut,
-    focusUnderCrosshair
+    focusUnderCrosshair,
   };
 }
 
 export default defineComponent({
   components: {
-    ExpressionElement
+    ExpressionElement,
   },
   setup() {
     const document = useDocument({
-      [ExpressionElementType]: useExpressionElementType(ExpressionElement)
+      [ExpressionElementType]: useExpressionElementType(ExpressionElement),
     });
 
     const documentElement = ref<HTMLElement>();
@@ -213,9 +214,9 @@ export default defineComponent({
       grid,
       clipboard,
 
-      log
+      log,
     };
-  }
+  },
 });
 </script>
 

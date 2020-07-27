@@ -1,5 +1,6 @@
 import { Ref } from "vue";
 import { Vec2 } from "../vectors";
+import { QuantumScope } from "./reactive-scopes";
 
 export interface UseQuantumElementType<T extends UseQuantumElement> {
   type: string;
@@ -18,11 +19,13 @@ export interface UseQuantumElement {
   resizeable: Ref<boolean>;
   selected: Ref<boolean>;
   focused: Ref<boolean>;
+  scope: Ref<QuantumScope | undefined>;
 
   setPosition(value: Vec2): void;
   setSize(value: Vec2): void;
   setSelected(value: boolean): void;
   setFocused(value: boolean): void;
+  setScope(value: QuantumScope | undefined): void;
 }
 
 export interface QuantumElementCreationOptions {

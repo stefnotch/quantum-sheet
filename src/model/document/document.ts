@@ -13,6 +13,11 @@ import {
 import { readonly, shallowReactive, shallowRef, ref, watch } from "vue";
 import { v4 as uuidv4 } from "uuid";
 import { getBinaryInsertIndex } from "../utils";
+import {
+  UseQuantumScopes,
+  useReactiveScopes,
+  QuantumScope,
+} from "./reactive-scopes";
 
 // TODO: Make stuff readonly
 // TODO: Variables and scopes are a property of the document itself!
@@ -30,6 +35,11 @@ export interface UseQuantumDocument<
    * Shallow reactive elements array
    */
   readonly elements: ReadonlyArray<UseQuantumElement>;
+
+  /**
+   * Variable scopes
+   */
+  readonly scopes: Readonly<UseQuantumScopes>;
 
   /**
    * Gets the component associated with an element type
@@ -221,6 +231,32 @@ function useElementFocus() {
   };
 }
 
+function useElementScopes() {
+  const scopes = useReactiveScopes();
+
+  function watchElement(element: UseQuantumElement) {
+    const stopHandle = watch(
+      element.position,
+      (value) => {
+        element.setScope(scopes.getScope(value));
+      },
+      {
+        immediate: true,
+      }
+    );
+
+    return () => {
+      element.setScope(undefined);
+      stopHandle();
+    };
+  }
+
+  return {
+    scopes,
+    watchElement,
+  };
+}
+
 function useQuantumElement(
   type: string,
   options: QuantumElementCreationOptions
@@ -231,6 +267,7 @@ function useQuantumElement(
   const resizeable = ref(options.resizeable ?? false);
   const selected = ref(false);
   const focused = ref(false);
+  const scope = ref<QuantumScope>();
 
   function setPosition(value: Vec2) {
     position.value = cloneVector2(value);
@@ -244,6 +281,9 @@ function useQuantumElement(
   function setFocused(value: boolean) {
     focused.value = value;
   }
+  function setScope(value: QuantumScope | undefined) {
+    scope.value = value;
+  }
 
   return {
     id: uuidv4(),
@@ -253,10 +293,12 @@ function useQuantumElement(
     resizeable,
     selected,
     focused,
+    scope,
     setPosition,
     setSize,
     setSelected,
     setFocused,
+    setScope,
   };
 }
 
@@ -273,6 +315,7 @@ export function useDocument<TElements extends QuantumDocumentElementTypes>(
   const elementList = useElementList();
   const elementSelection = useElementSelection();
   const elementFocus = useElementFocus();
+  const elementScopes = useElementScopes();
 
   function getTypeComponent<T extends keyof TElements>(type: T) {
     return elementTypes[type].component;
@@ -293,6 +336,7 @@ export function useDocument<TElements extends QuantumDocumentElementTypes>(
       elementList.watchElement(element),
       elementSelection.watchElement(element),
       elementFocus.watchElement(element),
+      elementScopes.watchElement(element),
     ];
     elementRemoveCallbacks.set(element.id, () => {
       stopHandles.forEach((stopHandle) => stopHandle());
@@ -346,8 +390,9 @@ variableManager: shallowReadonly(
   return {
     gridCellSize,
     elementTypes: elementTypes,
-    getTypeComponent,
     elements: elementList.elements,
+    scopes: elementScopes.scopes,
+    getTypeComponent,
     createElement,
     deleteElement,
     getElementAt: elementList.getElementAt,

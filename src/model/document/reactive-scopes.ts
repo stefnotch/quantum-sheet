@@ -1,6 +1,20 @@
 import { reactive, Ref } from "vue";
 import { Vec2 } from "../vectors";
 import { exposeState, getState, ReadonlyState } from "../expose-state";
+import { compare as compareVector2 } from "../vectors";
+
+export interface UseQuantumScopes {
+  /**
+   * Reactive root scope
+   */
+  rootScope: ReadonlyState<QuantumScope>;
+
+  setName(scope: ReadonlyState<QuantumScope>, value: string): void;
+  setStartPosition(scope: ReadonlyState<QuantumScope>, value: Vec2): void;
+  setEndPosition(scope: ReadonlyState<QuantumScope>, value: Vec2): void;
+
+  getScope(value: Vec2): QuantumScope;
+}
 
 export interface QuantumScope {
   /**
@@ -56,11 +70,11 @@ export interface Variable {
   getters: ((variable: Variable) => void)[];
 }
 
-export function useReactiveScopes() {
+export function useReactiveScopes(): UseQuantumScopes {
   const rootScope = reactive({
-    name: "",
+    name: "root",
     startPosition: { x: 0, y: 0 },
-    endPosition: { x: 0, y: 0 },
+    endPosition: { x: Infinity, y: Infinity },
     closed: true,
     variables: new Map<string, Variable[]>(),
     childScopes: [],
@@ -68,20 +82,35 @@ export function useReactiveScopes() {
   } as QuantumScope);
 
   function setName(scope: ReadonlyState<QuantumScope>, value: string) {
-    let internalState = getState(scope);
-    internalState.name = value;
+    getState(scope).name = value;
   }
 
   function setStartPosition(scope: ReadonlyState<QuantumScope>, value: Vec2) {
-    let internalState = getState(scope);
-    internalState.startPosition = value;
+    getState(scope).startPosition = value;
   }
 
   function setEndPosition(scope: ReadonlyState<QuantumScope>, value: Vec2) {
-    let internalState = getState(scope);
-    internalState.endPosition = value;
+    getState(scope).endPosition = value;
   }
 
+  function getScope(value: Vec2): QuantumScope {
+    let currentScope = rootScope;
+    while (true) {
+      const childScope = currentScope.childScopes.find(
+        (s) =>
+          s.startPosition.x <= value.x &&
+          value.x < s.endPosition.x &&
+          s.startPosition.y <= value.y &&
+          value.y < s.endPosition.y
+      );
+      if (childScope) {
+        currentScope = childScope;
+      } else {
+        break;
+      }
+    }
+    return currentScope;
+  }
   // TODO: Child scopes
 
   return {
@@ -89,6 +118,7 @@ export function useReactiveScopes() {
     setName,
     setStartPosition,
     setEndPosition,
+    getScope,
   };
 }
 
