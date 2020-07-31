@@ -1,8 +1,8 @@
 import { shallowRef, shallowReactive, Ref } from "vue";
 
 export interface TreeNode<T extends TreeNode<T>> {
-  children: ReadonlyArray<T>;
-  parent: Ref<T | undefined>;
+  readonly children: ReadonlyArray<T>;
+  readonly parent: Ref<T | undefined>;
   setParent(value: T | undefined): void;
   addChild(value: T): void;
   removeChild(value: T): void;
