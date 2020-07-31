@@ -1,51 +1,58 @@
 import { shallowRef, shallowReactive, Ref } from "vue";
 
-export interface TreeNode<T> {
-  value: T;
-  children: ReadonlyArray<TreeNode<T>>;
-  parent: Ref<TreeNode<T> | undefined>;
-  setParent(value: TreeNode<T> | undefined): void;
-  addChild(value: TreeNode<T>): void;
-  removeChild(value: TreeNode<T>): void;
+export interface TreeNode<T extends TreeNode<T>> {
+  children: ReadonlyArray<T>;
+  parent: Ref<T | undefined>;
+  setParent(value: T | undefined): void;
+  addChild(value: T): void;
+  removeChild(value: T): void;
 }
 
-/**
- * Wraps an object
- * @param value Object to wrap
- */
-export function useTreeNode<T>(value: T): TreeNode<T> {
-  const children = shallowReactive<TreeNode<T>[]>([]);
-  const parent = shallowRef<TreeNode<T>>();
+/*
+interface SomeObject {
+  someProperty: string;
+}
 
-  const treeNode: TreeNode<T> = {
-    value,
-    children,
+interface TCDerp extends TreeNode<MyInterface>, SomeObject {
+  // Multiple inheritance and self referencing generics
+}
+
+let x: MyInterface;*/
+
+export function useTreeNode<T extends TreeNode<T>>(self: T) {
+  const parent = shallowRef<T>();
+  const children = shallowReactive<T[]>([]);
+
+  function setParent(value: T | undefined) {
+    if (parent.value == value) return;
+    let oldValue = parent.value;
+    parent.value = undefined;
+    oldValue?.removeChild(self);
+
+    parent.value = value;
+    parent.value?.addChild(self);
+  }
+  function addChild(value: T) {
+    value.setParent(self);
+    if (!children.includes(value)) {
+      children.push(value);
+    }
+  }
+  function removeChild(value: T) {
+    if (children.includes(value)) {
+      value.setParent(undefined);
+      const index = children.indexOf(value);
+      if (index >= 0) {
+        children.splice(index, 1);
+      }
+    }
+  }
+
+  return {
     parent,
-    setParent: function (value: TreeNode<T> | undefined) {
-      if (parent.value == value) return;
-      let oldValue = parent.value;
-      parent.value = undefined;
-      oldValue?.removeChild(this);
-
-      parent.value = value;
-      parent.value?.addChild(this);
-    },
-    addChild: function (value: TreeNode<T>) {
-      value.setParent(this);
-      if (!children.includes(value)) {
-        children.push(value);
-      }
-    },
-    removeChild: function (value: TreeNode<T>) {
-      if (children.includes(value)) {
-        value.setParent(undefined);
-        const index = children.indexOf(value);
-        if (index >= 0) {
-          children.splice(index, 1);
-        }
-      }
-    },
+    children,
+    setParent,
+    addChild,
+    removeChild,
   };
-
-  return treeNode;
 }
