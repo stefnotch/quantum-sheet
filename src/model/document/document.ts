@@ -1,34 +1,29 @@
 // Not recursive! The expression tree on the other hand will be recursive.
 
 import {
-  UseQuantumElementType,
   UseQuantumElement,
   QuantumElementCreationOptions,
 } from "./document-element";
-import {
-  clone as cloneVector2,
-  compare as compareVector2,
-  Vec2,
-} from "../vectors";
+import { Vector2 } from "../vectors";
 import { readonly, shallowReactive, shallowRef, ref, watch } from "vue";
 import { v4 as uuidv4 } from "uuid";
-import { getBinaryInsertIndex } from "../utils";
-import {
-  UseQuantumScopes,
-  useReactiveScopes,
-  QuantumScope,
-} from "./reactive-scopes";
+import arrayUtils from "../array-utils";
+import { UseScopeElement } from "./elements/scope-element";
 
 // TODO: Make stuff readonly
-// TODO: Variables and scopes are a property of the document itself!
 export type QuantumDocumentElementTypes = {
-  [key: string]: UseQuantumElementType<UseQuantumElement>;
+  [key: string]: {
+    typeName: string;
+    useElement: (block: UseQuantumElement) => UseQuantumElement;
+    serializeElement(element: UseQuantumElement): string;
+    deserializeElement(data: string): UseQuantumElement;
+  };
 };
 
 export interface UseQuantumDocument<
   TElements extends QuantumDocumentElementTypes
 > {
-  readonly gridCellSize: Readonly<Vec2>;
+  readonly gridCellSize: Readonly<Vector2>;
   readonly elementTypes: Readonly<TElements>;
 
   /**
@@ -37,23 +32,12 @@ export interface UseQuantumDocument<
   readonly elements: ReadonlyArray<UseQuantumElement>;
 
   /**
-   * Variable scopes
-   */
-  readonly scopes: Readonly<UseQuantumScopes>;
-
-  /**
-   * Gets the component associated with an element type
-   * @param type Element type
-   */
-  getTypeComponent<T extends keyof TElements>(type: T): any;
-
-  /**
    * Creates an element with a given type
-   * @param type Element type
+   * @param typeName Element type name
    * @param options Element options
    */
   createElement<T extends keyof TElements>(
-    type: T,
+    typeName: T,
     options: QuantumElementCreationOptions
   ): ReturnType<TElements[T]["useElement"]>;
 
@@ -67,16 +51,16 @@ export interface UseQuantumDocument<
    * Gets the element at a given position
    * @param position Position
    */
-  getElementAt(position: Vec2): UseQuantumElement | undefined;
+  getElementAt(position: Vector2): UseQuantumElement | undefined;
 
   /**
    * Gets the element with the given id
    * @param id Element id
-   * @param type Element type
+   * @param type Element type name
    */
   getElementById<T extends keyof TElements>(
     id: string,
-    type: T
+    typeName: T
   ): ReturnType<TElements[T]["useElement"]> | undefined;
 
   /**
@@ -98,17 +82,17 @@ function useElementList() {
     const stopHandle = watch(
       element.position,
       (value, oldValue) => {
-        let insertPosition = getBinaryInsertIndex(elements, (a) =>
-          compareVector2(a.position.value, value)
+        let { index } = arrayUtils.getBinaryInsertIndex(elements, (a) =>
+          a.position.value.compareTo(value)
         );
 
         // TODO: A block added callback
-
-        elements.splice(
-          insertPosition < 0 ? -(insertPosition + 1) : insertPosition,
-          0,
-          element
+        // TODO: Refactor the scope setting
+        element.setScope(
+          arrayUtils.getElementOrUndefined(elements, index - 1)?.scope.value
         );
+
+        elements.splice(index, 0, element);
       },
       {
         immediate: true,
@@ -124,7 +108,7 @@ function useElementList() {
     };
   }
 
-  function getElementAt(position: Vec2) {
+  function getElementAt(position: Vector2) {
     const posX = position.x;
     const posY = position.y;
     for (let i = elements.length - 1; i >= 0; i--) {
@@ -231,59 +215,23 @@ function useElementFocus() {
   };
 }
 
-function useElementScopes() {
-  const scopes = useReactiveScopes();
-
-  // TODO: Callbacks with (block or element, index: number, oldIndex?: number) for
-  // - Added
-  // - Removed
-  // - Moved (and which elements are inbetween prev and new position)
-  // And a special optimization for moving:
-  // - When moving elements, iterate over them in reverse order (yep, that heuristic works for every case)
-  // - If their siblings are the same, don't do anything
-  // - else, remove and add the element from the syntax tree
-  // well, not actually callbacks, the functions can stay entirely local. They're just needed to update the expression tree/scope variables
-
-  function watchElement(element: UseQuantumElement) {
-    const stopHandle = watch(
-      element.position,
-      (value) => {
-        element.setScope(scopes.getScope(value));
-      },
-      {
-        immediate: true,
-      }
-    );
-
-    return () => {
-      element.setScope(undefined);
-      stopHandle();
-    };
-  }
-
-  return {
-    scopes,
-    watchElement,
-  };
-}
-
 function useQuantumElement(
-  type: string,
+  typeName: string,
   options: QuantumElementCreationOptions
   /* Here internal document stuff can be passed */
 ): UseQuantumElement {
-  const position = ref(cloneVector2(options.position ?? { x: 0, y: 0 }));
-  const size = ref({ x: 20, y: 20 }); // TODO: Size stuff
+  const position = ref(options.position ?? Vector2.zero);
+  const size = ref(new Vector2(20, 20)); // TODO: Size stuff
   const resizeable = ref(options.resizeable ?? false);
   const selected = ref(false);
   const focused = ref(false);
-  const scope = ref<QuantumScope>();
+  const scope = ref<UseScopeElement>();
 
-  function setPosition(value: Vec2) {
-    position.value = cloneVector2(value);
+  function setPosition(value: Vector2) {
+    position.value = value;
   }
-  function setSize(value: Vec2) {
-    size.value = cloneVector2(value);
+  function setSize(value: Vector2) {
+    size.value = value;
   }
   function setSelected(value: boolean) {
     selected.value = value;
@@ -291,13 +239,13 @@ function useQuantumElement(
   function setFocused(value: boolean) {
     focused.value = value;
   }
-  function setScope(value: QuantumScope | undefined) {
+  function setScope(value: UseScopeElement | undefined) {
     scope.value = value;
   }
 
   return {
     id: uuidv4(),
-    type: type,
+    typeName: typeName,
     position,
     size,
     resizeable,
@@ -319,34 +267,28 @@ function useQuantumElement(
 export function useDocument<TElements extends QuantumDocumentElementTypes>(
   elementTypes: TElements
 ): UseQuantumDocument<TElements> {
-  const gridCellSize = readonly({ x: 20, y: 20 });
+  const gridCellSize = readonly(new Vector2(20, 20));
 
   const elementRemoveCallbacks = new Map<string, () => void>();
   const elementList = useElementList();
   const elementSelection = useElementSelection();
   const elementFocus = useElementFocus();
-  const elementScopes = useElementScopes();
-
-  function getTypeComponent<T extends keyof TElements>(type: T) {
-    return elementTypes[type].component;
-  }
 
   function createElement<T extends keyof TElements>(
-    type: T,
+    typeName: T,
     options: QuantumElementCreationOptions
   ): ReturnType<TElements[T]["useElement"]> {
-    let elementType = elementTypes[type];
-    if (!elementType) throw new Error(`Unknown element type ${type}`);
+    let elementType = elementTypes[typeName];
+    if (!elementType) throw new Error(`Unknown element type ${typeName}`);
 
     const element = elementType.useElement(
-      useQuantumElement("" + type, options)
+      useQuantumElement("" + typeName, options)
     );
 
     let stopHandles = [
       elementList.watchElement(element),
       elementSelection.watchElement(element),
       elementFocus.watchElement(element),
-      elementScopes.watchElement(element),
     ];
     elementRemoveCallbacks.set(element.id, () => {
       stopHandles.forEach((stopHandle) => stopHandle());
@@ -374,12 +316,12 @@ variableManager: shallowReadonly(
 
   function getElementById<T extends keyof TElements>(
     id: string,
-    type?: T
+    typeName?: T
   ): ReturnType<TElements[T]["useElement"]> | undefined {
     let element = elementList.elements.find((e) => e.id == id);
-    if (element && type && element.type != type) {
+    if (element && typeName && element.typeName != typeName) {
       throw new Error(
-        `Wrong type, passed ${type} but element has ${element.type}`
+        `Wrong type, passed ${typeName} but element has ${element.typeName}`
       );
     }
 
@@ -391,8 +333,6 @@ variableManager: shallowReadonly(
     gridCellSize,
     elementTypes: elementTypes,
     elements: elementList.elements,
-    scopes: elementScopes.scopes,
-    getTypeComponent,
     createElement,
     deleteElement,
     getElementAt: elementList.getElementAt,

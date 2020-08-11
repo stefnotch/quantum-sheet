@@ -15,16 +15,16 @@
   },
   "dependencies": {
     "mathlive": "^0.54.1",
-    "uuid": "^8.2.0",
-    "vue": "^3.0.0-rc.4"
+    "uuid": "^8.3.0",
+    "vue": "^3.0.0-rc.5"
   },
   "devDependencies": {
     "@shockpkg/archive-files": "^1.10.0",
-    "@types/uuid": "^8.0.0",
-    "@vue/compiler-sfc": "^3.0.0-rc.4",
+    "@types/uuid": "^8.0.1",
+    "@vue/compiler-sfc": "^3.0.0-rc.5",
     "fs-extra": "^9.0.1",
     "gh-pages": "^3.1.0",
     "node-fetch": "3.0.0-beta.7",
-    "vite": "^1.0.0-rc.3"
+    "vite": "^1.0.0-rc.4"
   }
 }

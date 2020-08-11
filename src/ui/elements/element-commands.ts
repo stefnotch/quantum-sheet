@@ -2,9 +2,9 @@ import { ref } from "vue";
 
 export interface ElementCommands {
   elementType: string;
-  moveToStart(): void;
-  moveToEnd(): void;
-  insert(text: string): void;
+  moveToStart?: () => void;
+  moveToEnd?: () => void;
+  insert?: (text: string) => void;
 }
 
 export function useFocusedElementCommands() {

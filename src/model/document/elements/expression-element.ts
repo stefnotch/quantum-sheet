@@ -1,4 +1,4 @@
-import { UseQuantumElementType, UseQuantumElement } from "../document-element";
+import { UseQuantumElement, QuantumElementType } from "../document-element";
 import { ref, Ref } from "vue";
 
 export const ElementType = "expression-element";
@@ -30,14 +30,17 @@ function deserializeElement(data: string): UseExpressionElement {
   throw new Error(`Serialization not implemented yet`);
 }
 
-export function useExpressionElementType(
-  component: any
-): UseQuantumElementType<UseExpressionElement> {
-  return {
-    type: ElementType,
-    component: component,
-    useElement: useExpressionElement,
-    serializeElement: serializeElement,
-    deserializeElement: deserializeElement,
-  };
-}
+export const ExpressionElementType: QuantumElementType<
+  UseExpressionElement,
+  typeof ElementType
+> = {
+  typeName: ElementType,
+  documentType: {
+    [ElementType]: {
+      typeName: ElementType,
+      useElement: useExpressionElement,
+      serializeElement: serializeElement,
+      deserializeElement: deserializeElement,
+    },
+  },
+};

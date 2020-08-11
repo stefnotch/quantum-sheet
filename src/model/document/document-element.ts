@@ -1,34 +1,41 @@
 import { Ref } from "vue";
-import { Vec2 } from "../vectors";
-import { QuantumScope } from "./reactive-scopes";
+import { Vector2 } from "../vectors";
+import type { UseScopeElement } from "./elements/scope-element";
 
-export interface UseQuantumElementType<T extends UseQuantumElement> {
-  type: string;
-  useElement: (block: UseQuantumElement) => T;
-  serializeElement(element: T): string;
-  deserializeElement(data: string): T;
-  component: any;
-}
+export type QuantumElementType<
+  T extends UseQuantumElement,
+  U extends string
+> = {
+  typeName: U;
+  documentType: {
+    [K in U]: {
+      typeName: K;
+      useElement: (block: UseQuantumElement) => T;
+      serializeElement(element: T): string;
+      deserializeElement(data: string): T;
+    };
+  };
+};
 
 export interface UseQuantumElement {
   id: string;
-  type: string;
+  typeName: string;
 
-  position: Ref<Vec2>;
-  size: Ref<Vec2>; // can include a fractional part
+  position: Ref<Vector2>;
+  size: Ref<Vector2>; // can include a fractional part
   resizeable: Ref<boolean>;
   selected: Ref<boolean>;
   focused: Ref<boolean>;
-  scope: Ref<QuantumScope | undefined>;
+  scope: Ref<UseScopeElement | undefined>;
 
-  setPosition(value: Vec2): void;
-  setSize(value: Vec2): void;
+  setPosition(value: Vector2): void;
+  setSize(value: Vector2): void;
   setSelected(value: boolean): void;
   setFocused(value: boolean): void;
-  setScope(value: QuantumScope | undefined): void;
+  setScope(value: UseScopeElement | undefined): void;
 }
 
 export interface QuantumElementCreationOptions {
-  position?: Vec2;
+  position?: Vector2;
   resizeable?: boolean;
 }

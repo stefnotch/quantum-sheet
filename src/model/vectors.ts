@@ -1,20 +1,32 @@
-export interface Vec2 {
-  x: number;
-  y: number;
-}
+export class Vector2 {
+  readonly x: number;
+  readonly y: number;
+  constructor(x: number, y: number) {
+    this.x = x;
+    this.y = y;
+  }
 
-export function clone(a: Vec2) {
-  return { x: a.x, y: a.y };
-}
+  static get zero(): Vector2 {
+    return new Vector2(0, 0);
+  }
 
-export function compare(a: Vec2, b: Vec2) {
-  if (a.y == b.y) return a.x - b.x;
-  return a.y - b.y;
-}
+  get length() {
+    return Math.hypot(this.x, this.y);
+  }
 
-export function add(a: Vec2, b: Vec2) {
-  return {
-    x: a.x + b.x,
-    y: a.y + b.y,
-  };
+  static clone(other: Vector2): Vector2 {
+    return new Vector2(other.x, other.y);
+  }
+
+  add(other: Vector2): Vector2 {
+    return new Vector2(this.x + other.x, this.y + other.y);
+  }
+
+  /**
+   * For sorting in an array
+   */
+  compareTo(other: Vector2) {
+    if (this.y == other.y) return this.x - other.x;
+    return this.y - other.y;
+  }
 }

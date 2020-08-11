@@ -7,26 +7,26 @@
 import { defineComponent, PropType, ref, watch, shallowRef } from "vue";
 import {
   UseExpressionElement,
+  ExpressionElementType,
   ElementType,
-  useExpressionElementType
 } from "../../model/document/elements/expression-element";
 import MathLive from "mathlive";
 import { ElementCommands } from "./element-commands";
-import { Vec2 } from "../../model/vectors";
+import { Vector2 } from "../../model/vectors";
 
-export { ElementType as ExpressionElementType, useExpressionElementType };
+export { ExpressionElementType };
 
 export default defineComponent({
   props: {
     modelGetter: {
       type: Function as PropType<() => UseExpressionElement>,
-      required: true
-    }
+      required: true,
+    },
   },
   emits: {
     "focused-element-commands": (value: ElementCommands | undefined) => true,
-    "move-cursor-out": (direction: Vec2) => true,
-    "delete-element": () => true
+    "move-cursor-out": (direction: Vector2) => true,
+    "delete-element": () => true,
   },
   setup(props, context) {
     const mathfieldElement = ref<HTMLElement>();
@@ -43,14 +43,14 @@ export default defineComponent({
 
     watch(
       () => expressionElement.focused.value,
-      value => (value ? mathfield.value?.$focus() : mathfield.value?.$blur())
+      (value) => (value ? mathfield.value?.$focus() : mathfield.value?.$blur())
     );
 
-    watch(mathfieldElement, value => {
+    watch(mathfieldElement, (value) => {
       if (value) {
         mathfield.value = MathLive.makeMathField(value, {
           fontsDirectory: "http://localhost:3000/@modules/mathlive/dist/fonts", // TODO: Remove this horrible hack
-          onContentDidChange: _ => {
+          onContentDidChange: (_) => {
             expressionElement.setExpression(mathfield.value?.$text("latex"));
           },
           onFocus: (mathfield: MathLive.Mathfield) => {
@@ -59,8 +59,9 @@ export default defineComponent({
               elementType: ElementType,
               moveToStart: () => mathfield.$perform("moveToMathFieldStart"),
               moveToEnd: () => mathfield.$perform("moveToMathFieldEnd"),
-              insert: (text: string) => mathfield.$insert(text, {})
+              insert: (text: string) => mathfield.$insert(text, {}),
             });
+            console.log("Emitted");
           },
           onBlur: (mathfield: MathLive.Mathfield) => {
             expressionElement.setFocused(false);
@@ -71,19 +72,19 @@ export default defineComponent({
             }
           },
           onMoveOutOf: (mathfield: MathLive.Mathfield, direction) => {
-            context.emit("move-cursor-out", {
-              x: direction == "forward" ? 1 : -1,
-              y: 0
-            });
+            context.emit(
+              "move-cursor-out",
+              new Vector2(direction == "forward" ? 1 : -1, 0)
+            );
             return false;
           },
           onTabOutOf: (mathfield: MathLive.Mathfield, direction) => {
-            context.emit("move-cursor-out", {
-              x: direction == "forward" ? 1 : -1,
-              y: 0
-            });
+            context.emit(
+              "move-cursor-out",
+              new Vector2(direction == "forward" ? 1 : -1, 0)
+            );
             return true;
-          }
+          },
         });
 
         if (expressionElement.focused) {
@@ -93,9 +94,9 @@ export default defineComponent({
     });
 
     return {
-      mathfieldElement
+      mathfieldElement,
     };
-  }
+  },
 });
 </script>
 <style scoped>
