@@ -1,5 +1,5 @@
 <template>
-  <div class="scope-start">Scope start</div>
+  <div class="scope-start">Scope start {{element.id}}</div>
 </template>
 <script lang="ts">
 import { defineComponent, PropType, ref, watch, shallowRef } from "vue";
@@ -25,7 +25,9 @@ export default defineComponent({
   setup(props, context) {
     const scopeElement = props.modelGetter();
 
-    return {};
+    return {
+      element: scopeElement,
+    };
   },
 });
 </script>

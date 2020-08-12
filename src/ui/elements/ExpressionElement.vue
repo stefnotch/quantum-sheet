@@ -61,7 +61,6 @@ export default defineComponent({
               moveToEnd: () => mathfield.$perform("moveToMathFieldEnd"),
               insert: (text: string) => mathfield.$insert(text, {}),
             });
-            console.log("Emitted");
           },
           onBlur: (mathfield: MathLive.Mathfield) => {
             expressionElement.setFocused(false);

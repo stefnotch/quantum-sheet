@@ -112,11 +112,9 @@ function useGrid<T extends QuantumDocumentElementTypes>(
         resizeable: false,
       });
       document.setFocus(element);
-      console.log("created");
       nextTick(() => {
         focusedElementCommands.value?.moveToStart?.();
         focusedElementCommands.value?.insert?.(ev.data + "");
-        console.log("sent command");
       });
     }
 

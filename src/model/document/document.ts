@@ -8,7 +8,7 @@ import { Vector2 } from "../vectors";
 import { readonly, shallowReactive, shallowRef, ref, watch } from "vue";
 import { v4 as uuidv4 } from "uuid";
 import arrayUtils from "../array-utils";
-import { UseScopeElement } from "./elements/scope-element";
+import { UseScopeElement, ScopeElementType } from "./elements/scope-element";
 
 // TODO: Make stuff readonly
 export type QuantumDocumentElementTypes = {
@@ -18,7 +18,7 @@ export type QuantumDocumentElementTypes = {
     serializeElement(element: UseQuantumElement): string;
     deserializeElement(data: string): UseQuantumElement;
   };
-};
+} & typeof ScopeElementType.documentType;
 
 export interface UseQuantumDocument<
   TElements extends QuantumDocumentElementTypes
@@ -88,9 +88,13 @@ function useElementList() {
 
         // TODO: A block added callback
         // TODO: Refactor the scope setting
-        element.setScope(
-          arrayUtils.getElementOrUndefined(elements, index - 1)?.scope.value
-        );
+        const prev = arrayUtils.getElementOrUndefined(elements, index - 1);
+        if (prev?.typeName == ScopeElementType.typeName) {
+          element.setScope(prev as UseScopeElement);
+          console.log("prev");
+        } else {
+          element.setScope(prev?.scope.value);
+        }
 
         elements.splice(index, 0, element);
       },
@@ -273,6 +277,10 @@ export function useDocument<TElements extends QuantumDocumentElementTypes>(
   const elementList = useElementList();
   const elementSelection = useElementSelection();
   const elementFocus = useElementFocus();
+
+  const rootScope = createElement(ScopeElementType.typeName, {
+    position: Vector2.zero,
+  }); // TODO: Scope size:
 
   function createElement<T extends keyof TElements>(
     typeName: T,
