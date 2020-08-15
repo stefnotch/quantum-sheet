@@ -1,5 +1,4 @@
 import { usePyodideWorker } from "./pyodide-cas-worker";
-import type { CAS, CASRawCommand } from "./cas";
 
 export interface PyodideCas extends CAS {}
 
@@ -9,6 +8,7 @@ interface WorkerResponse {
   error?: any;
 }
 
+// TODO: Fix this
 export function usePyodide(
   nextCommands: AsyncGenerator<CASRawCommand, void, unknown>
 ): PyodideCas {

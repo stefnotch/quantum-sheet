@@ -91,7 +91,6 @@ function useElementList() {
         const prev = arrayUtils.getElementOrUndefined(elements, index - 1);
         if (prev?.typeName == ScopeElementType.typeName) {
           element.setScope(prev as UseScopeElement);
-          console.log("prev");
         } else {
           element.setScope(prev?.scope.value);
         }

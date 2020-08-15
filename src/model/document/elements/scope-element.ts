@@ -35,21 +35,9 @@ export interface UseScopeElement extends UseQuantumElement {
 
   setName(value: string): void;
 
-  addVariable(
-    name: string
-  ): {
-    setPosition(value: Vector2): void;
-    setData(data: any): void;
-    remove(): void;
-  };
+  addVariable(name: string): UseScopedVariable;
 
-  addGetter(
-    name: string,
-    callback: (data: any) => void
-  ): {
-    setPosition(value: Vector2): void;
-    remove(): void;
-  };
+  addGetter(name: string, callback: (data: any) => void): UseScopedGetter;
 }
 
 export interface ScopeElementCreationOptions {
@@ -58,6 +46,17 @@ export interface ScopeElementCreationOptions {
 
 // TODO: Scope end element
 // TODO: Child scopes
+
+export interface UseScopedVariable {
+  setPosition(value: Vector2): void;
+  setData(data: any): void;
+  remove(): void;
+}
+
+export interface UseScopedGetter {
+  setPosition(value: Vector2): void;
+  remove(): void;
+}
 
 // Internal interfaces
 interface ScopedVariable {
