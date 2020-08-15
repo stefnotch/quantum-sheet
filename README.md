@@ -1,4 +1,5 @@
 # ([WIP](https://github.com/stefnotch/quantum-sheet/projects)) QuantumSheet
+
 QuantumSheet - A web based computer algebra system aka fancy calculator
 
 ## Used Technology
@@ -15,3 +16,10 @@ QuantumSheet - A web based computer algebra system aka fancy calculator
 - `src/ui/` contains the user interface code
 - `src/model/` contains the logical part of the code
 - `src/cas/` contains the computer algebra systems
+
+## For Developers
+
+1. Clone the project
+2. `npm install`
+3. `npm run download:pyodide`
+4. `npm run dev`
