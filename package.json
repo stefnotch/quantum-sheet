@@ -9,8 +9,8 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build --base=./",
-    "deploy": "node utils/publish.js",
+    "build": "vite build",
+    "deploy": "vite build --base=/quantum-sheet/ && node utils/publish.js",
     "download:pyodide": "node ./utils/download-pyodide.js"
   },
   "dependencies": {
