@@ -1,6 +1,4 @@
-import { usePyodideWorker } from "./pyodide-cas-worker";
-
-export interface PyodideCas extends CAS {}
+import type {} from "vite";
 
 interface WorkerResponse {
   type: "result";
@@ -9,17 +7,20 @@ interface WorkerResponse {
 }
 
 // TODO: Fix this
-export function usePyodide(
-  nextCommands: AsyncGenerator<CASRawCommand, void, unknown>
-): PyodideCas {
-  let { worker } = usePyodideWorker();
+export function usePyodide(nextCommands: AsyncGenerator<any, void, unknown>) {
+  let worker: Worker = (window as any)["pyodide-worker"];
+  if (!worker) {
+    console.log("Creating pyodide worker");
+    worker = new Worker(`${import.meta.env.BASE_URL}pyodide-webworker.js`);
+    (window as any)["pyodide-worker"] = worker;
+  }
 
   worker.onerror = async (e) => {
     let response = e.error;
     console.log(response); // TODO: Error
 
     let nextCommand = (await nextCommands.next()).value;
-    worker.postMessage(nextCommand as CASRawCommand);
+    worker.postMessage(nextCommand);
   };
 
   worker.onmessage = async (e) => {
@@ -27,7 +28,7 @@ export function usePyodide(
     console.log(response);
 
     let nextCommand = (await nextCommands.next()).value;
-    worker.postMessage(nextCommand as CASRawCommand);
+    worker.postMessage(nextCommand);
   };
 
   worker.onmessageerror = async (e) => {
@@ -35,9 +36,24 @@ export function usePyodide(
     console.log(response); // TODO: Error
 
     let nextCommand = (await nextCommands.next()).value;
-    worker.postMessage(nextCommand as CASRawCommand);
+    worker.postMessage(nextCommand);
   };
 
+  /**
+   * Adds a command to the internal commands queue
+   */
+  /*
+  addCommand(command) {
+
+    function cancel() {
+      // TODO: If the command is already being executed, interrupt execution
+
+    }
+
+    return {
+      cancel
+    }
+  }*/
   /*
   sendRawCommand({
     command: "import statistics\n",

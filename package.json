@@ -9,12 +9,12 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build --base=./",
     "deploy": "node utils/publish.js",
     "download:pyodide": "node ./utils/download-pyodide.js"
   },
   "dependencies": {
-    "mathlive": "^0.54.1",
+    "mathlive": "^0.55.0",
     "uuid": "^8.3.0",
     "vue": "^3.0.0-rc.5"
   },

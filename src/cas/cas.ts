@@ -1,5 +1,3 @@
-import { usePyodide } from "./pyodide-cas";
-
 export interface UseCas {
   parseExpression(
     value: any

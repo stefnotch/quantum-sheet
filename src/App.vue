@@ -12,10 +12,10 @@ import QuantumDocument from "./ui/QuantumDocument.vue";
 export default defineComponent({
   name: "App",
   components: {
-    QuantumDocument
+    QuantumDocument,
   },
   setup(props, context) {
     return {};
-  }
+  },
 });
 </script>

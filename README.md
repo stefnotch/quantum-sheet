@@ -2,6 +2,8 @@
 
 QuantumSheet - A web based computer algebra system aka fancy calculator
 
+[Try it out here](https://stefnotch.github.io/quantum-sheet/)
+
 ## Used Technology
 
 - [Sympy](https://github.com/sympy/sympy) using [Pyodide](https://github.com/iodide-project/pyodide)

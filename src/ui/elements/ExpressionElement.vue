@@ -11,6 +11,7 @@ import {
   ElementType,
 } from "../../model/document/elements/expression-element";
 import MathLive from "mathlive";
+import "mathlive/dist/mathlive-fonts.css";
 import { ElementCommands } from "./element-commands";
 import { Vector2 } from "../../model/vectors";
 
