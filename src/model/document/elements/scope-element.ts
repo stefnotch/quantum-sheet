@@ -35,26 +35,21 @@ export interface UseScopeElement extends UseQuantumElement {
 
   setName(value: string): void;
 
-  addVariable(name: string): UseScopedVariable;
+  addVariable(name: string, position: ComputedRef<Vector2>): UseScopedVariable;
 
-  addGetter(name: string, callback: (data: any) => void): UseScopedGetter;
-}
-
-export interface ScopeElementCreationOptions {
-  position?: Vector2;
+  addGetter(name: string, position: ComputedRef<Vector2>): UseScopedGetter;
 }
 
 // TODO: Scope end element
 // TODO: Child scopes
 
 export interface UseScopedVariable {
-  setPosition(value: Vector2): void;
   setData(data: any): void;
   remove(): void;
 }
 
 export interface UseScopedGetter {
-  setPosition(value: Vector2): void;
+  data: ComputedRef<any>;
   remove(): void;
 }
 
@@ -63,7 +58,7 @@ interface ScopedVariable {
   /**
    * Variable position
    */
-  position: Vector2;
+  readonly position: Vector2;
 
   /**
    * Variable index in array
@@ -85,36 +80,22 @@ interface ScopedGetter {
   /**
    * Getter position
    */
-  position: Vector2;
+  readonly position: Vector2;
 
   /**
    * Getter variable
    */
   variable: ScopedVariable | undefined;
-
-  /**
-   * Callback whenever the variable or the variable's data changes
-   */
-  callback: (data: any) => void;
 }
 
-function createImporterVariable(position: ComputedRef<Vector2>) {
-  const importerVariable = reactive<ScopedVariable>({
-    position: Vector2.zero,
+function createImporterVariable(
+  position: ComputedRef<Vector2>
+): ScopedVariable {
+  const importerVariable: ScopedVariable = reactive({
+    position: position,
     index: 0,
     data: shallowRef(),
     getters: [],
-  });
-
-  watch(
-    () => importerVariable.data,
-    (data) => {
-      importerVariable.getters.forEach((getter) => getter.callback(data));
-    }
-  );
-
-  watchEffect(() => {
-    importerVariable.position = position.value;
   });
 
   return importerVariable;
@@ -137,7 +118,6 @@ function removeVariable(
       prev.getters = prev.getters.concat(variable.getters);
       variable.getters.forEach((v) => {
         v.variable = prev;
-        v.callback(prev.data);
       });
       variable.getters = [];
     }
@@ -175,7 +155,10 @@ function useScopeElement(block: UseQuantumElement): UseScopeElement {
     });
   })*/
 
-  function createVariableArray(name: string, position: ComputedRef<Vector2>) {
+  function createVariableArray(
+    name: string,
+    position: ComputedRef<Vector2>
+  ): ScopedVariable[] {
     const importerVariable = createImporterVariable(position);
 
     const newVariableArray = reactive([importerVariable]);
@@ -192,10 +175,10 @@ function useScopeElement(block: UseQuantumElement): UseScopeElement {
     return newVariableArray;
   }
 
-  function addVariable(name: string) {
+  function addVariable(name: string, position: ComputedRef<Vector2>) {
     // Add variable
-    const variable = reactive<ScopedVariable>({
-      position: Vector2.zero,
+    const variable: ScopedVariable = reactive({
+      position: position,
       index: -1,
       data: shallowRef(),
       getters: [],
@@ -207,13 +190,6 @@ function useScopeElement(block: UseQuantumElement): UseScopeElement {
         name,
         computed(() => block.position.value)
       );
-
-    watch(
-      () => variable.data,
-      (value) => {
-        variable.getters.forEach((getter) => getter.callback(value));
-      }
-    );
 
     watch(
       () => variable.position,
@@ -257,7 +233,6 @@ function useScopeElement(block: UseQuantumElement): UseScopeElement {
           );
           variable.getters.forEach((v) => {
             v.variable = variable;
-            v.callback(variable.data);
           });
           prev.getters = prev.getters.filter(
             (v) => v.position.compareTo(value) < 0
@@ -268,12 +243,11 @@ function useScopeElement(block: UseQuantumElement): UseScopeElement {
         }
         variableArray.splice(index, 0, variable);
         variable.index = index;
+      },
+      {
+        immediate: true,
       }
     );
-
-    function setPosition(value: Vector2) {
-      variable.position = value;
-    }
 
     function setData(data: any) {
       variable.data = data;
@@ -284,18 +258,17 @@ function useScopeElement(block: UseQuantumElement): UseScopeElement {
     }
 
     return {
-      setPosition,
       setData,
       remove,
     };
   }
 
-  function addGetter(name: string, callback: (data: any) => void) {
-    const getter = reactive<ScopedGetter>({
-      position: Vector2.zero,
+  function addGetter(name: string, position: ComputedRef<Vector2>) {
+    const getter: ScopedGetter = reactive({
+      position: position,
       variable: undefined,
-      callback: callback,
     });
+    const data = computed(() => getter.variable?.data);
 
     const variableArray =
       variableMap.get(name) ??
@@ -306,7 +279,7 @@ function useScopeElement(block: UseQuantumElement): UseScopeElement {
 
     watch(
       () => getter.position,
-      (value, oldValue) => {
+      (value) => {
         if (getter.variable) {
           // If the getter is still in the correct position, bail out
           const nextVariable = arrayUtils.getElementOrUndefined(
@@ -343,14 +316,10 @@ function useScopeElement(block: UseQuantumElement): UseScopeElement {
           // Add getter to variable
           variable.getters.push(getter);
           getter.variable = variable;
-          getter.callback(variable.data);
         }
-      }
+      },
+      { immediate: true }
     );
-
-    function setPosition(value: Vector2) {
-      getter.position = value;
-    }
 
     function remove() {
       if (!getter.variable) return;
@@ -359,7 +328,7 @@ function useScopeElement(block: UseQuantumElement): UseScopeElement {
     }
 
     return {
-      setPosition,
+      data,
       remove,
     };
   }

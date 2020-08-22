@@ -1,19 +1,22 @@
 import { UseQuantumElement, QuantumElementType } from "../document-element";
-import { ref, Ref, watch, reactive } from "vue";
+import { ref, Ref, watch, reactive, shallowRef, computed } from "vue";
 import { UseScopedVariable, UseScopedGetter } from "./scope-element";
 import { cas } from "../../../model/cas";
 
 export const ElementType = "expression-element";
 
 export interface UseExpressionElement extends UseQuantumElement {
+  getters: ReadonlyMap<string, UseScopedGetter>;
+  variables: ReadonlyMap<string, UseScopedVariable>;
   expression: Ref<any>;
   setExpression(value: any): void;
 }
 
 function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
-  const expression = ref({});
+  const expression = shallowRef([]);
   const getters = reactive(new Map<string, UseScopedGetter>());
   const variables = reactive(new Map<string, UseScopedVariable>());
+  const needsUpdate = ref(false); // TODO: Use this
   const casExpressionGetters = new Map<string, any>();
   let casParsedExpression: any = undefined;
 
@@ -21,14 +24,11 @@ function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
     expression.value = value;
   }
 
-  watch(block.position, (value) => {
-    getters.forEach((getter) => getter.setPosition(value));
-    variables.forEach((variable) => variable.setPosition(value));
-  });
-
   watch(expression, (value) => {
+    // TODO: Make expression value readonly
     const parseResults = cas.parseExpression(value);
 
+    console.log(parseResults);
     casExpressionGetters.clear();
 
     // TODO: Recalculate expressions when getter has changed
@@ -43,8 +43,13 @@ function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
     });
     if (block.scope.value) {
       parseResults.getters.forEach((variableName) => {
-        const newGetter = block.scope.value!.addGetter(variableName, (data) => {
-          casExpressionGetters.set(variableName, data);
+        const newGetter = block.scope.value!.addGetter(
+          variableName,
+          computed(() => block.position.value)
+        );
+        casExpressionGetters.set(variableName, newGetter.data.value);
+        watch(newGetter.data, (value) => {
+          casExpressionGetters.set(variableName, value);
           cas.calculateExpression({
             id: block.id,
             getterData: casExpressionGetters,
@@ -53,7 +58,6 @@ function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
           });
         });
         getters.set(variableName, newGetter);
-        newGetter.setPosition(block.position.value);
       });
     }
 
@@ -68,9 +72,11 @@ function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
     });
     if (block.scope.value) {
       parseResults.variables.forEach((variableName) => {
-        const newVariable = block.scope.value!.addVariable(variableName);
+        const newVariable = block.scope.value!.addVariable(
+          variableName,
+          computed(() => block.position.value)
+        );
         variables.set(variableName, newVariable);
-        newVariable.setPosition(block.position.value);
       });
     }
 
@@ -96,6 +102,8 @@ function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
 
   return {
     ...block,
+    getters,
+    variables,
     expression,
     setExpression,
   };

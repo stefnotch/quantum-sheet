@@ -27,14 +27,12 @@ function parseExpression(value: any) {
   const getters = new Set<string>();
   const variables = new Set<string>();
 
-  const variableMatches = (value + "").match(/^([^\\]+)\\coloneq([^]+)$/);
-  if (variableMatches) {
-    variables.add(variableMatches[1]);
-  }
-
-  const getterMatches = (value + "").match(/^([^\\]+)=$/);
-  if (getterMatches) {
-    getters.add(getterMatches[1]);
+  if (value[0] == "Equal" && !value[2]) {
+    // Getter
+    getters.add(value[1]);
+  } else if (value[0] == "Assign") {
+    // Variable
+    variables.add(value[1]);
   }
 
   return {
@@ -51,29 +49,25 @@ export function useCas(): UseCas {
     console.log(expressionData);
 
     // TODO: Remove this temporary hack
-    const variableMatches = (expressionData.expression + "").match(
-      /^([^\\]+)\\coloneq([^]+)$/
-    );
-    if (variableMatches) {
+    if (expressionData.expression[0] == "Assign") {
       expressionData.callback(
         [
           {
-            name: variableMatches[1],
-            data: variableMatches[2],
+            name: expressionData.expression[1],
+            data: expressionData.expression[2],
           },
         ],
         expressionData.expression
       );
     } else {
-      const getterMatches = (expressionData.expression + "").match(
-        /^([^\\]+)=$/
-      );
-      if (getterMatches) {
-        expressionData.callback(
-          [],
-          expressionData.expression +
-            expressionData.getterData.get(getterMatches[1])
-        );
+      if (
+        expressionData.expression[0] == "Equal" &&
+        !expressionData.expression[2]
+      ) {
+        const result = expressionData.expression.slice();
+        result[2] =
+          expressionData.getterData.get(expressionData.expression[1]) ?? "CAT";
+        expressionData.callback([], result);
       }
     }
 
