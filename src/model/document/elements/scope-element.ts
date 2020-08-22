@@ -11,6 +11,7 @@ import {
 } from "vue";
 import { Vector2 } from "../../vectors";
 import arrayUtils from "../../array-utils";
+import { assert } from "../../assert";
 
 export const ElementType = "scope-element";
 
@@ -88,19 +89,6 @@ interface ScopedGetter {
   variable: ScopedVariable | undefined;
 }
 
-function createImporterVariable(
-  position: ComputedRef<Vector2>
-): ScopedVariable {
-  const importerVariable: ScopedVariable = reactive({
-    position: position,
-    index: 0,
-    data: shallowRef(),
-    getters: [],
-  });
-
-  return importerVariable;
-}
-
 function removeVariable(
   variableArray: ScopedVariable[],
   variable: ScopedVariable
@@ -108,19 +96,14 @@ function removeVariable(
   if (variable.index < 0) return;
 
   if (variable.getters.length > 0) {
-    const prev = arrayUtils.getElementOrUndefined(
-      variableArray,
-      variable.index - 1
-    );
-    if (!prev) {
-      throw new Error("Expected prev variable to exist");
-    } else {
-      prev.getters = prev.getters.concat(variable.getters);
-      variable.getters.forEach((v) => {
-        v.variable = prev;
-      });
-      variable.getters = [];
-    }
+    const prev = arrayUtils.tryGetElement(variableArray, variable.index - 1);
+    assert(prev, "Expected prev variable to exist");
+
+    prev.getters = prev.getters.concat(variable.getters);
+    variable.getters.forEach((v) => {
+      v.variable = prev;
+    });
+    variable.getters = [];
   }
 
   // Remove variable and update indices
@@ -159,7 +142,12 @@ function useScopeElement(block: UseQuantumElement): UseScopeElement {
     name: string,
     position: ComputedRef<Vector2>
   ): ScopedVariable[] {
-    const importerVariable = createImporterVariable(position);
+    const importerVariable: ScopedVariable = reactive({
+      position: position,
+      index: 0,
+      data: shallowRef(),
+      getters: [],
+    });
 
     const newVariableArray = reactive([importerVariable]);
     watch(
@@ -196,17 +184,16 @@ function useScopeElement(block: UseQuantumElement): UseScopeElement {
       (value) => {
         // Remove (or bail out)
         if (variable.index >= 0) {
-          if (variableArray[variable.index] != variable) {
-            throw new Error(
-              `Expected variable ${variable} to be in ${variableArray} at index ${variable.index}`
-            );
-          }
+          assert(
+            variableArray[variable.index] == variable,
+            `Expected variable ${variable} to be in ${variableArray} at index ${variable.index}`
+          );
 
-          const prev = arrayUtils.getElementOrUndefined(
+          const prev = arrayUtils.tryGetElement(
             variableArray,
             variable.index - 1
           );
-          const next = arrayUtils.getElementOrUndefined(
+          const next = arrayUtils.tryGetElement(
             variableArray,
             variable.index + 1
           );
@@ -225,7 +212,7 @@ function useScopeElement(block: UseQuantumElement): UseScopeElement {
           v.position.compareTo(value)
         );
 
-        const prev = arrayUtils.getElementOrUndefined(variableArray, index - 1);
+        const prev = arrayUtils.tryGetElement(variableArray, index - 1);
         // Take some getters from prev
         if (prev?.getters) {
           variable.getters = prev.getters.filter(
@@ -238,6 +225,7 @@ function useScopeElement(block: UseQuantumElement): UseScopeElement {
             (v) => v.position.compareTo(value) < 0
           );
         }
+        // Update variable indices
         for (let i = index; i < variableArray.length; i++) {
           variableArray[i].index = i + 1;
         }
@@ -282,7 +270,7 @@ function useScopeElement(block: UseQuantumElement): UseScopeElement {
       (value) => {
         if (getter.variable) {
           // If the getter is still in the correct position, bail out
-          const nextVariable = arrayUtils.getElementOrUndefined(
+          const nextVariable = arrayUtils.tryGetElement(
             variableArray,
             getter.variable.index + 1
           );
@@ -304,19 +292,15 @@ function useScopeElement(block: UseQuantumElement): UseScopeElement {
           v.position.compareTo(value)
         );
 
-        const variable = arrayUtils.getElementOrUndefined(
-          variableArray,
-          index - 1
+        const variable = arrayUtils.tryGetElement(variableArray, index - 1);
+        assert(
+          variable,
+          `Getter position ${getter.position} outside of block ${block.position}`
         );
-        if (!variable) {
-          throw new Error(
-            `Getter position ${getter.position} outside of block ${block.position}`
-          );
-        } else {
-          // Add getter to variable
-          variable.getters.push(getter);
-          getter.variable = variable;
-        }
+
+        // Add getter to variable
+        variable.getters.push(getter);
+        getter.variable = variable;
       },
       { immediate: true }
     );

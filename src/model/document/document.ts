@@ -88,7 +88,7 @@ function useElementList() {
 
         // TODO: A block added callback
         // TODO: Refactor the scope setting
-        const prev = arrayUtils.getElementOrUndefined(elements, index - 1);
+        const prev = arrayUtils.tryGetElement(elements, index - 1);
         if (prev?.typeName == ScopeElementType.typeName) {
           element.setScope(prev as UseScopeElement);
         } else {
