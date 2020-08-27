@@ -236,7 +236,6 @@ export default defineComponent({
 });
 </script>
 
-<!-- TODO: Grid size variable -->
 <style scoped>
 .quantum-document {
   background-color: var(--color);

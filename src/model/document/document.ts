@@ -104,6 +104,7 @@ function useElementList() {
 
     return () => {
       stopHandle();
+      element.setScope(undefined); // TODO: Refactor the scope setting
       const index = elements.indexOf(element);
       if (index >= 0) {
         elements.splice(index, 1);

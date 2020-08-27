@@ -35,6 +35,7 @@ export default defineComponent({
     const expressionElement = props.modelGetter();
 
     watch(expressionElement.expression, (value) => {
+      console.log("watch");
       mathfield.value?.$latex(
         mathjsonToLatex(value, {
           multiply: "\\cdot",
@@ -80,7 +81,7 @@ export default defineComponent({
       // - If it was none if them, interpret it as separate, 1 letter variables
       // TODO: What about multi letter functions?
 
-      expressionElement.setExpression(expression);
+      expressionElement.inputExpression(expression);
     }
 
     // TODO: Remove this hack
@@ -104,7 +105,9 @@ export default defineComponent({
         mathfield.value = MathLive.makeMathField(value, {
           defaultMode: "math",
           smartSuperscript: true,
-          onContentDidChange: (_) => {},
+          onContentDidChange: (_) => {
+            // TODO: Don't try to compute anything while I'm editing the mathfield
+          },
           onFocus: (mathfield: MathLive.Mathfield) => {
             expressionElement.setFocused(true);
             context.emit("focused-element-commands", {
@@ -127,6 +130,7 @@ export default defineComponent({
             if (mathfield.$text("latex").length == 0) {
               context.emit("delete-element");
             } else {
+              console.log("onBlur");
               evaluateExpression();
             }
           },
@@ -142,6 +146,15 @@ export default defineComponent({
               "move-cursor-out",
               new Vector2(direction == "forward" ? 1 : -1, 0)
             );
+            return true;
+          },
+          onKeystroke: (mathfield, keystroke, ev) => {
+            //@ts-ignore
+            // TODO: This conflicts with vectors
+            if (mathfield.mode == "math" && keystroke == "[Enter]") {
+              mathfield.$blur();
+              context.emit("move-cursor-out", new Vector2(1, 0));
+            }
             return true;
           },
         });

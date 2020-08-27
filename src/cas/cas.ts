@@ -1,81 +1,106 @@
+import { v4 as uuidv4 } from "uuid";
+import { usePyodide } from "./pyodide-cas";
+
 export interface UseCas {
   parseExpression(
     value: any
-  ): {
-    getters: Set<string>;
-    variables: Set<string>;
-    parsedExpression: any;
-  };
-  calculateExpression(expressionData: CasExpressionData): void;
+  ):
+    | {
+        getters: Set<string>;
+        variables: Set<string>;
+        parsedExpression: any;
+      }
+    | undefined;
+
+  executeCommand(command: CasCommand): void;
+
+  cancelCommand(command: CasCommand): void;
 }
 
-interface CasExpressionData {
-  id: string;
-  getterData: Map<string, any>;
-  expression: any;
+export class CasCommand {
+  readonly id: string;
+  readonly gettersData: Map<string, any>;
+  readonly expression: any;
   /**
    * NOTE: This callback can be called multiple times
    * (like, when you have x*3=7^y --solve,y--> ... --expand--> ... --collect,x--> ...)
    */
-  callback(
-    variableResults: { name: string; data: any }[],
-    resultingExpression: any
-  ): void;
+  readonly callback: (result: {
+    variables: { name: string; data: any }[];
+    expression: any;
+  }) => void;
+
+  constructor(
+    gettersData: Map<string, any>,
+    expression: any,
+    callback: (result: {
+      variables: { name: string; data: any }[];
+      expression: any;
+    }) => void
+  ) {
+    this.id = uuidv4();
+    this.gettersData = gettersData;
+    this.expression = expression;
+    this.callback = callback;
+  }
 }
 
-function parseExpression(value: any) {
+function parseExpression(expression: any) {
+  if (!Array.isArray(expression)) return;
+
   const getters = new Set<string>();
   const variables = new Set<string>();
 
-  if (value[0] == "Equal" && !value[2]) {
-    // Getter
-    getters.add(value[1]);
-  } else if (value[0] == "Assign") {
-    // Variable
-    variables.add(value[1]);
+  // Only parse the expression if there is an "Equal" or "Assign"
+  if (expression[0] == "Assign") {
+    variables.add(expression[1]);
+    handleExpression(expression[2]);
+  } else if (expression[0] == "Equal" && expression[2] === null) {
+    handleExpression(expression[1]);
+  } else {
+    return;
+  }
+
+  // Eh, a recursive solution is fine for now
+  function handleExpression(expression: any) {
+    if (Array.isArray(expression)) {
+      const functionName = expression[0];
+      for (let i = 1; i < expression.length; i++) {
+        handleExpression(expression[i]);
+      }
+    } else if (typeof expression === "string") {
+      getters.add(expression);
+    } else if (typeof expression === "number") {
+    } else if (expression === null) {
+    } else {
+      // TODO: Make sure to handle all cases (string, number, bool, array, object, ...)
+      console.warn("Unknown element type", { x: expression });
+    }
   }
 
   return {
     getters: getters,
     variables: variables,
-    parsedExpression: value,
+    parsedExpression: expression,
   };
 }
 
 export function useCas(): UseCas {
-  //const cas = usePyodide(); // TODO: Use pyodide
+  const cas = usePyodide();
 
-  function calculateExpression(expressionData: CasExpressionData) {
-    console.log(expressionData);
+  function executeCommand(command: CasCommand) {
+    console.log("Executing", command);
 
-    // TODO: Remove this temporary hack
-    if (expressionData.expression[0] == "Assign") {
-      expressionData.callback(
-        [
-          {
-            name: expressionData.expression[1],
-            data: expressionData.expression[2],
-          },
-        ],
-        expressionData.expression
-      );
-    } else {
-      if (
-        expressionData.expression[0] == "Equal" &&
-        !expressionData.expression[2]
-      ) {
-        const result = expressionData.expression.slice();
-        result[2] =
-          expressionData.getterData.get(expressionData.expression[1]) ?? "CAT";
-        expressionData.callback([], result);
-      }
-    }
+    cas.executeCommand(command);
+  }
 
-    // TODO: Implement calculate expression (use a dummy for now, first check if the variables work, then implement the calculations)
+  function cancelCommand(command: CasCommand) {
+    cas.cancelCommand(command);
   }
 
   return {
-    calculateExpression,
     parseExpression,
+    executeCommand,
+    cancelCommand,
   };
 }

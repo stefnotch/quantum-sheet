@@ -1,7 +1,18 @@
 import { UseQuantumElement, QuantumElementType } from "../document-element";
-import { ref, Ref, watch, reactive, shallowRef, computed } from "vue";
+import {
+  ref,
+  Ref,
+  watch,
+  reactive,
+  shallowRef,
+  computed,
+  watchEffect,
+  shallowReactive,
+} from "vue";
 import { UseScopedVariable, UseScopedGetter } from "./scope-element";
-import { cas } from "../../../model/cas";
+import { cas } from "../../cas";
+import { assert } from "../../assert";
+import { CasCommand } from "../../../cas/cas";
 
 export const ElementType = "expression-element";
 
@@ -9,29 +20,44 @@ export interface UseExpressionElement extends UseQuantumElement {
   getters: ReadonlyMap<string, UseScopedGetter>;
   variables: ReadonlyMap<string, UseScopedVariable>;
   expression: Ref<any>;
-  setExpression(value: any): void;
+  /**
+   * User expression input
+   * @param value Expression that the user typed
+   */
+  inputExpression(value: any): void;
 }
 
 function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
-  const expression = shallowRef([]);
-  const getters = reactive(new Map<string, UseScopedGetter>());
-  const variables = reactive(new Map<string, UseScopedVariable>());
-  const needsUpdate = ref(false); // TODO: Use this
-  const casExpressionGetters = new Map<string, any>();
-  let casParsedExpression: any = undefined;
+  const expression = shallowRef();
+  const getters = shallowReactive(new Map<string, UseScopedGetter>());
+  const variables = shallowReactive(new Map<string, UseScopedVariable>());
+  const parsedExpression = shallowRef();
+  const runningCasExpression: Ref<CasCommand | undefined> = shallowRef();
+  const blockPosition = computed(() => block.position.value);
 
   function setExpression(value: any) {
     expression.value = value;
   }
 
-  watch(expression, (value) => {
+  function inputExpression(value: any) {
     // TODO: Make expression value readonly
     const parseResults = cas.parseExpression(value);
+    if (!parseResults) {
+      getters.forEach((getter, variableName) => {
+        getter.remove();
+        getters.delete(variableName);
+      });
+      variables.forEach((variable, variableName) => {
+        variable.remove();
+        variables.delete(variableName);
+      });
+      return;
+    }
+    console.log("Parsed", parseResults);
 
-    console.log(parseResults);
-    casExpressionGetters.clear();
+    const scope = block.scope.value;
+    assert(scope, "Expected the block to have a scope");
 
-    // TODO: Recalculate expressions when getter has changed
     // Update getters
     getters.forEach((getter, variableName) => {
       if (!parseResults.getters.has(variableName)) {
@@ -41,25 +67,14 @@ function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
         parseResults.getters.delete(variableName);
       }
     });
-    if (block.scope.value) {
-      parseResults.getters.forEach((variableName) => {
-        const newGetter = block.scope.value!.addGetter(
-          variableName,
-          computed(() => block.position.value)
-        );
-        casExpressionGetters.set(variableName, newGetter.data.value);
-        watch(newGetter.data, (value) => {
-          casExpressionGetters.set(variableName, value);
-          cas.calculateExpression({
-            id: block.id,
-            getterData: casExpressionGetters,
-            expression: casParsedExpression,
-            callback: casExpressionResultCallback,
-          });
-        });
-        getters.set(variableName, newGetter);
+    parseResults.getters.forEach((variableName) => {
+      const newGetter = scope.addGetter(variableName, blockPosition);
+      watch(newGetter.data, (value) => {
+        clearVariables();
+        if (value) evaluateLater();
       });
-    }
+      getters.set(variableName, newGetter);
+    });
 
     // Update variables
     variables.forEach((variable, variableName) => {
@@ -70,34 +85,74 @@ function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
         parseResults.variables.delete(variableName);
       }
     });
-    if (block.scope.value) {
-      parseResults.variables.forEach((variableName) => {
-        const newVariable = block.scope.value!.addVariable(
-          variableName,
-          computed(() => block.position.value)
-        );
-        variables.set(variableName, newVariable);
-      });
-    }
-
-    casParsedExpression = parseResults.parsedExpression;
-    // Calculate the expression
-    cas.calculateExpression({
-      id: block.id,
-      getterData: casExpressionGetters,
-      expression: casParsedExpression,
-      callback: casExpressionResultCallback,
+    parseResults.variables.forEach((variableName) => {
+      const newVariable = scope.addVariable(variableName, blockPosition);
+      variables.set(variableName, newVariable);
     });
+
+    parsedExpression.value = parseResults.parsedExpression;
+    clearVariables(); // Cascading invalidation, only the topmost ones will be valid commands
+    evaluateLater();
+  }
+
+  watch(block.scope, (value) => {
+    if (value) {
+      // TODO: Re-create getters and variables when the scope changes
+      clearVariables();
+      evaluateLater();
+    } else {
+      getters.forEach((getter, variableName) => {
+        getter.remove();
+        getters.delete(variableName);
+      });
+      variables.forEach((variable, variableName) => {
+        variable.remove();
+        variables.delete(variableName);
+      });
+
+      if (runningCasExpression.value) {
+        cas.cancelCommand(runningCasExpression.value);
+      }
+    }
   });
 
-  function casExpressionResultCallback(
-    variableResults: { name: string; data: any }[],
-    resultingExpression: any
-  ) {
-    variableResults.forEach((v) => {
+  function clearVariables() {
+    variables.forEach((v) => v.setData(undefined));
+  }
+
+  function evaluateLater() {
+    if (runningCasExpression.value) {
+      cas.cancelCommand(runningCasExpression.value);
+    }
+
+    const gettersData = new Map<string, any>();
+    let allDataDefined = true;
+    getters.forEach((value, key) => {
+      const data = value.data.value;
+      if (!data) allDataDefined = false;
+      gettersData.set(key, data);
+    });
+
+    if (!allDataDefined || !parsedExpression.value) {
+      return;
+    }
+
+    runningCasExpression.value = new CasCommand(
+      gettersData,
+      parsedExpression.value,
+      casExpressionResultCallback
+    );
+    cas.executeCommand(runningCasExpression.value);
+  }
+
+  function casExpressionResultCallback(result: {
+    variables: { name: string; data: any }[];
+    expression: any;
+  }) {
+    result.variables.forEach((v) => {
       variables.get(v.name)?.setData(v.data);
     });
-    setExpression(resultingExpression);
+    setExpression(result.expression);
   }
 
   return {
@@ -105,7 +160,7 @@ function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
     getters,
     variables,
     expression,
-    setExpression,
+    inputExpression,
   };
 }
 
