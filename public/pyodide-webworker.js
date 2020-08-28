@@ -4,8 +4,12 @@ self.languagePluginUrl = "./pyodide/";
 importScripts("./pyodide/pyodide.js");
 
 languagePluginLoader
-  .then(() => self.pyodide.loadPackage(["sympy", "mpmath"]))
-  .then(() => self.postMessage({ type: "initialized" }));
+  .then(() => self.pyodide.loadPackage(["mpmath", "sympy"]))
+  .then(() => {
+    self.pyodide.runPython(`sys.setrecursionlimit(999)
+import sympy`);
+    self.postMessage({ type: "initialized" });
+  });
 
 self.onmessage = (event) => {
   const command = event.data;
@@ -17,13 +21,14 @@ self.onmessage = (event) => {
     });
   }
 
-  let aa;
   try {
     let pyodideResult = self.pyodide.runPython(command.command);
     if (pyodideResult?.destroy) {
-      throw new Error("A proxy object was created"); // TODO: Better error handling
-      //pyodideResult.destroy();
-      //pyodideResult = undefined;
+      console.warn("Pyodide returned a proxy", pyodideResult.toString()); // Internally calls repr()
+      console.warn(Reflect.ownKeys(pyodideResult)); // Lists all properties and methods
+      //console.warn(pyodideResult.__doc__) // Shows the documentation string
+      pyodideResult.destroy();
+      pyodideResult = undefined;
     }
     self.postMessage({
       type: "result",

@@ -81,11 +81,6 @@ export function usePyodide() {
     let response = e.data as WorkerResponse;
     console.log(response);
     if (response.type == "initialized") {
-      worker.postMessage({
-        id: "",
-        data: {},
-        command: "import sympy\n",
-      } as WorkerMessage);
       isInitialized = true;
       commandBuffer.forEach((v) => sendCommand(v));
       commandBuffer.length = 0;
@@ -121,12 +116,12 @@ export function usePyodide() {
     let pythonCode = "";
     // Only parse the expression if there is an "Equal" or "Assign" at the root
     if (command.expression[0] == "Assign") {
-      pythonCode = `str(${handleExpression(command.expression[2])}.evalf())`;
+      pythonCode = `${handleExpression(command.expression[2])}.evalf()`;
     } else if (
       command.expression[0] == "Equal" &&
       command.expression[2] === null
     ) {
-      pythonCode = `str(${handleExpression(command.expression[1])}.evalf())`;
+      pythonCode = `${handleExpression(command.expression[1])}.evalf()`;
     } else {
       commands.delete(command.id);
       return;
@@ -163,7 +158,7 @@ export function usePyodide() {
     command.gettersData.forEach((value, key) => {
       data[encodeName(key)] = value;
     });
-    console.log("Python", pythonCode);
+    console.log("Python code", pythonCode);
     sendCommand({
       id: command.id,
       data: data,
