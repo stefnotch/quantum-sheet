@@ -11,13 +11,13 @@ from mpmath.libmp import prec_to_dps, to_str as mlib_to_str
 
 from sympy.utilities import default_sort_key
 
+# TODO: Update the ones maked with "# TODO: Important Update"
 
 class MathJsonPrinter(Printer):
     printmethod = "_mathjson"
     _default_settings = {
         "order": None,
         "full_prec": "auto",
-        "abbrev": False,
         "perm_cyclic": True,
         "min": None,
         "max": None,
@@ -146,11 +146,11 @@ class MathJsonPrinter(Printer):
     def _print_Dummy(self, expr):
         return self._quotes('_' + expr.name)
 
-    # TODO: Update
+    # TODO: Important Update
     def _print_EulerGamma(self, expr):
         return 'EulerGamma'
 
-    # TODO: Update
+    # TODO: Important Update
     def _print_Exp1(self, expr):
         return 'E'
 
@@ -170,11 +170,11 @@ class MathJsonPrinter(Printer):
     def _print_TribonacciConstant(self, expr):
         return 'TribonacciConstant'
 
-    # TODO: Update
+    # TODO: Important Update
     def _print_ImaginaryUnit(self, expr):
         return 'I'
 
-    # TODO: Update
+    # TODO: Important Update
     def _print_Infinity(self, expr):
         return 'oo'
 
@@ -346,11 +346,11 @@ class MathJsonPrinter(Printer):
             self._print(expr.expr),
         )
 
-    # TODO: Update
+    # TODO: Important Update
     def _print_NaN(self, expr):
         return 'nan'
 
-    # TODO: Update
+    # TODO: Important Update
     def _print_NegativeInfinity(self, expr):
         return '-oo'
 
@@ -449,7 +449,7 @@ class MathJsonPrinter(Printer):
         p = ['    %s' % self._print(a) for a in expr.args]
         return 'PermutationGroup([%s])' % ','.join(p)
 
-    # TODO: Update
+    # TODO: Important Update
     def _print_Pi(self, expr):
         return 'pi'
 
@@ -640,33 +640,30 @@ class MathJsonPrinter(Printer):
 
     def _print_Rational(self, expr):
         if expr.q == 1:
-            return self._quotes(str(expr.p))
+            return str(expr.p)
         else:
             return self._function('Divide', [str(expr.p), str(expr.q)])
 
-    # TODO: Update
     def _print_PythonRational(self, expr):
         if expr.q == 1:
-            return self._quotes(str(expr.p))
+            return str(expr.p)
         else:
             return self._function('Divide', [str(expr.p), str(expr.q)])
 
-    # TODO: Update
     def _print_Fraction(self, expr):
         if expr.denominator == 1:
             return str(expr.numerator)
         else:
-            return "%s/%s" % (expr.numerator, expr.denominator)
+            return self._function('Divide', [str(expr.numerator), str(expr.denominator)])
 
-    # TODO: Update
     def _print_mpq(self, expr):
         if expr.denominator == 1:
             return str(expr.numerator)
         else:
-            return "%s/%s" % (expr.numerator, expr.denominator)
+            return self._function('Divide', [str(expr.numerator), str(expr.denominator)])
 
-    # TODO: Update
     def _print_Float(self, expr):
+        # Precision
         prec = expr._prec
         if prec < 5:
             dps = 0
@@ -690,7 +687,7 @@ class MathJsonPrinter(Printer):
             rv = rv[1:]
         return rv
 
-    # TODO: Update
+    # TODO: Important Update
     def _print_Relational(self, expr):
 
         charmap = {
@@ -813,8 +810,6 @@ class MathJsonPrinter(Printer):
 
     # TODO: Update
     def _print_Quantity(self, expr):
-        if self._settings.get("abbrev", False):
-            return "%s" % expr.abbrev
         return "%s" % expr.name
 
     # TODO: Update
