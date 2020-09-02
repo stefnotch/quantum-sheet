@@ -187,6 +187,8 @@ function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
           - "Add", "Subtract", "Multiply", "Divide", ===, <, and so on
       */
 
+    // TODO: Fix c:=8+4=
+    // TODO: Fix 1*1=
     function evaluateExpression(
       expression: any,
       callback: (result: any) => void

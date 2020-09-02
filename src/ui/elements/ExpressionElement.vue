@@ -35,7 +35,6 @@ export default defineComponent({
     const expressionElement = props.modelGetter();
 
     watch(expressionElement.expression, (value) => {
-      console.log("watching expressionElement.expression");
       mathfield.value?.$latex(
         mathjsonToLatex(value, {
           multiply: "\\cdot",
@@ -59,7 +58,7 @@ export default defineComponent({
       const expression = latexToMathjson(
         mathfield.value?.$text("latex-expanded") + "",
         {
-          form: "full",
+          form: ["full"], // TODO: Mathjson can have objects like {num:"3"} instead of 3
           // @ts-ignore
           /*promoteUnknownSymbols: {
             test: (value) => {
@@ -69,7 +68,6 @@ export default defineComponent({
           },*/
           //promoteUnknownSymbols: /^[a-zA-Z]([a-zA-Z]|$)/,
           //promoteUnknownFunctions: /^[fge][fg]$/,
-          //preserveLatex: true,
           //dictionary: // TODO:
           //onError,
         }

@@ -1,5 +1,6 @@
 import type {} from "vite";
 import type { CasCommand } from "./cas";
+import mathlive from "mathlive";
 
 type WorkerMessage =
   | {
@@ -84,7 +85,9 @@ function usePythonConverter() {
       } else if (functionName == "Divide") {
         pythonFunctionName = "Divide"; // TODO: Raise the second parameter to the power of -1
       } else if (functionName == "Power") {
-        // TODO:
+        pythonFunctionName = "sympy.Pow";
+      } else if (functionName == "Sqrt") {
+        pythonFunctionName = "Sqrt"; // TODO: Replace with power
       } else {
         pythonFunctionName = functionName;
       }
@@ -105,10 +108,27 @@ function usePythonConverter() {
     }
   }
 
+  const fakeDictionary = new Proxy(
+    { fakeKey: 1 },
+    {
+      get(target, name) {
+        console.error("Tried to access a dictionary key");
+        throw new Error("Tried to access a dictionary key");
+      },
+    }
+  );
+
   return {
     encodeName,
     decodeName,
-    expressionToPython,
+    expressionToPython: (expression: any) =>
+      expressionToPython(
+        mathlive.form(fakeDictionary as any, expression, [
+          "canonical-root",
+          "canonical-subtract",
+          "canonical-divide",
+        ])
+      ),
   };
 }
 
