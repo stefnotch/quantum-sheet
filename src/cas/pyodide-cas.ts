@@ -1,13 +1,24 @@
 import type {} from "vite";
 import type { CasCommand } from "./cas";
 
-type WorkerMessage = {
-  id: string;
-  data: {
-    [key: string]: any;
-  };
-  command: any;
-};
+type WorkerMessage =
+  | {
+      type: "python";
+      id: string;
+      data: {
+        [key: string]: any;
+      };
+      command: any;
+    }
+  | {
+      type: "expression";
+      id: string;
+      data: {
+        [key: string]: any;
+      };
+      symbols: string[];
+      command: any;
+    };
 
 type WorkerResponse =
   | {
@@ -17,7 +28,6 @@ type WorkerResponse =
       type: "result";
       id: string;
       data: any;
-      done: boolean;
     }
   | {
       type: "error";
@@ -25,7 +35,7 @@ type WorkerResponse =
       message: string;
     };
 
-function usePythonNameConverter() {
+function usePythonConverter() {
   const textEncoder = new TextEncoder();
   const textDecoder = new TextDecoder();
 
@@ -55,9 +65,50 @@ function usePythonNameConverter() {
     }
     return textDecoder.decode(output);
   }
+
+  function expressionToPython(expression: any): string {
+    if (Array.isArray(expression)) {
+      const functionName = expression[0];
+      let pythonFunctionName = "";
+      let parameters = [];
+
+      if (functionName == "Add") {
+        pythonFunctionName = "sympy.Add";
+      } else if (functionName == "Subtract") {
+        pythonFunctionName = "Subtract"; // TODO: Negate the second parameter
+      } else if (functionName == "Negate") {
+        pythonFunctionName = "sympy.Mul";
+        parameters.push(-1);
+      } else if (functionName == "Multiply") {
+        pythonFunctionName = "sympy.Mul";
+      } else if (functionName == "Divide") {
+        pythonFunctionName = "Divide"; // TODO: Raise the second parameter to the power of -1
+      } else if (functionName == "Power") {
+        // TODO:
+      } else {
+        pythonFunctionName = functionName;
+      }
+      for (let i = 1; i < expression.length; i++) {
+        parameters.push(expressionToPython(expression[i]));
+      }
+      return `${pythonFunctionName}(${parameters.join(",")})`;
+    } else if (typeof expression === "string") {
+      return encodeName(expression);
+    } else if (typeof expression === "number") {
+      return `sympy.Float(${expression})`;
+    } else if (expression === null) {
+      return `None`;
+    } else {
+      // TODO: Make sure to handle all cases (string, number, bool, array, object, ...)
+      console.warn("Unknown element type", { x: expression });
+      return "";
+    }
+  }
+
   return {
     encodeName,
     decodeName,
+    expressionToPython,
   };
 }
 
@@ -72,14 +123,14 @@ export function usePyodide() {
     isInitialized = false;
   }
 
-  const { encodeName, decodeName } = usePythonNameConverter();
+  const { encodeName, decodeName, expressionToPython } = usePythonConverter();
   const commands = new Map<string, CasCommand>();
 
   const commandBuffer: WorkerMessage[] = [];
 
   worker.onmessage = async (e) => {
     let response = e.data as WorkerResponse;
-    console.log(response);
+    console.log("Response", response);
     if (response.type == "initialized") {
       isInitialized = true;
       commandBuffer.forEach((v) => sendCommand(v));
@@ -90,10 +141,8 @@ export function usePyodide() {
     const command = commands.get(response.id);
 
     if (response.type == "result") {
-      // TODO: command?.callback(response.data);
-      if (response.done) {
-        commands.delete(response.id);
-      }
+      command?.callback(JSON.parse(response.data));
+      commands.delete(response.id);
     } else if (response.type == "error") {
       console.warn(response);
       commands.delete(response.id);
@@ -113,56 +162,33 @@ export function usePyodide() {
   function executeCommand(command: CasCommand) {
     commands.set(command.id, command);
 
-    let pythonCode = "";
-    // Only parse the expression if there is an "Equal" or "Assign" at the root
-    if (command.expression[0] == "Assign") {
-      pythonCode = `${handleExpression(command.expression[2])}.evalf()`;
-    } else if (
-      command.expression[0] == "Equal" &&
-      command.expression[2] === null
-    ) {
-      pythonCode = `${handleExpression(command.expression[1])}.evalf()`;
+    const symbolNames = Array.from(command.gettersData.keys()).map((key) =>
+      encodeName(key)
+    );
+
+    const substitutions = Array.from(command.gettersData.entries())
+      .map(([key, value]) => `${encodeName(key)}:${expressionToPython(value)}`)
+      .join(",");
+
+    let pythonExpression = "";
+    // Only parse the expression if there is an "Equal" or "Solve" or "Apply" at the root
+    if (command.expression[0] == "Equal") {
+      // TODO: If the expression is only a single getter or something simple, don't call the CAS
+      pythonExpression = `${expressionToPython(
+        command.expression[1]
+      )}\n\t.subs({${substitutions}})\n\t.evalf()`;
     } else {
       commands.delete(command.id);
       return;
     }
 
-    function handleExpression(expression: any): string {
-      if (Array.isArray(expression)) {
-        const functionName = expression[0];
-        let pythonFunctionName = "";
-        if (functionName == "Add") {
-          pythonFunctionName = "sympy.Add";
-        } else {
-          pythonFunctionName = functionName;
-        }
-        let parameters = [];
-        for (let i = 1; i < expression.length; i++) {
-          parameters.push(handleExpression(expression[i]));
-        }
-        return `${pythonFunctionName}(${parameters.join(",")})`;
-      } else if (typeof expression === "string") {
-        return encodeName(expression);
-      } else if (typeof expression === "number") {
-        return `sympy.Float(${expression})`;
-      } else if (expression === null) {
-        return `None`;
-      } else {
-        // TODO: Make sure to handle all cases (string, number, bool, array, object, ...)
-        console.warn("Unknown element type", { x: expression });
-        return "";
-      }
-    }
-
-    let data = {} as { [key: string]: any };
-    command.gettersData.forEach((value, key) => {
-      data[encodeName(key)] = value;
-    });
-    console.log("Python code", pythonCode);
+    console.log("Python expression", pythonExpression);
     sendCommand({
+      type: "expression",
       id: command.id,
-      data: data,
-      command: pythonCode,
+      data: {},
+      symbols: symbolNames,
+      command: pythonExpression,
     } as WorkerMessage);
   }
 

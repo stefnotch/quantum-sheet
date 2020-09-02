@@ -35,7 +35,7 @@ export default defineComponent({
     const expressionElement = props.modelGetter();
 
     watch(expressionElement.expression, (value) => {
-      console.log("watch");
+      console.log("watching expressionElement.expression");
       mathfield.value?.$latex(
         mathjsonToLatex(value, {
           multiply: "\\cdot",
@@ -55,7 +55,7 @@ export default defineComponent({
     );
 
     function evaluateExpression() {
-      console.log("parsing", mathfield.value?.$text("latex-expanded"));
+      console.log("Parsing", mathfield.value?.$text("latex-expanded"));
       const expression = latexToMathjson(
         mathfield.value?.$text("latex-expanded") + "",
         {

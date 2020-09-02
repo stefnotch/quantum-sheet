@@ -5,6 +5,14 @@ importScripts("./pyodide/pyodide.js");
 
 languagePluginLoader
   .then(() => self.pyodide.loadPackage(["mpmath", "sympy"]))
+  .then(() =>
+    fetch("./mathjson.py")
+      .then((response) => response.text())
+      .then((v) => {
+        self.pyodide.runPython("sys.setrecursionlimit(999)");
+        self.pyodide.runPython(v);
+      })
+  )
   .then(() => {
     self.pyodide.runPython(`sys.setrecursionlimit(999)
 import sympy`);
@@ -22,7 +30,23 @@ self.onmessage = (event) => {
   }
 
   try {
-    let pyodideResult = self.pyodide.runPython(command.command);
+    let pyodideResult = undefined;
+    if (command.type == "expression") {
+      if (command.symbols && command.symbols.length > 0) {
+        self.pyodide.runPython(
+          command.symbols.map((v) => `${v} = sympy.Symbol('${v}')`).join("\n")
+        );
+      }
+
+      pyodideResult = self.pyodide.runPython(
+        `MathJsonPrinter().doprint(${command.command})`
+      );
+    } else if (command.type == "python") {
+      pyodideResult = self.pyodide.runPython(command.command);
+    } else {
+      throw new Error("Unknown command type", command);
+    }
+
     if (pyodideResult?.destroy) {
       console.warn("Pyodide returned a proxy", pyodideResult.toString()); // Internally calls repr()
       console.warn(Reflect.ownKeys(pyodideResult)); // Lists all properties and methods
@@ -34,7 +58,6 @@ self.onmessage = (event) => {
       type: "result",
       id: command.id,
       data: pyodideResult,
-      done: true,
     });
   } catch (e) {
     self.postMessage({

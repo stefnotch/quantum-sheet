@@ -1,4 +1,4 @@
-import ArchiveFiles from "@shockpkg/archive-files";
+import {createArchiveByFileExtension} from "@shockpkg/archive-files";
 import fse from "fs-extra";
 import path from "path";
 import fetch from "node-fetch";
@@ -61,7 +61,7 @@ const filesWhitelist = [
 
   console.log(`Extracting ${outputArchivePath}`);
 
-  const archive = ArchiveFiles.createArchiveByFileExtension(outputArchivePath);
+  const archive = createArchiveByFileExtension(outputArchivePath);
   const pyodideData = {
     version: latestRelease.tag_name,
     identifier: latestRelease.node_id,
