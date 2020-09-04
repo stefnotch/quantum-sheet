@@ -137,10 +137,17 @@ export default defineComponent({
             }
           },
           onMoveOutOf: (mathfield: MathLive.Mathfield, direction) => {
-            context.emit(
-              "move-cursor-out",
-              new Vector2(direction == "forward" ? 1 : -1, 0)
-            );
+            let directionVector = Vector2.zero;
+            if (direction == "forward") {
+              directionVector = new Vector2(1, 0);
+            } else if (direction == "backward") {
+              directionVector = new Vector2(-1, 0);
+            } else if (direction == "upward") {
+              directionVector = new Vector2(0, -1);
+            } else if (direction == "downward") {
+              directionVector = new Vector2(0, 1);
+            }
+            context.emit("move-cursor-out", directionVector);
             return false;
           },
           onTabOutOf: (mathfield: MathLive.Mathfield, direction) => {
@@ -155,7 +162,7 @@ export default defineComponent({
             // TODO: This conflicts with vectors
             if (mathfield.mode == "math" && keystroke == "[Enter]") {
               mathfield.$blur();
-              context.emit("move-cursor-out", new Vector2(1, 0));
+              context.emit("move-cursor-out", new Vector2(0, 1));
             }
             return true;
           },

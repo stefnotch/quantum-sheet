@@ -225,7 +225,7 @@ function useQuantumElement(
   /* Here internal document stuff can be passed */
 ): UseQuantumElement {
   const position = ref(options.position ?? Vector2.zero);
-  const size = ref(new Vector2(20, 20)); // TODO: Size stuff
+  const size = ref(new Vector2(5, 2)); // TODO: Size stuff
   const resizeable = ref(options.resizeable ?? false);
   const selected = ref(false);
   const focused = ref(false);
