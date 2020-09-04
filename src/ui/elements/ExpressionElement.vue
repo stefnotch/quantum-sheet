@@ -54,7 +54,6 @@ export default defineComponent({
     );
 
     function evaluateExpression() {
-      console.log("Parsing", mathfield.value?.$text("latex-expanded"));
       const expression = latexToMathjson(
         mathfield.value?.$text("latex-expanded") + "",
         {
@@ -72,7 +71,12 @@ export default defineComponent({
           //onError,
         }
       );
-
+      console.log(
+        "Parsing",
+        mathfield.value?.$text("latex-expanded"),
+        "resulted in",
+        expression
+      );
       // TODO: Verify that the expression has no issues
       // TODO: Regarding multi letter variables
       // - Add all known variables point to dictionary

@@ -100,9 +100,7 @@ function removeVariable(
     assert(prev, "Expected prev variable to exist");
 
     prev.getters = prev.getters.concat(variable.getters);
-    variable.getters.forEach((v) => {
-      v.variable = prev;
-    });
+    variable.getters.forEach((v) => (v.variable = prev));
     variable.getters = [];
   }
 

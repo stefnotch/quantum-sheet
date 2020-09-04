@@ -62,6 +62,24 @@ function getGettersAndVariables(expression: any) {
   };
 }
 
+function addPlaceholders(expression: any) {
+  if (Array.isArray(expression)) {
+    const functionName = expression[0];
+    const output = expression.slice();
+    if (functionName == "Equal") {
+      output[1] = addPlaceholders(expression[1]);
+      output[2] = ["\\mathinner", ["Missing", ""]];
+    } else {
+      for (let i = 1; i < expression.length; i++) {
+        output[i] = addPlaceholders(expression[i]);
+      }
+    }
+    return output;
+  } else {
+    return expression;
+  }
+}
+
 function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
   const expression = shallowRef();
   const getters = shallowReactive(new Map<string, UseScopedGetter>());
@@ -91,6 +109,7 @@ function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
         const newGetter = scope.addGetter(variableName, blockPosition);
         watch(newGetter.data, (value) => {
           clearVariableValues();
+          clearPlaceholders();
           if (value) evaluateLater();
         });
         getters.set(variableName, newGetter);
@@ -123,6 +142,29 @@ function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
     variables.forEach((v) => v.setData(undefined));
   }
 
+  function clearPlaceholders() {
+    // TODO: Reduce flashing (make this slightly delayed or something)
+    function clearPlaceholders(expression: any) {
+      if (Array.isArray(expression)) {
+        const functionName = expression[0];
+        const output = expression.slice();
+        if (functionName == "Equal") {
+          output[1] = addPlaceholders(expression[1]);
+          output[2] = ["\\mathinner", ["Missing", ""]];
+        } else {
+          for (let i = 1; i < expression.length; i++) {
+            output[i] = addPlaceholders(expression[i]);
+          }
+        }
+        return output;
+      } else {
+        return expression;
+      }
+    }
+
+    setExpression(clearPlaceholders(expression.value));
+  }
+
   function inputExpression(value: any) {
     // TODO: Make expression value readonly
     const parseResults = getGettersAndVariables(value);
@@ -133,8 +175,7 @@ function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
     const scope = block.scope.value;
     assert(scope, "Expected the block to have a scope");
 
-    // TODO: Insert placeholders into the expression!
-    setExpression(value);
+    setExpression(addPlaceholders(value));
     // Cascading invalidation, only the topmost ones will be valid commands
     clearVariableValues();
     evaluateLater();
@@ -144,6 +185,7 @@ function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
     if (value) {
       // TODO: Re-create getters and variables when the scope changes
       clearVariableValues();
+      clearPlaceholders();
       evaluateLater();
     } else {
       setGetters(new Set<string>());
@@ -188,7 +230,6 @@ function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
       */
 
     // TODO: Fix c:=8+4=
-    // TODO: Fix 1*1=
     function evaluateExpression(
       expression: any,
       callback: (result: any) => void
@@ -204,8 +245,9 @@ function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
               gettersData, // TODO: Don't pass in all getters
               casExpression,
               (result) => {
+                // TODO: Fix this for nested equals signs/expressions
                 const output = expression.slice();
-                output[2] = result;
+                output[2] = ["\\mathinner", result];
                 setExpression(output);
                 callback(result);
               }
@@ -226,11 +268,9 @@ function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
 
     if (Array.isArray(expression.value) && expression.value[0] == "Assign") {
       evaluateExpression(expression.value[2], (result) => {
-        const casExpression = ["Equal", result, null];
-
         runningCasExpression.value = new CasCommand(
           gettersData, // TODO: Don't pass in all getters
-          casExpression,
+          ["Equal", result, null],
           (result) => {
             // TODO: Support assigning to multiple variables
             assert(
