@@ -2,7 +2,7 @@ import type {} from "vite";
 import type { CasCommand } from "./cas";
 import mathlive from "mathlive";
 
-type WorkerMessage =
+export type WorkerMessage =
   | {
       type: "python";
       id: string;
@@ -14,14 +14,11 @@ type WorkerMessage =
   | {
       type: "expression";
       id: string;
-      data: {
-        [key: string]: any;
-      };
       symbols: string[];
       command: any;
     };
 
-type WorkerResponse =
+export type WorkerResponse =
   | {
       type: "initialized";
     }
@@ -132,52 +129,154 @@ function usePythonConverter() {
   };
 }
 
-// TODO: Fix this
-export function usePyodide() {
-  let worker: Worker = (window as any)["pyodide-worker"];
-  let isInitialized = true;
-  if (!worker) {
-    console.log("Creating pyodide worker");
-    worker = new Worker(`${import.meta.env.BASE_URL}pyodide-webworker.js`);
-    (window as any)["pyodide-worker"] = worker;
-    isInitialized = false;
+interface PyodideWorker {
+  onmessage: ((ev: MessageEvent) => any) | null;
+  onmessageerror: ((ev: MessageEvent) => any) | null;
+  onerror: ((ev: ErrorEvent) => any) | null;
+
+  postMessage(message: any, transfer: Transferable[]): void;
+  postMessage(message: any, options?: PostMessageOptions): void;
+}
+
+function getOrCreateWorker(): Promise<PyodideWorker> {
+  console.log(import.meta.env.BASE_URL);
+  const workerUrl = `${import.meta.env.BASE_URL}pyodide-worker.js`;
+
+  if (import.meta.env.DEV && SharedWorker) {
+    // Shared worker, survives all reloading as long as a tab is referencing it
+    console.log(
+      `Creating pyodide worker... Slow? Try our new ${
+        new URL(
+          import.meta.env.BASE_URL + "pyodide-worker-keep-alive.html",
+          document.baseURI
+        ).href
+      }`
+    );
+    const sharedWorker = new SharedWorker(workerUrl);
+    const pyodideWorker: PyodideWorker = {
+      onmessage: null,
+      onmessageerror: null,
+      onerror: null,
+      postMessage: function (
+        message: any,
+        options?: PostMessageOptions | Transferable[]
+      ) {
+        sharedWorker.port.postMessage(message, options as any);
+      },
+    };
+
+    return new Promise((resolve, reject) => {
+      sharedWorker.port.onmessage = (e) => {
+        sharedWorker.port.onmessage = function (e: MessageEvent) {
+          pyodideWorker.onmessage?.apply(this, [e]);
+        };
+        sharedWorker.port.onmessageerror = function (e: MessageEvent) {
+          pyodideWorker.onmessage?.apply(this, [e]);
+        };
+        sharedWorker.onerror = function (e: ErrorEvent) {
+          pyodideWorker.onerror?.apply(this, [e]);
+        };
+
+        const workerResponse = e.data;
+        if (workerResponse.type == "initialized") {
+          resolve(pyodideWorker);
+        } else {
+          reject(
+            `Did not receive response of type initialized. ${JSON.stringify(
+              e.data
+            )}`
+          );
+        }
+      };
+
+      sharedWorker.port.onmessageerror = (e) => {
+        reject(`Message error ${e}`);
+      };
+      sharedWorker.onerror = (e) => {
+        reject(e.message);
+      };
+
+      sharedWorker.port.start();
+    });
+  } else {
+    // Normal web worker, survives vite hot reloading
+    let worker: Worker = (window as any)["pyodide-worker"];
+    if (worker) {
+      return Promise.resolve(worker);
+    } else {
+      console.log("Creating pyodide worker...");
+      worker = new Worker(workerUrl);
+      (window as any)["pyodide-worker"] = worker;
+
+      return new Promise((resolve, reject) => {
+        worker.onmessage = (e) => {
+          worker.onmessage = null;
+          worker.onmessageerror = null;
+          worker.onerror = null;
+
+          const workerResponse = e.data;
+          if (workerResponse.type == "initialized") {
+            resolve(worker);
+          } else {
+            reject(
+              `Did not receive response of type initialized. ${JSON.stringify(
+                e.data
+              )}`
+            );
+          }
+        };
+        worker.onmessageerror = (e) => {
+          reject(`Message error ${e}`);
+        };
+        worker.onerror = (e) => {
+          reject(e.message);
+        };
+      });
+    }
   }
+}
+
+export function usePyodide() {
+  let worker: PyodideWorker | undefined;
+  const commandBuffer: WorkerMessage[] = [];
+
+  getOrCreateWorker().then(
+    (result) => {
+      console.log("Done creating worker!");
+      worker = result;
+
+      worker.onmessage = (e) => {
+        let response = e.data as WorkerResponse;
+        console.log("Response", response);
+
+        if (response.type == "result") {
+          const command = commands.get(response.id);
+          command?.callback(JSON.parse(response.data));
+          commands.delete(response.id);
+        } else if (response.type == "error") {
+          console.warn(response);
+          commands.delete(response.id);
+        } else {
+          console.error("Unknown response type", response);
+        }
+      };
+      worker.onerror = (e) => {
+        console.warn("Worker error", e);
+      };
+      worker.onmessageerror = (e) => {
+        console.error("Message error", e);
+      };
+
+      commandBuffer.forEach((v) => sendCommand(v));
+      commandBuffer.length = 0;
+    },
+    (error) => {
+      throw new Error(error);
+    }
+  );
 
   const { encodeName, decodeName, expressionToPython } = usePythonConverter();
   const commands = new Map<string, CasCommand>();
-
-  const commandBuffer: WorkerMessage[] = [];
-
-  worker.onmessage = async (e) => {
-    let response = e.data as WorkerResponse;
-    console.log("Response", response);
-    if (response.type == "initialized") {
-      isInitialized = true;
-      commandBuffer.forEach((v) => sendCommand(v));
-      commandBuffer.length = 0;
-      return;
-    }
-
-    const command = commands.get(response.id);
-
-    if (response.type == "result") {
-      command?.callback(JSON.parse(response.data));
-      commands.delete(response.id);
-    } else if (response.type == "error") {
-      console.warn(response);
-      commands.delete(response.id);
-    } else {
-      console.error("Unknown response type", response);
-    }
-  };
-
-  worker.onerror = async (e) => {
-    console.warn("Worker error", e);
-  };
-
-  worker.onmessageerror = async (e) => {
-    console.error("Message error", e);
-  };
 
   function executeCommand(command: CasCommand) {
     commands.set(command.id, command);
@@ -219,7 +318,7 @@ export function usePyodide() {
   }
 
   function sendCommand(command: WorkerMessage) {
-    if (!isInitialized) {
+    if (!worker) {
       commandBuffer.push(command);
     } else {
       worker.postMessage(command);
