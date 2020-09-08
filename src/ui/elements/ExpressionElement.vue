@@ -102,6 +102,10 @@ export default defineComponent({
       return [null, ["Equal", lhs, rhs]];
     };
     //@ts-ignore
+    dictionary["inequalities"].find(
+      (v) => v.name == "EqualEqual"
+    ).precedence = 265;
+    //@ts-ignore
     dictionary["algebra"][
       //@ts-ignore
       dictionary["algebra"].findIndex((v) => v.name == "To")
@@ -154,6 +158,7 @@ export default defineComponent({
       trigger: { infix: "\\xrightarrow" },
     };
 
+    // TODO: Maintain your own list of shortcuts (because the default ones cause some issues)
     watch(mathfieldElement, (value) => {
       if (value) {
         mathfield.value = MathLive.makeMathField(value, {

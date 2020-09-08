@@ -102,6 +102,8 @@ function usePythonConverter() {
         pythonFunctionName = "sympy.Pow";
       } else if (functionName == "Sqrt") {
         pythonFunctionName = "Sqrt"; // TODO: Replace with power
+      } else if (functionName == "EqualEqual") {
+        pythonFunctionName = "sympy.Eq";
       } else {
         pythonFunctionName = functionName;
       }
@@ -286,9 +288,8 @@ export function usePyodide() {
   function executeCommand(command: CasCommand) {
     commands.set(command.id, command);
 
-    const symbolNames = Array.from(
-      getGetterNames(command.expression)
-    ).map((key) => encodeName(key));
+    const getterNames = getGetterNames(command.expression);
+    const symbolNames = Array.from(getterNames).map((key) => encodeName(key));
 
     const substitutions = Array.from(command.gettersData.entries())
       .map(([key, value]) => `${encodeName(key)}:${expressionToPython(value)}`)
@@ -303,11 +304,32 @@ export function usePyodide() {
       )}\n\t.subs({${substitutions}})\n\t.evalf()`;
     } else if (command.expression[0] == "To") {
       if ((command.expression[2] + "").toLowerCase() == "solve") {
-        // TODO: Find the variable
-        // TODO: Solve
-        pythonExpression = `${expressionToPython(
-          command.expression[1]
-        )}\n\t.subs({${substitutions}})\n\t.evalf()`;
+        let variablesToSolveFor: string[] = [];
+        getterNames.forEach((getterName) => {
+          if (!command.gettersData.has(getterName)) {
+            variablesToSolveFor.push(getterName);
+          }
+        });
+        if (variablesToSolveFor.length !== 1) {
+          console.error(
+            "Expected one variable to solve for",
+            variablesToSolveFor
+          );
+        }
+
+        const innerExpression = command.expression[1];
+        if (
+          Array.isArray(innerExpression) &&
+          innerExpression[0] == "EqualEqual"
+        ) {
+          // TODO: Use recommended solver instead of the generic one
+
+          pythonExpression = `sympy.solvers.solve(\n\t${expressionToPython(
+            innerExpression
+          )}\n\t\t.subs({${substitutions}})\n)`;
+        } else {
+          console.error("Expected inner expression to be EqualEqual (==)");
+        }
       } else {
         pythonExpression = `${expressionToPython(
           command.expression[1]

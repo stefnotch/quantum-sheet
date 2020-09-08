@@ -8,6 +8,10 @@ export function getGetterNames(expression: any) {
   } else {
     if (expression[0] == "Assign") {
       extractGetters(expression[2]);
+    } else if (expression[0] == "Equal") {
+      extractGetters(expression[1]);
+    } else if (expression[0] == "To") {
+      extractGetters(expression[1]);
     } else {
       extractGetters(expression);
     }

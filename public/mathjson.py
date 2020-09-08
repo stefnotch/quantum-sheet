@@ -36,10 +36,12 @@ class MathJsonPrinter(Printer):
 
     # TODO: Update
     def parenthesize(self, item, level, strict=False):
+        print("Warning: parenthesize was called")
         return "(%s)" % self._print(item)
 
     # TODO: Update
     def stringify(self, args, sep, level=0):
+        print("Warning: stringify was called")
         return sep.join([self.parenthesize(item, level) for item in args])
 
     def emptyPrinter(self, expr):
@@ -59,53 +61,65 @@ class MathJsonPrinter(Printer):
 
     # TODO: Update
     def _print_BooleanTrue(self, expr):
+        print("Warning: _print_BooleanTrue was called")
         return "True"
 
     # TODO: Update
     def _print_BooleanFalse(self, expr):
+        print("Warning: _print_BooleanFalse was called")
         return "False"
 
     # TODO: Update
     def _print_Not(self, expr):
+        print("Warning: _print_Not was called")
         return '~%s' %(self.parenthesize(expr.args[0],PRECEDENCE["Not"]))
 
     # TODO: Update
     def _print_And(self, expr):
+        print("Warning: _print_And was called")
         return self.stringify(expr.args, " & ", PRECEDENCE["BitwiseAnd"])
 
     # TODO: Update
     def _print_Or(self, expr):
+        print("Warning: _print_Or was called")
         return self.stringify(expr.args, " | ", PRECEDENCE["BitwiseOr"])
 
     # TODO: Update
     def _print_Xor(self, expr):
+        print("Warning: _print_Xor was called")
         return self.stringify(expr.args, " ^ ", PRECEDENCE["BitwiseXor"])
 
     # TODO: Update
     def _print_AppliedPredicate(self, expr):
+        print("Warning: _print_AppliedPredicate was called")
         return '%s(%s)' % (self._print(expr.func), self._print(expr.arg))
 
     # TODO: Update
     def _print_Basic(self, expr):
+        print("Warning: _print_Basic was called")
         l = [self._print(o) for o in expr.args]
         return expr.__class__.__name__ + "(%s)" % ", ".join(l)
 
     # TODO: Update
     def _print_BlockMatrix(self, B):
+        print("Warning: _print_BlockMatrix was called")
         if B.blocks.shape == (1, 1):
             self._print(B.blocks[0, 0])
         return self._print(B.blocks)
 
     # TODO: Update
     def _print_Catalan(self, expr):
+        print("Warning: _print_Catalan was called")
         return 'Catalan'
 
     # TODO: Update
     def _print_ComplexInfinity(self, expr):
+        print("Warning: _print_ComplexInfinity was called")
         return 'zoo'
 
     # TODO: Update
     def _print_ConditionSet(self, s):
+        print("Warning: _print_ConditionSet was called")
         args = tuple([self._print(i) for i in (s.sym, s.condition)])
         if s.base_set is S.UniversalSet:
             return 'ConditionSet(%s, %s)' % args
@@ -114,12 +128,14 @@ class MathJsonPrinter(Printer):
 
     # TODO: Update
     def _print_Derivative(self, expr):
+        print("Warning: _print_Derivative was called")
         dexpr = expr.expr
         dvars = [i[0] if i[1] == 1 else i for i in expr.variable_count]
         return 'Derivative(%s)' % ", ".join(map(lambda arg: self._print(arg), [dexpr] + dvars))
 
     # TODO: Update
     def _print_dict(self, d):
+        print("Warning: _print_dict was called")
         keys = sorted(d.keys(), key=default_sort_key)
         items = []
 
@@ -131,10 +147,12 @@ class MathJsonPrinter(Printer):
 
     # TODO: Update
     def _print_Dict(self, expr):
+        print("Warning: _print_Dict was called")
         return self._print_dict(expr)
 
     # TODO: Update
     def _print_RandomDomain(self, d):
+        print("Warning: _print_RandomDomain was called")
         if hasattr(d, 'as_boolean'):
             return 'Domain: ' + self._print(d.as_boolean())
         elif hasattr(d, 'set'):
@@ -148,38 +166,47 @@ class MathJsonPrinter(Printer):
 
     # TODO: Important Update
     def _print_EulerGamma(self, expr):
+        print("Warning: _print_EulerGamma was called")
         return 'EulerGamma'
 
     # TODO: Important Update
     def _print_Exp1(self, expr):
+        print("Warning: _print_Exp1 was called")
         return 'E'
 
     # TODO: Update
     def _print_ExprCondPair(self, expr):
+        print("Warning: _print_ExprCondPair was called")
         return '(%s, %s)' % (self._print(expr.expr), self._print(expr.cond))
 
     # TODO: Update
     def _print_Function(self, expr):
+        print("Warning: _print_Function was called")
         return expr.func.__name__ + "(%s)" % self.stringify(expr.args, ", ")
 
     # TODO: Update
     def _print_GoldenRatio(self, expr):
+        print("Warning: _print_GoldenRatio was called")
         return 'GoldenRatio'
 
     # TODO: Update
     def _print_TribonacciConstant(self, expr):
+        print("Warning: _print_TribonacciConstant was called")
         return 'TribonacciConstant'
 
     # TODO: Important Update
     def _print_ImaginaryUnit(self, expr):
+        print("Warning: _print_ImaginaryUnit was called")
         return 'I'
 
     # TODO: Important Update
     def _print_Infinity(self, expr):
+        print("Warning: _print_Infinity was called")
         return 'oo'
 
     # TODO: Update
     def _print_Integral(self, expr):
+        print("Warning: _print_Integral was called")
         # TODO: Update
         def _xab_tostr(xab):
             if len(xab) == 1:
@@ -191,6 +218,7 @@ class MathJsonPrinter(Printer):
 
     # TODO: Update
     def _print_Interval(self, i):
+        print("Warning: _print_Interval was called")
         fin =  'Interval{m}({a}, {b})'
         a, b, l, r = i.args
         if a.is_infinite and b.is_infinite:
@@ -211,15 +239,18 @@ class MathJsonPrinter(Printer):
 
     # TODO: Update
     def _print_AccumulationBounds(self, i):
+        print("Warning: _print_AccumulationBounds was called")
         return "AccumBounds(%s, %s)" % (self._print(i.min),
                                         self._print(i.max))
 
     # TODO: Update
     def _print_Inverse(self, I):
+        print("Warning: _print_Inverse was called")
         return "%s**(-1)" % self.parenthesize(I.arg, PRECEDENCE["Pow"])
 
     # TODO: Update
     def _print_Lambda(self, obj):
+        print("Warning: _print_Lambda was called")
         expr = obj.expr
         sig = obj.signature
         if len(sig) == 1 and sig[0].is_symbol:
@@ -228,11 +259,13 @@ class MathJsonPrinter(Printer):
 
     # TODO: Update
     def _print_LatticeOp(self, expr):
+        print("Warning: _print_LatticeOp was called")
         args = sorted(expr.args, key=default_sort_key)
         return expr.func.__name__ + "(%s)" % ", ".join(self._print(arg) for arg in args)
 
     # TODO: Update
     def _print_Limit(self, expr):
+        print("Warning: _print_Limit was called")
         e, z, z0, dir = expr.args
         if str(dir) == "+":
             return "Limit(%s, %s, %s)" % tuple(map(self._print, (e, z, z0)))
@@ -242,19 +275,22 @@ class MathJsonPrinter(Printer):
 
     # TODO: Update
     def _print_list(self, expr):
-        return "[%s]" % self.stringify(expr, ", ")
+        return self._function("List", [self._print(item) for item in expr], True)
 
     # TODO: Update
     def _print_MatrixBase(self, expr):
+        print("Warning: _print_MatrixBase was called")
         return expr._format_str(self)
 
     # TODO: Update
     def _print_MatrixElement(self, expr):
+        print("Warning: _print_MatrixElement was called")
         return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) \
             + '[%s, %s]' % (self._print(expr.i), self._print(expr.j))
 
     # TODO: Update
     def _print_MatrixSlice(self, expr):
+        print("Warning: _print_MatrixSlice was called")
         # TODO: Update
         def strslice(x, dim):
             x = list(x)
@@ -271,6 +307,7 @@ class MathJsonPrinter(Printer):
 
     # TODO: Update
     def _print_DeferredVector(self, expr):
+        print("Warning: _print_DeferredVector was called")
         return expr.name
 
     def _print_Mul(self, expr):
@@ -323,6 +360,7 @@ class MathJsonPrinter(Printer):
 
     # TODO: Update
     def _print_MatMul(self, expr):
+        print("Warning: _print_MatMul was called")
         c, m = expr.as_coeff_mmul()
 
         sign = ""
@@ -341,6 +379,7 @@ class MathJsonPrinter(Printer):
 
     # TODO: Update
     def _print_ElementwiseApplyFunction(self, expr):
+        print("Warning: _print_ElementwiseApplyFunction was called")
         return "{0}.({1})".format(
             expr.function,
             self._print(expr.expr),
@@ -348,14 +387,17 @@ class MathJsonPrinter(Printer):
 
     # TODO: Important Update
     def _print_NaN(self, expr):
+        print("Warning: _print_NaN was called")
         return 'nan'
 
     # TODO: Important Update
     def _print_NegativeInfinity(self, expr):
+        print("Warning: _print_NegativeInfinity was called")
         return '-oo'
 
     # TODO: Update
     def _print_Order(self, expr):
+        print("Warning: _print_Order was called")
         if not expr.variables or all(p is S.Zero for p in expr.point):
             if len(expr.variables) <= 1:
                 return 'O(%s)' % self._print(expr.expr)
@@ -366,14 +408,17 @@ class MathJsonPrinter(Printer):
 
     # TODO: Update
     def _print_Ordinal(self, expr):
+        print("Warning: _print_Ordinal was called")
         return expr.__str__()
 
     # TODO: Update
     def _print_Cycle(self, expr):
+        print("Warning: _print_Cycle was called")
         return expr.__str__()
 
     # TODO: Update
     def _print_Permutation(self, expr):
+        print("Warning: _print_Permutation was called")
         from sympy.combinatorics.permutations import Permutation, Cycle
         from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -413,6 +458,7 @@ class MathJsonPrinter(Printer):
 
     # TODO: Update
     def _print_Subs(self, obj):
+        print("Warning: _print_Subs was called")
         expr, old, new = obj.args
         if len(obj.point) == 1:
             old = old[0]
@@ -422,18 +468,22 @@ class MathJsonPrinter(Printer):
 
     # TODO: Update
     def _print_TensorIndex(self, expr):
+        print("Warning: _print_TensorIndex was called")
         return expr._print()
 
     # TODO: Update
     def _print_TensorHead(self, expr):
+        print("Warning: _print_TensorHead was called")
         return expr._print()
 
     # TODO: Update
     def _print_Tensor(self, expr):
+        print("Warning: _print_Tensor was called")
         return expr._print()
 
     # TODO: Update
     def _print_TensMul(self, expr):
+        print("Warning: _print_TensMul was called")
         # prints expressions like "A(a)", "3*A(a)", "(1+x)*A(a)"
         sign, args = expr._get_args_for_traditional_printer()
         return sign + "*".join(
@@ -442,43 +492,52 @@ class MathJsonPrinter(Printer):
 
     # TODO: Update
     def _print_TensAdd(self, expr):
+        print("Warning: _print_TensAdd was called")
         return expr._print()
 
     # TODO: Update
     def _print_PermutationGroup(self, expr):
+        print("Warning: _print_PermutationGroup was called")
         p = ['    %s' % self._print(a) for a in expr.args]
         return 'PermutationGroup([%s])' % ','.join(p)
 
     # TODO: Important Update
     def _print_Pi(self, expr):
+        print("Warning: _print_Pi was called")
         return 'pi'
 
     # TODO: Update
     def _print_PolyRing(self, ring):
+        print("Warning: _print_PolyRing was called")
         return "Polynomial ring in %s over %s with %s order" % \
             (", ".join(map(lambda rs: self._print(rs), ring.symbols)),
             self._print(ring.domain), self._print(ring.order))
 
     # TODO: Update
     def _print_FracField(self, field):
+        print("Warning: _print_FracField was called")
         return "Rational function field in %s over %s with %s order" % \
             (", ".join(map(lambda fs: self._print(fs), field.symbols)),
             self._print(field.domain), self._print(field.order))
 
     # TODO: Update
     def _print_FreeGroupElement(self, elm):
+        print("Warning: _print_FreeGroupElement was called")
         return elm.__str__()
 
     # TODO: Update
     def _print_GaussianElement(self, poly):
+        print("Warning: _print_GaussianElement was called")
         return "(%s + %s*I)" % (poly.x, poly.y)
 
     # TODO: Update
     def _print_PolyElement(self, poly):
+        print("Warning: _print_PolyElement was called")
         return poly.str(self, PRECEDENCE, "%s**%s", "*")
 
     # TODO: Update
     def _print_FracElement(self, frac):
+        print("Warning: _print_FracElement was called")
         if frac.denom == 1:
             return self._print(frac.numer)
         else:
@@ -488,6 +547,7 @@ class MathJsonPrinter(Printer):
 
     # TODO: Update
     def _print_Poly(self, expr):
+        print("Warning: _print_Poly was called")
         ATOM_PREC = PRECEDENCE["Atom"] - 1
         terms, gens = [], [ self.parenthesize(s, ATOM_PREC) for s in expr.gens ]
 
@@ -555,10 +615,12 @@ class MathJsonPrinter(Printer):
 
     # TODO: Update
     def _print_UniversalSet(self, p):
+        print("Warning: _print_UniversalSet was called")
         return 'UniversalSet'
 
     # TODO: Update
     def _print_AlgebraicNumber(self, expr):
+        print("Warning: _print_AlgebraicNumber was called")
         if expr.is_aliased:
             return self._print(expr.as_poly().as_expr())
         else:
@@ -587,10 +649,12 @@ class MathJsonPrinter(Printer):
 
     # TODO: Update
     def _print_UnevaluatedExpr(self, expr):
+        print("Warning: _print_UnevaluatedExpr was called")
         return self._print(expr.args[0])
 
     # TODO: Update
     def _print_MatPow(self, expr):
+        print("Warning: _print_MatPow was called")
         PREC = precedence(expr)
         return '%s**%s' % (self.parenthesize(expr.base, PREC, strict=False),
                          self.parenthesize(expr.exp, PREC, strict=False))
@@ -600,42 +664,52 @@ class MathJsonPrinter(Printer):
 
     # TODO: Update
     def _print_Integers(self, expr):
+        print("Warning: _print_Integers was called")
         return 'Integers'
 
     # TODO: Update
     def _print_Naturals(self, expr):
+        print("Warning: _print_Naturals was called")
         return 'Naturals'
 
     # TODO: Update
     def _print_Naturals0(self, expr):
+        print("Warning: _print_Naturals0 was called")
         return 'Naturals0'
 
     # TODO: Update
     def _print_Rationals(self, expr):
+        print("Warning: _print_Rationals was called")
         return 'Rationals'
 
     # TODO: Update
     def _print_Reals(self, expr):
+        print("Warning: _print_Reals was called")
         return 'Reals'
 
     # TODO: Update
     def _print_Complexes(self, expr):
+        print("Warning: _print_Complexes was called")
         return 'Complexes'
 
     # TODO: Update
     def _print_EmptySet(self, expr):
+        print("Warning: _print_EmptySet was called")
         return 'EmptySet'
 
     # TODO: Update
     def _print_EmptySequence(self, expr):
+        print("Warning: _print_EmptySequence was called")
         return 'EmptySequence'
 
     # TODO: Update
     def _print_int(self, expr):
+        print("Warning: _print_int was called")
         return str(expr)
 
     # TODO: Update
     def _print_mpz(self, expr):
+        print("Warning: _print_mpz was called")
         return str(expr)
 
     def _print_Rational(self, expr):
@@ -689,6 +763,7 @@ class MathJsonPrinter(Printer):
 
     # TODO: Important Update
     def _print_Relational(self, expr):
+        print("Warning: _print_Relational was called")
 
         charmap = {
             "==": "Eq",
@@ -711,11 +786,13 @@ class MathJsonPrinter(Printer):
 
     # TODO: Update
     def _print_ComplexRootOf(self, expr):
+        print("Warning: _print_ComplexRootOf was called")
         return "CRootOf(%s, %d)" % (self._print_Add(expr.expr,  order='lex'),
                                     expr.index)
 
     # TODO: Update
     def _print_RootSum(self, expr):
+        print("Warning: _print_RootSum was called")
         args = [self._print_Add(expr.expr, order='lex')]
 
         if expr.fun is not S.IdentityFunction:
@@ -725,6 +802,7 @@ class MathJsonPrinter(Printer):
 
     # TODO: Update
     def _print_GroebnerBasis(self, basis):
+        print("Warning: _print_GroebnerBasis was called")
         cls = basis.__class__.__name__
 
         exprs = [self._print_Add(arg, order=basis.order) for arg in basis.exprs]
@@ -740,6 +818,7 @@ class MathJsonPrinter(Printer):
 
     # TODO: Update
     def _print_set(self, s):
+        print("Warning: _print_set was called")
         items = sorted(s, key=default_sort_key)
 
         args = ', '.join(self._print(item) for item in items)
@@ -749,12 +828,14 @@ class MathJsonPrinter(Printer):
 
     # TODO: Update
     def _print_frozenset(self, s):
+        print("Warning: _print_frozenset was called")
         if not s:
             return "frozenset()"
         return "frozenset(%s)" % self._print_set(s)
 
     # TODO: Update
     def _print_Sum(self, expr):
+        print("Warning: _print_Sum was called")
         # TODO: Update
         def _xab_tostr(xab):
             if len(xab) == 1:
@@ -771,26 +852,32 @@ class MathJsonPrinter(Printer):
 
     # TODO: Update
     def _print_Identity(self, expr):
+        print("Warning: _print_Identity was called")
         return "I"
 
     # TODO: Update
     def _print_ZeroMatrix(self, expr):
+        print("Warning: _print_ZeroMatrix was called")
         return "0"
 
     # TODO: Update
     def _print_OneMatrix(self, expr):
+        print("Warning: _print_OneMatrix was called")
         return "1"
 
     # TODO: Update
     def _print_Predicate(self, expr):
+        print("Warning: _print_Predicate was called")
         return "Q.%s" % expr.name
 
     # TODO: Update
     def _print_str(self, expr):
+        print("Warning: _print_str was called")
         return str(expr)
 
     # TODO: Update
     def _print_tuple(self, expr):
+        print("Warning: _print_tuple was called")
         if len(expr) == 1:
             return "(%s,)" % self._print(expr[0])
         else:
@@ -798,44 +885,54 @@ class MathJsonPrinter(Printer):
 
     # TODO: Update
     def _print_Tuple(self, expr):
+        print("Warning: _print_Tuple was called")
         return self._print_tuple(expr)
 
     # TODO: Update
     def _print_Transpose(self, T):
+        print("Warning: _print_Transpose was called")
         return "%s.T" % self.parenthesize(T.arg, PRECEDENCE["Pow"])
 
     # TODO: Update
     def _print_Uniform(self, expr):
+        print("Warning: _print_Uniform was called")
         return "Uniform(%s, %s)" % (self._print(expr.a), self._print(expr.b))
 
     # TODO: Update
     def _print_Quantity(self, expr):
+        print("Warning: _print_Quantity was called")
         return "%s" % expr.name
 
     # TODO: Update
     def _print_Quaternion(self, expr):
+        print("Warning: _print_Quaternion was called")
         s = [self.parenthesize(i, PRECEDENCE["Mul"], strict=True) for i in expr.args]
         a = [s[0]] + [i+"*"+j for i, j in zip(s[1:], "ijk")]
         return " + ".join(a)
 
     # TODO: Update
     def _print_Dimension(self, expr):
+        print("Warning: _print_Dimension was called")
         return str(expr)
 
     # TODO: Update
     def _print_Wild(self, expr):
+        print("Warning: _print_Wild was called")
         return expr.name + '_'
 
     # TODO: Update
     def _print_WildFunction(self, expr):
+        print("Warning: _print_WildFunction was called")
         return expr.name + '_'
 
     # TODO: Update
     def _print_Zero(self, expr):
+        print("Warning: _print_Zero was called")
         return "0"
 
     # TODO: Update
     def _print_DMP(self, p):
+        print("Warning: _print_DMP was called")
         from sympy.core.sympify import SympifyError
         try:
             if p.ring is not None:
@@ -853,47 +950,58 @@ class MathJsonPrinter(Printer):
 
     # TODO: Update
     def _print_DMF(self, expr):
+        print("Warning: _print_DMF was called")
         return self._print_DMP(expr)
 
     # TODO: Update
     def _print_Object(self, obj):
+        print("Warning: _print_Object was called")
         return 'Object("%s")' % obj.name
 
     # TODO: Update
     def _print_IdentityMorphism(self, morphism):
+        print("Warning: _print_IdentityMorphism was called")
         return 'IdentityMorphism(%s)' % morphism.domain
 
     # TODO: Update
     def _print_NamedMorphism(self, morphism):
+        print("Warning: _print_NamedMorphism was called")
         return 'NamedMorphism(%s, %s, "%s")' % \
                (morphism.domain, morphism.codomain, morphism.name)
 
     # TODO: Update
     def _print_Category(self, category):
+        print("Warning: _print_Category was called")
         return 'Category("%s")' % category.name
 
     # TODO: Update
     def _print_Manifold(self, manifold):
+        print("Warning: _print_Manifold was called")
         return manifold.name.name
 
     # TODO: Update
     def _print_Patch(self, patch):
+        print("Warning: _print_Patch was called")
         return patch.name.name
 
     # TODO: Update
     def _print_CoordSystem(self, coords):
+        print("Warning: _print_CoordSystem was called")
         return coords.name.name
 
     # TODO: Update
     def _print_BaseScalarField(self, field):
+        print("Warning: _print_BaseScalarField was called")
         return field._coord_sys.symbols[field._index].name
 
     # TODO: Update
     def _print_BaseVectorField(self, field):
+        print("Warning: _print_BaseVectorField was called")
         return 'e_%s' % field._coord_sys.symbols[field._index].name
 
     # TODO: Update
     def _print_Differential(self, diff):
+        print("Warning: _print_Differential was called")
         field = diff._form_field
         if hasattr(field, '_coord_sys'):
             return 'd%s' % field._coord_sys.symbols[field._index].name
@@ -902,9 +1010,11 @@ class MathJsonPrinter(Printer):
 
     # TODO: Update
     def _print_Tr(self, expr):
+        print("Warning: _print_Tr was called")
         #TODO : Handle indices
         return "%s(%s)" % ("Tr", self._print(expr.args[0]))
 
     # TODO: Update
     def _print_Str(self, s):
+        print("Warning: _print_Str was called")
         return self._print(s.name)
