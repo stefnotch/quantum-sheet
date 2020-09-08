@@ -45,11 +45,21 @@ export interface UseScopeElement extends UseQuantumElement {
 // TODO: Child scopes
 
 export interface UseScopedVariable {
-  setData(data: any): void;
+  /**
+   * - `undefined` is equivalent to the variable not existing
+   * - `null` is a variable without data
+   * - anything else is data
+   */
+  setData(data: any): void; // TODO: Use MathJson type
   remove(): void;
 }
 
 export interface UseScopedGetter {
+  /**
+   * - `undefined` is equivalent to the variable not existing
+   * - `null` is a variable without data
+   * - anything else is data
+   */
   data: ComputedRef<any>;
   remove(): void;
 }
@@ -68,6 +78,7 @@ interface ScopedVariable {
 
   /**
    * Shallow ref variable data
+   *
    */
   data: any;
 
@@ -166,7 +177,7 @@ function useScopeElement(block: UseQuantumElement): UseScopeElement {
     const variable: ScopedVariable = reactive({
       position: position,
       index: -1,
-      data: shallowRef(),
+      data: shallowRef<any>(null),
       getters: [],
     });
 

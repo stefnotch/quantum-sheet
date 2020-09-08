@@ -10,10 +10,7 @@ export class CasCommand {
   readonly id: string;
   readonly gettersData: Map<string, any>;
   readonly expression: any;
-  /**
-   * NOTE: This callback can be called multiple times
-   * (like, when you have x*3=7^y --solve,y--> ... --expand--> ... --collect,x--> ...)
-   */
+
   readonly callback: (result: any) => void;
 
   constructor(

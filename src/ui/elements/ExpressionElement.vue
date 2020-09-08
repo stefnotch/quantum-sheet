@@ -101,6 +101,58 @@ export default defineComponent({
       if (rhs == null) return [null, ["Equal", lhs, null]];
       return [null, ["Equal", lhs, rhs]];
     };
+    //@ts-ignore
+    dictionary["algebra"][
+      //@ts-ignore
+      dictionary["algebra"].findIndex((v) => v.name == "To")
+    ] = {
+      emit: function (emitter, expr) {
+        if (!Array.isArray(expr)) throw new Error("Expect array expression");
+
+        return `${emitter.wrap(expr[1], 260)}\\xrightarrow{${
+          Array.isArray(expr[2]) && expr[2][0] == "Missing"
+            ? "\\placeholder{}"
+            : expr[2]
+        }}${emitter.wrap(expr[3], 260)}`;
+      },
+      precedence: 260,
+      name: "To",
+      optionalLatexArg: 1,
+      requiredLatexArg: 1,
+      parse: function (lhs, scanner, minPrec, _latex) {
+        if (260 < minPrec) return [lhs, null];
+        scanner.matchOptionalLatexArgument();
+        //const solveArgument = scanner.matchRequiredLatexArgument(); // TODO: Add the solve keyword to known stuff
+        let solveArgument = "";
+        scanner.skipSpace();
+        if (scanner.match("<{>")) {
+          let level = 1;
+          while (!scanner.atEnd() && level !== 0) {
+            if (scanner.match("<{>")) {
+              level += 1;
+            } else if (scanner.match("<}>")) {
+              level -= 1;
+            } else if (scanner.match("<space>")) {
+              solveArgument += " ";
+            } else {
+              solveArgument += scanner.next();
+            }
+          }
+        }
+
+        const rhs = scanner.matchExpression(260);
+        return [
+          null,
+          [
+            "To",
+            lhs,
+            solveArgument == "\\placeholder" ? ["Missing", ""] : solveArgument,
+            rhs,
+          ],
+        ];
+      },
+      trigger: { infix: "\\xrightarrow" },
+    };
 
     watch(mathfieldElement, (value) => {
       if (value) {
@@ -166,6 +218,17 @@ export default defineComponent({
             }
             return true;
           },
+        });
+
+        const keybindings = mathfield.value.getConfig("keybindings");
+        mathfield.value.$setConfig({
+          keybindings: keybindings.concat([
+            {
+              key: "ctrl+[Period]",
+              ifMode: "math",
+              command: ["insert", "\\xrightarrow{\\placeholder{}}"],
+            },
+          ]),
         });
 
         if (expressionElement.focused) {

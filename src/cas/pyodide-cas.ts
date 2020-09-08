@@ -1,5 +1,6 @@
 import type {} from "vite";
 import type { CasCommand } from "./cas";
+import { getGetterNames } from "./cas-math";
 import mathlive from "mathlive";
 
 export type WorkerMessage =
@@ -57,18 +58,34 @@ function usePythonConverter() {
     name = name.slice(1);
     const output = new Uint8Array(name.length / 2);
     for (let i = 0; i < name.length; i += 2) {
-      const highBits = name.charCodeAt(i - charOffset);
-      const lowBits = name.charCodeAt(i + 1 - charOffset);
+      const highBits = name.charCodeAt(i) - charOffset;
+      const lowBits = name.charCodeAt(i + 1) - charOffset;
       output[i / 2] = (highBits << 4) | lowBits;
     }
     return textDecoder.decode(output);
   }
 
+  function decodeNames(expression: any) {
+    if (Array.isArray(expression)) {
+      const functionName = expression[0];
+      const output = expression.slice();
+      for (let i = 1; i < expression.length; i++) {
+        output[i] = decodeNames(expression[i]);
+      }
+      return output;
+    } else if (typeof expression === "string") {
+      return decodeName(expression);
+    } else {
+      return expression;
+    }
+  }
+
+  // TODO: Options (rational numbers)
   function expressionToPython(expression: any): string {
     if (Array.isArray(expression)) {
       const functionName = expression[0];
       let pythonFunctionName = "";
-      let parameters = [];
+      const parameters = [];
 
       if (functionName == "Add") {
         pythonFunctionName = "sympy.Add";
@@ -118,6 +135,7 @@ function usePythonConverter() {
   return {
     encodeName,
     decodeName,
+    decodeNames,
     expressionToPython: (expression: any) =>
       expressionToPython(
         mathlive.form(fakeDictionary as any, expression, [
@@ -139,7 +157,6 @@ interface PyodideWorker {
 }
 
 function getOrCreateWorker(): Promise<PyodideWorker> {
-  console.log(import.meta.env.BASE_URL);
   const workerUrl = `${import.meta.env.BASE_URL}pyodide-worker.js`;
 
   if (import.meta.env.DEV && SharedWorker) {
@@ -176,26 +193,19 @@ function getOrCreateWorker(): Promise<PyodideWorker> {
         sharedWorker.onerror = function (e: ErrorEvent) {
           pyodideWorker.onerror?.apply(this, [e]);
         };
-
         const workerResponse = e.data;
         if (workerResponse.type == "initialized") {
           resolve(pyodideWorker);
         } else {
-          reject(
-            `Did not receive response of type initialized. ${JSON.stringify(
-              e.data
-            )}`
-          );
+          reject(`Did not receive response of type initialized. ${e.data}`);
         }
       };
-
       sharedWorker.port.onmessageerror = (e) => {
         reject(`Message error ${e}`);
       };
       sharedWorker.onerror = (e) => {
         reject(e.message);
       };
-
       sharedWorker.port.start();
     });
   } else {
@@ -218,11 +228,7 @@ function getOrCreateWorker(): Promise<PyodideWorker> {
           if (workerResponse.type == "initialized") {
             resolve(worker);
           } else {
-            reject(
-              `Did not receive response of type initialized. ${JSON.stringify(
-                e.data
-              )}`
-            );
+            reject(`Did not receive response of type initialized. ${e.data}`);
           }
         };
         worker.onmessageerror = (e) => {
@@ -239,6 +245,8 @@ function getOrCreateWorker(): Promise<PyodideWorker> {
 export function usePyodide() {
   let worker: PyodideWorker | undefined;
   const commandBuffer: WorkerMessage[] = [];
+  const { encodeName, decodeNames, expressionToPython } = usePythonConverter();
+  const commands = new Map<string, CasCommand>();
 
   getOrCreateWorker().then(
     (result) => {
@@ -251,7 +259,7 @@ export function usePyodide() {
 
         if (response.type == "result") {
           const command = commands.get(response.id);
-          command?.callback(JSON.parse(response.data));
+          command?.callback(decodeNames(JSON.parse(response.data)));
           commands.delete(response.id);
         } else if (response.type == "error") {
           console.warn(response);
@@ -275,15 +283,12 @@ export function usePyodide() {
     }
   );
 
-  const { encodeName, decodeName, expressionToPython } = usePythonConverter();
-  const commands = new Map<string, CasCommand>();
-
   function executeCommand(command: CasCommand) {
     commands.set(command.id, command);
 
-    const symbolNames = Array.from(command.gettersData.keys()).map((key) =>
-      encodeName(key)
-    );
+    const symbolNames = Array.from(
+      getGetterNames(command.expression)
+    ).map((key) => encodeName(key));
 
     const substitutions = Array.from(command.gettersData.entries())
       .map(([key, value]) => `${encodeName(key)}:${expressionToPython(value)}`)
@@ -296,6 +301,18 @@ export function usePyodide() {
       pythonExpression = `${expressionToPython(
         command.expression[1]
       )}\n\t.subs({${substitutions}})\n\t.evalf()`;
+    } else if (command.expression[0] == "To") {
+      if ((command.expression[2] + "").toLowerCase() == "solve") {
+        // TODO: Find the variable
+        // TODO: Solve
+        pythonExpression = `${expressionToPython(
+          command.expression[1]
+        )}\n\t.subs({${substitutions}})\n\t.evalf()`;
+      } else {
+        pythonExpression = `${expressionToPython(
+          command.expression[1]
+        )}\n\t.subs({${substitutions}})\n\t.evalf()`;
+      }
     } else {
       commands.delete(command.id);
       return;

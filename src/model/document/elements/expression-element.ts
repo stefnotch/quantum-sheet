@@ -13,6 +13,7 @@ import { UseScopedVariable, UseScopedGetter } from "./scope-element";
 import { cas } from "../../cas";
 import { assert } from "../../assert";
 import { CasCommand } from "../../../cas/cas";
+import { getGetterNames, getVariableNames } from "../../../cas/cas-math";
 
 export const ElementType = "expression-element";
 
@@ -27,41 +28,6 @@ export interface UseExpressionElement extends UseQuantumElement {
   inputExpression(value: any): void;
 }
 
-function getGettersAndVariables(expression: any) {
-  const getters = new Set<string>();
-  const variables = new Set<string>();
-
-  if (!Array.isArray(expression)) {
-    if (typeof expression == "string") {
-      getters.add(expression);
-    }
-  } else {
-    if (expression[0] == "Assign") {
-      // TODO: Handle variable arrays
-      variables.add(expression[1]);
-      extractGetters(expression[2]);
-    } else {
-      extractGetters(expression);
-    }
-
-    function extractGetters(expression: any) {
-      if (Array.isArray(expression)) {
-        const functionName = expression[0];
-        for (let i = 1; i < expression.length; i++) {
-          extractGetters(expression[i]);
-        }
-      } else if (typeof expression === "string") {
-        getters.add(expression);
-      }
-    }
-  }
-
-  return {
-    getters: getters,
-    variables: variables,
-  };
-}
-
 function addPlaceholders(expression: any) {
   if (Array.isArray(expression)) {
     const functionName = expression[0];
@@ -69,6 +35,9 @@ function addPlaceholders(expression: any) {
     if (functionName == "Equal") {
       output[1] = addPlaceholders(expression[1]);
       output[2] = ["\\mathinner", ["Missing", ""]];
+    } else if (functionName == "To") {
+      output[1] = addPlaceholders(expression[1]);
+      output[3] = ["\\mathinner", ["Missing", ""]];
     } else {
       for (let i = 1; i < expression.length; i++) {
         output[i] = addPlaceholders(expression[i]);
@@ -110,7 +79,7 @@ function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
         watch(newGetter.data, (value) => {
           clearVariableValues();
           clearPlaceholders();
-          if (value) evaluateLater();
+          if (value !== undefined && value !== null) evaluateLater();
         });
         getters.set(variableName, newGetter);
       });
@@ -139,7 +108,7 @@ function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
   }
 
   function clearVariableValues() {
-    variables.forEach((v) => v.setData(undefined));
+    variables.forEach((v) => v.setData(null));
   }
 
   function clearPlaceholders() {
@@ -151,6 +120,9 @@ function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
         if (functionName == "Equal") {
           output[1] = addPlaceholders(expression[1]);
           output[2] = ["\\mathinner", ["Missing", ""]];
+        } else if (functionName == "To") {
+          output[1] = addPlaceholders(expression[1]);
+          output[3] = ["\\mathinner", ["Missing", ""]];
         } else {
           for (let i = 1; i < expression.length; i++) {
             output[i] = addPlaceholders(expression[i]);
@@ -167,13 +139,10 @@ function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
 
   function inputExpression(value: any) {
     // TODO: Make expression value readonly
-    const parseResults = getGettersAndVariables(value);
+    setGetters(getGetterNames(value));
+    setVariables(getVariableNames(value));
 
-    setGetters(parseResults.getters);
-    setVariables(parseResults.variables);
-
-    const scope = block.scope.value;
-    assert(scope, "Expected the block to have a scope");
+    assert(block.scope.value, "Expected the block to have a scope");
 
     setExpression(addPlaceholders(value));
     // Cascading invalidation, only the topmost ones will be valid commands
@@ -201,12 +170,19 @@ function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
       cas.cancelCommand(runningCasExpression.value);
     }
 
+    // Check if all getters that should have a value actually do have a value
     const gettersData = new Map<string, any>();
     let allDataDefined = true;
     getters.forEach((value, key) => {
       const data = value.data.value;
-      if (!data) allDataDefined = false;
-      gettersData.set(key, data);
+      if (data === undefined) {
+        // It's a symbol
+      } else if (data === null) {
+        // Variable is missing its data
+        allDataDefined = false;
+      } else {
+        gettersData.set(key, data);
+      }
     });
 
     if (!allDataDefined || !expression.value) {
@@ -254,8 +230,24 @@ function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
             );
             cas.executeCommand(runningCasExpression.value);
           });
-        } else if (functionName == "Solve") {
-          // TODO:
+        } else if (functionName == "To") {
+          evaluateExpression(expression[1], (result) => {
+            const casExpression = expression.slice();
+            casExpression[1] = result;
+
+            runningCasExpression.value = new CasCommand(
+              gettersData, // TODO: Don't pass in all getters
+              casExpression,
+              (result) => {
+                // TODO: Fix this for nested equals signs/expressions
+                const output = expression.slice();
+                output[3] = ["\\mathinner", result];
+                setExpression(output);
+                callback(result);
+              }
+            );
+            cas.executeCommand(runningCasExpression.value);
+          });
         } else if (functionName == "Apply") {
           // TODO:
         } else {
