@@ -10,10 +10,13 @@ import {
   ExpressionElementType,
   ElementType,
 } from "../../model/document/elements/expression-element";
-import MathLive, { latexToMathjson, mathjsonToLatex } from "mathlive"; //TODO: Warning: I'm using a locally patched version of mathlive that uses the new MathJSON format
 import "mathlive/dist/mathlive-fonts.css";
+import MathLive, { latexToMathjson, mathjsonToLatex } from "mathlive"; //TODO: Warning: I'm using a locally patched version of mathlive that uses the new MathJSON format
 import { ElementCommands } from "./element-commands";
 import { Vector2 } from "../../model/vectors";
+import { something } from "./hak-mathlive-dictionary";
+
+console.log(something);
 
 export { ExpressionElementType };
 
@@ -55,7 +58,7 @@ export default defineComponent({
 
     function evaluateExpression() {
       const expression = latexToMathjson(
-        mathfield.value?.$text("latex-expanded") + "",
+        (mathfield.value?.$text("latex-expanded") + "").replaceAll("^{}", ""),
         {
           form: ["full"], // TODO: Mathjson can have objects like {num:"3"} instead of 3
           // @ts-ignore
@@ -85,78 +88,6 @@ export default defineComponent({
 
       expressionElement.inputExpression(expression);
     }
-
-    // TODO: Remove this hack
-    let dictionary = MathLive.DEFAULT_LATEX_DICTIONARY;
-    console.log(dictionary);
-    //@ts-ignore
-    dictionary["inequalities"].find((v) => v.name == "Equal").parse = function (
-      lhs,
-      scanner,
-      minPrec,
-      _latex
-    ) {
-      if (260 < minPrec) return [lhs, null];
-      const rhs = scanner.matchExpression(260);
-      if (rhs == null) return [null, ["Equal", lhs, null]];
-      return [null, ["Equal", lhs, rhs]];
-    };
-    //@ts-ignore
-    dictionary["inequalities"].find(
-      (v) => v.name == "EqualEqual"
-    ).precedence = 265;
-    //@ts-ignore
-    dictionary["algebra"][
-      //@ts-ignore
-      dictionary["algebra"].findIndex((v) => v.name == "To")
-    ] = {
-      emit: function (emitter, expr) {
-        if (!Array.isArray(expr)) throw new Error("Expect array expression");
-
-        return `${emitter.wrap(expr[1], 260)}\\xrightarrow{${
-          Array.isArray(expr[2]) && expr[2][0] == "Missing"
-            ? "\\placeholder{}"
-            : expr[2]
-        }}${emitter.wrap(expr[3], 260)}`;
-      },
-      precedence: 260,
-      name: "To",
-      optionalLatexArg: 1,
-      requiredLatexArg: 1,
-      parse: function (lhs, scanner, minPrec, _latex) {
-        if (260 < minPrec) return [lhs, null];
-        scanner.matchOptionalLatexArgument();
-        //const solveArgument = scanner.matchRequiredLatexArgument(); // TODO: Add the solve keyword to known stuff
-        let solveArgument = "";
-        scanner.skipSpace();
-        if (scanner.match("<{>")) {
-          let level = 1;
-          while (!scanner.atEnd() && level !== 0) {
-            if (scanner.match("<{>")) {
-              level += 1;
-            } else if (scanner.match("<}>")) {
-              level -= 1;
-            } else if (scanner.match("<space>")) {
-              solveArgument += " ";
-            } else {
-              solveArgument += scanner.next();
-            }
-          }
-        }
-
-        const rhs = scanner.matchExpression(260);
-        return [
-          null,
-          [
-            "To",
-            lhs,
-            solveArgument == "\\placeholder" ? ["Missing", ""] : solveArgument,
-            rhs,
-          ],
-        ];
-      },
-      trigger: { infix: "\\xrightarrow" },
-    };
 
     // TODO: Maintain your own list of shortcuts (because the default ones cause some issues)
     watch(mathfieldElement, (value) => {
@@ -225,9 +156,8 @@ export default defineComponent({
           },
         });
 
-        const keybindings = mathfield.value.getConfig("keybindings");
         mathfield.value.$setConfig({
-          keybindings: keybindings.concat([
+          keybindings: mathfield.value.getConfig("keybindings").concat([
             {
               key: "ctrl+[Period]",
               ifMode: "math",
@@ -236,7 +166,13 @@ export default defineComponent({
           ]),
         });
 
-        if (expressionElement.focused) {
+        const shortcuts = mathfield.value.getConfig("inlineShortcuts");
+        shortcuts["->"] = "\\xrightarrow{\\placeholder{}}";
+        mathfield.value.$setConfig({
+          inlineShortcuts: shortcuts,
+        });
+
+        if (expressionElement.focused.value) {
           mathfield.value.$focus();
         }
       }

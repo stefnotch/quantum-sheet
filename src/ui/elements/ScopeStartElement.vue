@@ -1,5 +1,5 @@
 <template>
-  <div class="scope-start">Scope start {{element.id}}</div>
+  <div class="scope-start"></div>
 </template>
 <script lang="ts">
 import { defineComponent, PropType, ref, watch, shallowRef } from "vue";

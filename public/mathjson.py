@@ -197,7 +197,7 @@ class MathJsonPrinter(Printer):
     # TODO: Important Update
     def _print_ImaginaryUnit(self, expr):
         print("Warning: _print_ImaginaryUnit was called")
-        return 'I'
+        return '"I"'
 
     # TODO: Important Update
     def _print_Infinity(self, expr):
