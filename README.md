@@ -1,8 +1,14 @@
-# ([WIP](https://github.com/stefnotch/quantum-sheet/projects)) QuantumSheet
+# (Prototype) QuantumSheet
 
 QuantumSheet - A web based computer algebra system aka fancy calculator
 
-[Try it out here](https://stefnotch.github.io/quantum-sheet/)
+[**Try it out here**](https://stefnotch.github.io/quantum-sheet/)
+
+![Screenshot](./screenshot.png)
+
+## Roadmap
+
+[Roadmap](https://github.com/stefnotch/quantum-sheet/projects)
 
 ## Used Technology
 
