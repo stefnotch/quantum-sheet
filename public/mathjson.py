@@ -761,25 +761,23 @@ class MathJsonPrinter(Printer):
             rv = rv[1:]
         return rv
 
-    # TODO: Important Update
     def _print_Relational(self, expr):
-        print("Warning: _print_Relational was called")
 
         charmap = {
-            "==": "Eq",
-            "!=": "Ne",
-            ":=": "Assignment",
-            '+=': "AddAugmentedAssignment",
-            "-=": "SubAugmentedAssignment",
-            "*=": "MulAugmentedAssignment",
-            "/=": "DivAugmentedAssignment",
-            "%=": "ModAugmentedAssignment",
+            "==": "EqualEqual",
+            "!=": "Unequal",
+            ":=": "Assign",
+            '+=': "PlusEqual",
+            "-=": "MinusEqual",
+            "*=": "StarEqual",
+            # "/=": "DivAugmentedAssignment",
+            # "%=": "ModAugmentedAssignment",
         }
 
         if expr.rel_op in charmap:
-            return '%s(%s, %s)' % (charmap[expr.rel_op], self._print(expr.lhs),
-                                   self._print(expr.rhs))
+            return self._function(charmap[expr.rel_op], [self._print(expr.lhs), self._print(expr.rhs)])
 
+        print("Warning: _print_Relational was called")
         return '%s %s %s' % (self.parenthesize(expr.lhs, precedence(expr)),
                            self._relationals.get(expr.rel_op) or expr.rel_op,
                            self.parenthesize(expr.rhs, precedence(expr)))
