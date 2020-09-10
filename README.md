@@ -25,8 +25,6 @@ I would really love to develop this project much further and am looking for coll
 
 ## For Developers
 
-**Warning: The project currently depends on a patched version of mathlive that I haven't published.**
-
 1. Clone the project
 2. `npm install`
 3. `npm run download:pyodide`
