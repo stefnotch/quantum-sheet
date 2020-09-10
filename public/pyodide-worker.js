@@ -42,6 +42,18 @@ if (self.SharedWorkerGlobalScope) {
 } else {
   console.error("Please use this script in a web worker or shared worker");
 }
+
+/**
+ *
+ * @param {string[]} symbols
+ * @param {string} command
+ */
+function wrapSympyCommand(symbols, command) {
+  const argumentNames = symbols.join(",");
+  const argumentValues = symbols.map((v) => `sympy.Symbol('${v}')`).join(",");
+  return `MathJsonPrinter().doprint((lambda ${argumentNames}: ${command})(${argumentValues}))`;
+}
+
 /**
  *
  * @param {MessageEvent} event
@@ -64,13 +76,8 @@ function messageHandler(event) {
       }
       pyodideResult = self.pyodide.runPython(message.command);
     } else if (message.type == "expression") {
-      if (message.symbols && message.symbols.length > 0) {
-        self.pyodide.runPython(
-          message.symbols.map((v) => `${v} = sympy.Symbol('${v}')`).join("\n")
-        );
-      }
       pyodideResult = self.pyodide.runPython(
-        `MathJsonPrinter().doprint(${message.command})`
+        wrapSympyCommand(message.symbols, message.command)
       );
     } else {
       throw new Error("Unknown command type", message);
