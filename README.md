@@ -6,6 +6,10 @@ QuantumSheet - A web based computer algebra system aka fancy calculator
 
 ![Screenshot](./screenshot.png)
 
+## Looking for collaborators
+
+I would really love to develop this project much further and am looking for collaborators. If you want to give it a shot, just respond here https://github.com/stefnotch/quantum-sheet/issues/14
+
 ## Roadmap
 
 [Roadmap](https://github.com/stefnotch/quantum-sheet/projects)
