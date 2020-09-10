@@ -229,7 +229,7 @@ export default defineComponent({
       return (typeComponents as any)[typeName];
     }
 
-    onMounted(() => {
+    /* onMounted(() => {
       document
         .createElement("expression-element", {
           position: new Vector2(1, 0),
@@ -300,7 +300,82 @@ export default defineComponent({
           position: new Vector2(14, 11),
         })
         .inputExpression(["\\text", "Solve equalities with -> and solve"]);
+    });*/
+
+    onMounted(async () => {
+      function wait(ms: number) {
+        return new Promise((resolve, reject) => {
+          setTimeout(() => resolve(), ms);
+        });
+      }
+      function typeExpression(
+        position: Vector2,
+        text: string,
+        characterDelay: number
+      ) {
+        return new Promise((resolve, reject) => {
+          const element = document.createElement("expression-element", {
+            position: position,
+          });
+          element.setFocused(true);
+          nextTick(() => {
+            const characters = text.split("");
+            let characterIndex = 0;
+            const typingInterval = setInterval(() => {
+              focusedElementCommands.commands.value?.insert?.(
+                characters[characterIndex]
+              );
+              characterIndex++;
+              if (characterIndex >= text.length) {
+                clearInterval(typingInterval);
+                resolve();
+              }
+            }, characterDelay);
+          });
+        });
+      }
+      function showText(position: Vector2, text: string) {
+        return new Promise((resolve, reject) => {
+          const element = document.createElement("expression-element", {
+            position: position,
+          });
+          element.inputExpression(["\\textcolor", "#363659", ["\\text", text]]);
+          nextTick(() => resolve());
+        });
+      }
+
+      await wait(10000);
+      await typeExpression(new Vector2(2, 2), "a:=5\n", 150);
+      await wait(400);
+      await showText(new Vector2(14, 2), "Assign variables with :=");
+
+      await wait(700);
+      await typeExpression(new Vector2(2, 5), "34/4 +a^3=\n", 150);
+      await wait(400);
+      await showText(new Vector2(14, 5), "Evaluate expressions with =");
+
+      await wait(700);
+      await typeExpression(new Vector2(2, 8), "b-4d/d +2*b ->\n", 150);
+      await wait(400);
+      await showText(
+        new Vector2(14, 8),
+        "Symbolically evaluate expressions with ->"
+      );
+
+      await wait(700);
+      await typeExpression(
+        new Vector2(2, 11),
+        "x^2/0.25 +3==19 ->solve\n",
+        150
+      );
+      await wait(400);
+      await showText(new Vector2(14, 11), "Solve equalities with -> and solve");
+
+      await wait(500);
+      await showText(new Vector2(4, 13), "");
+      await showText(new Vector2(4, 14), "QuantumSheet - Prototype");
     });
+
     return {
       document,
       documentElement,
@@ -374,5 +449,17 @@ export default defineComponent({
   transform: translate(-50%, -50%);
   padding: 1px;
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.quantum-block:nth-of-type(even) {
+  animation: fadein 500ms;
+}
+@keyframes fadein {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 </style>
