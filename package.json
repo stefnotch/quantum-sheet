@@ -14,7 +14,7 @@
     "download:pyodide": "node ./utils/download-pyodide.js"
   },
   "dependencies": {
-    "mathlive": "^0.55.0",
+    "mathlive": "github:stefnotch/mathlive#local-patch-2",
     "uuid": "^8.3.0",
     "vue": "^3.0.0-rc.10"
   },
