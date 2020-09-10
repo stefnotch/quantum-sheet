@@ -105,33 +105,11 @@ export default defineComponent({
               moveToStart: () => mathfield.$perform("moveToMathFieldStart"),
               moveToEnd: () => mathfield.$perform("moveToMathFieldEnd"),
               insert: (text: string) => {
-                if (text == "/") {
-                  mathfield.$perform(["insert", "$$\\frac{#@}{#?}$$"]);
-                } else if (text == "\n") {
-                  mathfield.$blur();
-                } else if (text == ">") {
-                  mathfield.$perform("deletePreviousChar");
-                  mathfield.$perform([
-                    "insert",
-                    "\\xrightarrow{\\placeholder{}}",
-                  ]);
-                } else {
-                  mathfield.$perform([
-                    "typedText",
-                    text,
-                    { simulateKeystroke: true },
-                  ]);
-                }
-                /*
                 if (text.startsWith("\\")) {
                   mathfield.$insert(text, { mode: "command" });
                 } else {
-                  mathfield.$insert(text, {
-                    resetStyle: false,
-                    smartFence: false,
-                    feedback: false,
-                  });
-                }*/
+                  mathfield.$insert(text);
+                }
               },
             });
           },
