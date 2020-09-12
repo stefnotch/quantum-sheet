@@ -30,8 +30,5 @@ I would really love to develop this project much further and am looking for coll
 3. `npm run download:pyodide`
 4. `npm run dev`
 
-### Structure
+Check out [CONTRIBUTING.md](https://github.com/stefnotch/quantum-sheet/blob/master/CONTRIBUTING.md) for more
 
-- `src/ui/` contains the user interface code
-- `src/model/` contains the logical part of the code
-- `src/cas/` contains the computer algebra systems
