@@ -15,7 +15,7 @@ export default defineComponent({
     QuantumDocument,
   },
   setup(props, context) {
-    if(import.meta.env.PROD) {
+    if (import.meta.env.PROD) {
       console.log(`${pkg.name} - ${pkg.version}`);
     }
     return {};

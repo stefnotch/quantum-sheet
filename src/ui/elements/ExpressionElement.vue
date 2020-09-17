@@ -157,6 +157,7 @@ export default defineComponent({
         });
 
         mathfield.value.$setConfig({
+          //@ts-ignore
           keybindings: mathfield.value.getConfig("keybindings").concat([
             {
               key: "ctrl+[Period]",
@@ -167,6 +168,7 @@ export default defineComponent({
         });
 
         const shortcuts = mathfield.value.getConfig("inlineShortcuts");
+        // @ts-ignore
         shortcuts["->"] = "\\xrightarrow{\\placeholder{}}";
         mathfield.value.$setConfig({
           inlineShortcuts: shortcuts,
