@@ -16,12 +16,12 @@
   "dependencies": {
     "mathlive": "github:stefnotch/mathlive#local-patch-3",
     "uuid": "^8.3.0",
-    "vue": "^3.0.0-rc.12"
+    "vue": "^3.0.0"
   },
   "devDependencies": {
     "@shockpkg/archive-files": "^1.10.0",
     "@types/uuid": "^8.3.0",
-    "@vue/compiler-sfc": "^3.0.0-rc.12",
+    "@vue/compiler-sfc": "^3.0.0",
     "fs-extra": "^9.0.1",
     "gh-pages": "^3.1.0",
     "node-fetch": "3.0.0-beta.9",
