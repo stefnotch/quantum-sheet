@@ -51,9 +51,8 @@ export default defineComponent({
       );
     });
 
-    watch(
-      () => expressionElement.focused.value,
-      (value) => (value ? mathfield.value?.$focus() : mathfield.value?.$blur())
+    watch(expressionElement.focused, (value) =>
+      value ? mathfield.value?.$focus() : mathfield.value?.$blur()
     );
 
     function evaluateExpression() {
@@ -90,8 +89,10 @@ export default defineComponent({
     }
 
     // TODO: Maintain your own list of shortcuts (because the default ones cause some issues)
-    watch(mathfieldElement, (value) => {
-      if (value) {
+    watch(
+      mathfieldElement,
+      (value) => {
+        if (!value) return;
         mathfield.value = MathLive.makeMathField(value, {
           defaultMode: "math",
           smartSuperscript: true,
@@ -177,8 +178,11 @@ export default defineComponent({
         if (expressionElement.focused.value) {
           mathfield.value.$focus();
         }
+      },
+      {
+        flush: "post",
       }
-    });
+    );
 
     return {
       mathfieldElement,
