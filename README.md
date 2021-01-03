@@ -12,6 +12,8 @@ I would really love to develop this project much further and am looking for coll
 
 ## Roadmap
 
+I'm currently also investigating https://en.wikipedia.org/wiki/Lean_(proof_assistant) 
+
 [Roadmap](https://github.com/stefnotch/quantum-sheet/projects)
 
 ## Used Technology
