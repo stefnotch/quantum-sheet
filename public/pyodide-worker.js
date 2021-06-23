@@ -8,38 +8,39 @@
  */
 
 // TODO: Use new Pyodide APIs https://pyodide.org/en/stable/project/changelog.html#version-0-17-0
-self.languagePluginUrl = "./pyodide/";
-self.importScripts("./pyodide/pyodide.js");
+globalThis.importScripts("./pyodide/pyodide.js");
 
-const loadPyodide = self.languagePluginLoader
-  .then(() => self.pyodide.loadPackage(["mpmath", "sympy"]))
+const loadPyodide = globalThis
+  .loadPyodide({ indexURL: "./pyodide/" })
+  .then(() => globalThis.pyodide.loadPackage(["mpmath", "sympy"]))
   .then(() =>
     fetch("./mathjson.py")
       .then((response) => response.text())
       .then((v) => {
-        self.pyodide.runPython("sys.setrecursionlimit(999)");
-        self.pyodide.runPython(v);
+        globalThis.pyodide.runPython("import sys\nsys.setrecursionlimit(999)");
+        globalThis.pyodide.runPython(v);
       })
   )
   .then(() => {
-    self.pyodide.runPython(`sys.setrecursionlimit(999)
+    globalThis.pyodide.runPython(`import sys
+sys.setrecursionlimit(999)
 import sympy`);
   })
   .catch((error) => console.error(error));
 
-if (self.SharedWorkerGlobalScope) {
-  self.onconnect = (/**@type {MessageEvent} */ event) => {
+if (globalThis.SharedWorkerGlobalScope) {
+  globalThis.onconnect = (/**@type {MessageEvent} */ event) => {
     const messagePort = event.ports[0];
     messagePort.onmessage = function (event) {
       messagePort.postMessage(messageHandler(event));
     };
     loadPyodide.then(() => messagePort.postMessage({ type: "initialized" }));
   };
-} else if (self.WorkerGlobalScope) {
-  self.onmessage = function (event) {
-    self.postMessage(messageHandler(event));
+} else if (globalThis.WorkerGlobalScope) {
+  globalThis.onmessage = function (event) {
+    globalThis.postMessage(messageHandler(event));
   };
-  loadPyodide.then(() => self.postMessage({ type: "initialized" }));
+  loadPyodide.then(() => globalThis.postMessage({ type: "initialized" }));
 } else {
   console.error("Please use this script in a web worker or shared worker");
 }
@@ -71,13 +72,14 @@ function messageHandler(event) {
     if (message.type == "python") {
       if (message.data) {
         Object.keys(message.data).forEach((key) => {
-          // Set them on self, so that `from js import key` works.
-          self[key] = message.data[key];
+          // Set them on globalThis, so that `from js import key` works.
+          // TODO: Superseded by the globals https://pyodide.org/en/stable/usage/quickstart.html
+          globalThis[key] = message.data[key];
         });
       }
-      pyodideResult = self.pyodide.runPython(message.command);
+      pyodideResult = globalThis.pyodide.runPython(message.command);
     } else if (message.type == "expression") {
-      pyodideResult = self.pyodide.runPython(
+      pyodideResult = globalThis.pyodide.runPython(
         wrapSympyCommand(message.symbols, message.command)
       );
     } else {
