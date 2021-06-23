@@ -7,6 +7,7 @@
  * @typedef { import("../src/cas/pyodide-cas").WorkerResponse } WorkerResponse
  */
 
+// TODO: Use new Pyodide APIs https://pyodide.org/en/stable/project/changelog.html#version-0-17-0
 self.languagePluginUrl = "./pyodide/";
 self.importScripts("./pyodide/pyodide.js");
 

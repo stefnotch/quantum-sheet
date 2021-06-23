@@ -1,4 +1,4 @@
-import {createArchiveByFileExtension} from "@shockpkg/archive-files";
+import { createArchiveByFileExtension } from "@shockpkg/archive-files";
 import fse from "fs-extra";
 import path from "path";
 import fetch from "node-fetch";
@@ -13,6 +13,8 @@ const filesWhitelist = [
   "pyodide.asm.data.js",
   "pyodide.asm.data",
   "pyodide.asm.js",
+  "pyodide-interrupts.js",
+  "pyodide-interrupts.data",
   "packages.json",
   "sympy.js",
   "sympy.data",
@@ -67,8 +69,9 @@ const filesWhitelist = [
     identifier: latestRelease.node_id,
   };
   await archive.read(async (entry) => {
-    if (filesWhitelist.includes(entry.path)) {
-      await entry.extract(path.join(outputDirectory, entry.path));
+    const path = entry.path.replace(/^pyodide\//, "");
+    if (filesWhitelist.includes(path)) {
+      await entry.extract(path.join(outputDirectory, path));
     }
   });
   await fse.remove(outputArchivePath);
