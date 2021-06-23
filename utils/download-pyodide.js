@@ -69,9 +69,9 @@ const filesWhitelist = [
     identifier: latestRelease.node_id,
   };
   await archive.read(async (entry) => {
-    const path = entry.path.replace(/^pyodide\//, "");
-    if (filesWhitelist.includes(path)) {
-      await entry.extract(path.join(outputDirectory, path));
+    const entryPath = entry.path.replace(/^pyodide\//, "");
+    if (filesWhitelist.includes(entryPath)) {
+      await entry.extract(path.join(outputDirectory, entryPath));
     }
   });
   await fse.remove(outputArchivePath);
