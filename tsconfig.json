@@ -13,6 +13,7 @@
     "baseUrl": ".",
     "isolatedModules": true,
     "lib": ["esnext", "dom", "dom.iterable"],
+    "types": ["vite/client"],
     "outDir": "./dist"
   },
   "include": ["src/**/*.ts", "src/**/*.js", "src/**/*.vue"],
