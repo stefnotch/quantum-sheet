@@ -1,4 +1,8 @@
-export function getGetterNames(expression: any) {
+import { Expression } from "@cortex-js/compute-engine";
+
+// TODO: Ask mathlive creator about how to best do stuff like this
+
+export function getGetterNames(expression: Expression) {
   const getters = new Set<string>();
 
   if (!Array.isArray(expression)) {
@@ -31,11 +35,11 @@ export function getGetterNames(expression: any) {
   return getters;
 }
 
-export function getVariableNames(expression: any) {
+export function getVariableNames(expression: Expression) {
   const variables = new Set<string>();
   if (Array.isArray(expression) && expression[0] == "Assign") {
     // TODO: Handle variable arrays
-    variables.add(expression[1]);
+    variables.add(expression[1] as any);
   }
   return variables;
 }

@@ -9,11 +9,12 @@
     "sourceMap": true,
     "allowJs": true,
     "checkJs": true,
+    "resolveJsonModule": true,
     "baseUrl": ".",
     "isolatedModules": true,
-    "resolveJsonModule": true,
-    "lib": ["esnext", "dom", "dom.iterable"]
+    "lib": ["esnext", "dom", "dom.iterable"],
+    "outDir": "./dist"
   },
-  "include": ["src/**/*.ts", "src/**/*.vue"],
+  "include": ["src/**/*.ts", "src/**/*.js", "src/**/*.vue"],
   "exclude": ["node_modules"]
 }

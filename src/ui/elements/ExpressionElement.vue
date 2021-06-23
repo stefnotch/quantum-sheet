@@ -11,9 +11,10 @@ import {
   ElementType,
 } from "../../model/document/elements/expression-element";
 import "mathlive/dist/mathlive-fonts.css";
-import MathLive, { latexToMathjson, mathjsonToLatex } from "mathlive"; //TODO: Warning: I'm using a locally patched version of mathlive that uses the new MathJSON format
+import MathLive, { MathfieldElement } from "mathlive";
 import { ElementCommands } from "./element-commands";
 import { Vector2 } from "../../model/vectors";
+import { parse, serialize } from "@cortex-js/compute-engine";
 import { something } from "./hak-mathlive-dictionary";
 
 console.log(something);
@@ -34,31 +35,30 @@ export default defineComponent({
   },
   setup(props, context) {
     const mathfieldElement = ref<HTMLElement>();
-    const mathfield = shallowRef<MathLive.Mathfield>();
+    const mathfield = shallowRef<MathLive.MathfieldElement>();
     const expressionElement = props.modelGetter();
 
     watch(expressionElement.expression, (value) => {
-      mathfield.value?.$latex(
-        mathjsonToLatex(value, {
-          multiply: "\\cdot",
-          invisibleMultiply: "\\cdot",
-        }),
-        {
-          suppressChangeNotifications: true,
-          mode: "math",
-          format: "latex",
-        }
-      );
+      const latex = serialize(value, {
+        multiply: "\\cdot",
+        invisibleMultiply: "\\cdot",
+      });
+      mathfield.value?.setValue(latex, {
+        suppressChangeNotifications: true,
+        mode: "math",
+        format: "latex",
+      });
     });
 
     watch(expressionElement.focused, (value) =>
-      value ? mathfield.value?.$focus() : mathfield.value?.$blur()
+      value ? mathfield.value?.focus?.() : mathfield.value?.blur?.()
     );
 
     function evaluateExpression() {
-      const expression = latexToMathjson(
-        (mathfield.value?.$text("latex-expanded") + "").replaceAll("^{}", ""),
-        {
+      const expression = parse(mathfield.value?.getValue?.("latex") ?? "", {
+        dictionary: something,
+      });
+      /*        {
           form: ["full"], // TODO: Mathjson can have objects like {num:"3"} instead of 3
           // @ts-ignore
           /*promoteUnknownSymbols: {
@@ -66,16 +66,16 @@ export default defineComponent({
               console.log(value);
               return false;
             },
-          },*/
+          },/
           //promoteUnknownSymbols: /^[a-zA-Z]([a-zA-Z]|$)/,
           //promoteUnknownFunctions: /^[fge][fg]$/,
           //dictionary: // TODO:
           //onError,
         }
-      );
+      );*/
       console.log(
         "Parsing",
-        mathfield.value?.$text("latex-expanded"),
+        mathfield.value?.getValue?.("latex"),
         "resulted in",
         expression
       );
@@ -93,23 +93,29 @@ export default defineComponent({
       mathfieldElement,
       (value) => {
         if (!value) return;
-        mathfield.value = MathLive.makeMathField(value, {
+        mathfield.value = new MathfieldElement({
           defaultMode: "math",
-          smartSuperscript: true,
-          onContentDidChange: (_) => {
+          // smartSuperscript: true,
+          removeExtraneousParentheses: true,
+          smartFence: true,
+          plonkSound: null,
+          keypressSound: null,
+          onContentDidChange: (mathfield: MathLive.Mathfield) => {
+            console.log("content changed", mathfield.getValue("latex"));
             // TODO: Don't try to compute anything while I'm editing the mathfield
           },
           onFocus: (mathfield: MathLive.Mathfield) => {
             expressionElement.setFocused(true);
             context.emit("focused-element-commands", {
               elementType: ElementType,
-              moveToStart: () => mathfield.$perform("moveToMathFieldStart"),
-              moveToEnd: () => mathfield.$perform("moveToMathFieldEnd"),
+              moveToStart: () =>
+                mathfield.executeCommand("moveToMathFieldStart"),
+              moveToEnd: () => mathfield.executeCommand("moveToMathFieldEnd"),
               insert: (text: string) => {
                 if (text.startsWith("\\")) {
-                  mathfield.$insert(text, { mode: "command" });
+                  mathfield.insert(text, { mode: "latex" });
                 } else {
-                  mathfield.$insert(text);
+                  mathfield.insert(text);
                 }
               },
             });
@@ -118,7 +124,7 @@ export default defineComponent({
             expressionElement.setFocused(false);
             context.emit("focused-element-commands", undefined);
 
-            if (mathfield.$text("latex").length == 0) {
+            if (mathfield.getValue("latex").length == 0) {
               context.emit("delete-element");
             } else {
               console.log("onBlur");
@@ -150,16 +156,16 @@ export default defineComponent({
             //@ts-ignore
             // TODO: This conflicts with vectors
             if (mathfield.mode == "math" && keystroke == "[Enter]") {
-              mathfield.$blur();
+              mathfield.blur?.();
               context.emit("move-cursor-out", new Vector2(0, 1));
             }
             return true;
           },
         });
 
-        mathfield.value.$setConfig({
+        mathfield.value.setOptions({
           //@ts-ignore
-          keybindings: mathfield.value.getConfig("keybindings").concat([
+          keybindings: mathfield.value.getOption("keybindings").concat([
             {
               key: "ctrl+[Period]",
               ifMode: "math",
@@ -168,15 +174,30 @@ export default defineComponent({
           ]),
         });
 
-        const shortcuts = mathfield.value.getConfig("inlineShortcuts");
+        const shortcuts = mathfield.value.getOption("inlineShortcuts");
         // @ts-ignore
         shortcuts["->"] = "\\xrightarrow{\\placeholder{}}";
-        mathfield.value.$setConfig({
+        mathfield.value.setOptions({
           inlineShortcuts: shortcuts,
         });
 
+        mathfield.value.style.fontSize = "18px";
+
+        // Later down the road we can use "adoptedStyleSheets"
+        const caretCustomStyle = document.createElement("style");
+        caretCustomStyle.innerHTML = `.ML__caret:after {
+          border-right-width: 0px !important;
+          margin-right: 0px !important;
+          width: 0px !important;
+          box-shadow: 0px 0px 0px 1px var(--caret,hsl(var(--hue,212),40%,49%));
+         }`;
+        mathfield.value.shadowRoot?.appendChild?.(caretCustomStyle);
+
+        value.innerHTML = "";
+        value.appendChild(mathfield.value);
+
         if (expressionElement.focused.value) {
-          mathfield.value.$focus();
+          mathfield.value.focus();
         }
       },
       {

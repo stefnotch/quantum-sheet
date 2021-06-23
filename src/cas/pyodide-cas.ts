@@ -1,7 +1,7 @@
 import type {} from "vite";
 import type { CasCommand } from "./cas";
 import { getGetterNames } from "./cas-math";
-import mathlive from "mathlive";
+import { format } from '@cortex-js/compute-engine';
 
 export type WorkerMessage =
   | {
@@ -117,6 +117,8 @@ function usePythonConverter() {
       return `sympy.Float(${expression})`;
     } else if (expression === null) {
       return `None`;
+    } else if(expression.num !== undefined) {
+      return `sympy.Float(${expression.num})`;
     } else {
       // TODO: Make sure to handle all cases (string, number, bool, array, object, ...)
       console.warn("Unknown element type", { x: expression });
@@ -140,7 +142,7 @@ function usePythonConverter() {
     decodeNames,
     expressionToPython: (expression: any) =>
       expressionToPython(
-        mathlive.form(fakeDictionary as any, expression, [
+        format(expression, [
           "canonical-root",
           "canonical-subtract",
           "canonical-divide",

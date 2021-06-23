@@ -14,21 +14,22 @@ import { cas } from "../../cas";
 import { assert } from "../../assert";
 import { CasCommand } from "../../../cas/cas";
 import { getGetterNames, getVariableNames } from "../../../cas/cas-math";
+import { Expression } from "@cortex-js/compute-engine";
 
 export const ElementType = "expression-element";
 
 export interface UseExpressionElement extends UseQuantumElement {
   getters: ReadonlyMap<string, UseScopedGetter>;
   variables: ReadonlyMap<string, UseScopedVariable>;
-  expression: Ref<any>;
+  expression: Ref<Expression>;
   /**
    * User expression input
    * @param value Expression that the user typed
    */
-  inputExpression(value: any): void;
+  inputExpression(value: Expression): void;
 }
 
-function addPlaceholders(expression: any) {
+function addPlaceholders(expression: Expression) {
   if (Array.isArray(expression)) {
     const functionName = expression[0];
     const output = expression.slice();
@@ -56,7 +57,7 @@ function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
   const runningCasExpression: Ref<CasCommand | undefined> = shallowRef();
   const blockPosition = computed(() => block.position.value);
 
-  function setExpression(value: any) {
+  function setExpression(value: Expression) {
     expression.value = value;
   }
 
@@ -137,7 +138,7 @@ function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
     setExpression(clearPlaceholders(expression.value));
   }
 
-  function inputExpression(value: any) {
+  function inputExpression(value: Expression) {
     // TODO: Make expression value readonly
     setGetters(getGetterNames(value));
     setVariables(getVariableNames(value));
