@@ -1,3 +1,4 @@
+import type { Expression } from "@cortex-js/compute-engine";
 import { v4 as uuidv4 } from "uuid";
 import { usePyodide } from "./pyodide-cas";
 
@@ -9,13 +10,13 @@ export interface UseCas {
 export class CasCommand {
   readonly id: string;
   readonly gettersData: Map<string, any>;
-  readonly expression: any;
+  readonly expression: Expression;
 
   readonly callback: (result: any) => void;
 
   constructor(
     gettersData: Map<string, any>,
-    expression: any,
+    expression: Expression,
     callback: (result: any) => void
   ) {
     this.id = uuidv4();

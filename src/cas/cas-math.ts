@@ -20,7 +20,7 @@ export function getGetterNames(expression: Expression) {
       extractGetters(expression);
     }
 
-    function extractGetters(expression: any) {
+    function extractGetters(expression: Expression) {
       if (Array.isArray(expression)) {
         const functionName = expression[0];
         for (let i = 1; i < expression.length; i++) {

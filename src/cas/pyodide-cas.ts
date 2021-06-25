@@ -1,7 +1,7 @@
 import type {} from "vite";
 import type { CasCommand } from "./cas";
 import { getGetterNames } from "./cas-math";
-import { format } from '@cortex-js/compute-engine';
+import { format } from "@cortex-js/compute-engine";
 
 export type WorkerMessage =
   | {
@@ -34,10 +34,12 @@ export type WorkerResponse =
       message: string;
     };
 
+// TODO: Split out the python converter and contribute it to mathlive/cortex-js?
 function usePythonConverter() {
   const textEncoder = new TextEncoder();
   const textDecoder = new TextDecoder();
 
+  // TODO: Only convert names that actually need to be converted? Or use some standard encoding format?
   // Using 16 characters to encode utf-8. So, 2 chars per byte.
   const charOffset = "A".charCodeAt(0);
   function encodeName(name: string) {
@@ -117,7 +119,7 @@ function usePythonConverter() {
       return `sympy.Float(${expression})`;
     } else if (expression === null) {
       return `None`;
-    } else if(expression.num !== undefined) {
+    } else if (expression.num !== undefined) {
       return `sympy.Float(${expression.num})`;
     } else {
       // TODO: Make sure to handle all cases (string, number, bool, array, object, ...)
