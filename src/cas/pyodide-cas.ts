@@ -306,7 +306,7 @@ export function usePyodide() {
       pythonExpression = `${expressionToPython(
         command.expression[1]
       )}\n\t.subs({${substitutions}})\n\t.evalf()`;
-    } else if (command.expression[0] == "To") {
+    } else if (command.expression[0] == "Evaluate") {
       if ((command.expression[2] + "").toLowerCase() == "solve") {
         let variablesToSolveFor: string[] = [];
         getterNames.forEach((getterName) => {

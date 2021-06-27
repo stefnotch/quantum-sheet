@@ -14,7 +14,7 @@ export function getGetterNames(expression: Expression) {
       extractGetters(expression[2]);
     } else if (expression[0] == "Equal") {
       extractGetters(expression[1]);
-    } else if (expression[0] == "To") {
+    } else if (expression[0] == "Evaluate") {
       extractGetters(expression[1]);
     } else {
       extractGetters(expression);

@@ -121,7 +121,7 @@ function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
         if (functionName == "Equal") {
           output[1] = addPlaceholders(expression[1]);
           output[2] = ["\\mathinner", ["Missing", ""]];
-        } else if (functionName == "To") {
+        } else if (functionName == "Evaluate") {
           output[1] = addPlaceholders(expression[1]);
           output[3] = ["\\mathinner", ["Missing", ""]];
         } else {
@@ -224,14 +224,14 @@ function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
               (result) => {
                 // TODO: Fix this for nested equals signs/expressions
                 const output = expression.slice();
-                output[2] = ["\\mathinner", result];
+                output[2] = ["\\mathinner", result]; // A part of the expression, namely the one with the placeholder, gets replaced
                 setExpression(output);
                 callback(result);
               }
             );
             cas.executeCommand(runningCasExpression.value);
           });
-        } else if (functionName == "To") {
+        } else if (functionName == "Evaluate") {
           evaluateExpression(expression[1], (result) => {
             const casExpression = expression.slice();
             casExpression[1] = result;
