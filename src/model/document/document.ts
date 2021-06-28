@@ -20,6 +20,8 @@ export type QuantumDocumentElementTypes = {
   };
 } & typeof ScopeElementType.documentType;
 
+// type NameToElementType<T extends {useElement: (...args: any) => UseQuantumElement}> = T extends {useElement: (...args: any) => infer R} ? R : any;
+
 export interface UseQuantumDocument<
   TElements extends QuantumDocumentElementTypes
 > {
@@ -291,7 +293,7 @@ export function useDocument<TElements extends QuantumDocumentElementTypes>(
 
     const element = elementType.useElement(
       useQuantumElement("" + typeName, options)
-    );
+    ) as ReturnType<TElements[T]["useElement"]>;
 
     let stopHandles = [
       elementList.watchElement(element),
@@ -311,7 +313,7 @@ variableManager: shallowReadonly(
       ),*/
 
     // Weird, Typescript doesn't like whatever I cooked up
-    return element as any;
+    return element;
   }
 
   function deleteElement(element: UseQuantumElement) {

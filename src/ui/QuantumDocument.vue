@@ -3,7 +3,10 @@
     class="quantum-document"
     ref="documentElement"
     tabindex="-1"
-    :style="{ '--grid-cell-size-x': `${document.gridCellSize.x}px`, '--grid-cell-size-y': `${document.gridCellSize.y}px` }"
+    :style="{
+      '--grid-cell-size-x': `${document.gridCellSize.x}px`,
+      '--grid-cell-size-y': `${document.gridCellSize.y}px`,
+    }"
     @pointerdown="grid.pointerDown($event)"
     @paste="clipboard.paste"
     @focus="documentInputElement.focus()"
@@ -18,28 +21,35 @@
       @input="grid.textInput($event)"
       @keydown="grid.keydown($event)"
       @keyup="grid.keyup($event)"
-      @focus="document.setSelection(); grid.showCrosshair.value = true"
+      @focus="
+        document.setSelection();
+        grid.showCrosshair.value = true;
+      "
       @blur="grid.showCrosshair.value = false"
     ></textarea>
     <div
       class="grid-crosshair"
       :style="grid.gridToStyle(grid.crosshairPosition.value)"
       v-show="grid.showCrosshair.value"
-    >+</div>
+    >
+      +
+    </div>
     <div
       class="quantum-block"
       v-for="element in document.elements"
       :key="element.id"
       :style="grid.gridToStyle(element.position.value)"
-      :class="{'selected': element.selected.value }"
-      @pointerdown=";"
+      :class="{ selected: element.selected.value }"
+      @pointerdown="() => {}"
     >
       <component
         :is="getTypeComponent(element.typeName)"
         class="quantum-element"
         :modelGetter="() => element"
-        @focused-element-commands="value => focusedElementCommands.commands.value = value"
-        @move-cursor-out="value => grid.moveCrosshairOut(element, value)"
+        @focused-element-commands="
+          (value) => (focusedElementCommands.commands.value = value)
+        "
+        @move-cursor-out="(value) => grid.moveCrosshairOut(element, value)"
         @delete-element="document.deleteElement(element)"
       ></component>
     </div>
@@ -194,9 +204,11 @@ function useGrid<T extends QuantumDocumentElementTypes>(
   };
 }
 
-type TypeComponents<
-  T extends UseQuantumDocument<any>
-> = T extends UseQuantumDocument<infer U> ? { [key in keyof U]: any } : any;
+/**
+ * To say with document-element type corresponds to which Vue.js component
+ */
+type TypeComponents<T extends UseQuantumDocument<any>> =
+  T extends UseQuantumDocument<infer U> ? { [key in keyof U]: any } : any;
 
 export default defineComponent({
   components: {

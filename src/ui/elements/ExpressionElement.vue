@@ -1,5 +1,5 @@
 <template>
-  <div class="mathfield" ref="mathfieldElement" tabindex="0"></div>
+  <div class="mathfield" ref="mathfieldContainer" tabindex="0"></div>
   <!--If you need a second element, just create it next to the mathfield?-->
   <!--Though, you gotta figure out the whole listeners and attributes stuff-->
 </template>
@@ -15,14 +15,15 @@ import MathLive, { MathfieldElement } from "mathlive";
 import { ElementCommands } from "./element-commands";
 import { Vector2 } from "../../model/vectors";
 import { parse, serialize } from "@cortex-js/compute-engine";
-import { something } from "./hak-mathlive-dictionary";
-
-console.log(something);
+import { dictionary } from "../../model/mathlive-custom-dictionary";
 
 export { ExpressionElementType };
 
 export default defineComponent({
   props: {
+    /**
+     * Gets the associated document-element
+     */
     modelGetter: {
       type: Function as PropType<() => UseExpressionElement>,
       required: true,
@@ -34,14 +35,15 @@ export default defineComponent({
     "delete-element": () => true,
   },
   setup(props, context) {
-    const mathfieldElement = ref<HTMLElement>();
-    const mathfield = shallowRef<MathLive.MathfieldElement>();
+    const mathfieldContainer = ref<HTMLElement>();
+    const mathfield = shallowRef<MathfieldElement>();
     const expressionElement = props.modelGetter();
 
     watch(expressionElement.expression, (value) => {
       const latex = serialize(value, {
         multiply: "\\cdot",
         invisibleMultiply: "\\cdot",
+        dictionary: dictionary,
       });
       mathfield.value?.setValue(latex, {
         suppressChangeNotifications: true,
@@ -56,7 +58,7 @@ export default defineComponent({
 
     function evaluateExpression() {
       const expression = parse(mathfield.value?.getValue?.("latex") ?? "", {
-        dictionary: something,
+        dictionary: dictionary,
       });
       /*        {
           form: ["full"], // TODO: Mathjson can have objects like {num:"3"} instead of 3
@@ -90,7 +92,7 @@ export default defineComponent({
 
     // TODO: Maintain your own list of shortcuts (because the default ones cause some issues)
     watch(
-      mathfieldElement,
+      mathfieldContainer,
       (value) => {
         if (!value) return;
         mathfield.value = new MathfieldElement({
@@ -206,7 +208,7 @@ export default defineComponent({
     );
 
     return {
-      mathfieldElement,
+      mathfieldContainer,
     };
   },
 });

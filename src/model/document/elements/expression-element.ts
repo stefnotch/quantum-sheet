@@ -114,14 +114,14 @@ function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
 
   function clearPlaceholders() {
     // TODO: Reduce flashing (make this slightly delayed or something)
-    function clearPlaceholders(expression: any) {
+    function clearPlaceholders(expression: Expression) {
       if (Array.isArray(expression)) {
         const functionName = expression[0];
         const output = expression.slice();
         if (functionName == "Equal") {
           output[1] = addPlaceholders(expression[1]);
           output[2] = ["\\mathinner", ["Missing", ""]];
-        } else if (functionName == "To") {
+        } else if (functionName == "Evaluate") {
           output[1] = addPlaceholders(expression[1]);
           output[3] = ["\\mathinner", ["Missing", ""]];
         } else {
@@ -219,25 +219,25 @@ function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
             casExpression[1] = result;
 
             runningCasExpression.value = new CasCommand(
-              gettersData, // TODO: Don't pass in all getters
+              gettersData, // TODO: Don't pass in all getters (or pass in a reference to the getters?)
               casExpression,
               (result) => {
                 // TODO: Fix this for nested equals signs/expressions
                 const output = expression.slice();
-                output[2] = ["\\mathinner", result];
+                output[2] = ["\\mathinner", result]; // A part of the expression, namely the one with the placeholder, gets replaced
                 setExpression(output);
                 callback(result);
               }
             );
             cas.executeCommand(runningCasExpression.value);
           });
-        } else if (functionName == "To") {
+        } else if (functionName == "Evaluate") {
           evaluateExpression(expression[1], (result) => {
             const casExpression = expression.slice();
             casExpression[1] = result;
 
             runningCasExpression.value = new CasCommand(
-              gettersData, // TODO: Don't pass in all getters
+              gettersData, // TODO: Don't pass in all getters (or pass in a reference to the getters?)
               casExpression,
               (result) => {
                 // TODO: Fix this for nested equals signs/expressions
@@ -262,7 +262,7 @@ function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
     if (Array.isArray(expression.value) && expression.value[0] == "Assign") {
       evaluateExpression(expression.value[2], (result) => {
         runningCasExpression.value = new CasCommand(
-          gettersData, // TODO: Don't pass in all getters
+          gettersData, // TODO: Don't pass in all getters (or pass in a reference to the getters?)
           ["Equal", result, null],
           (result) => {
             // TODO: Support assigning to multiple variables
