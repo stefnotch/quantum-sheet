@@ -103,11 +103,15 @@ function useGrid<T extends QuantumDocumentElementTypes>(
   }
 
   function pointerDown(ev: PointerEvent) {
+    console.log('pointerdown', ev)
     if (ev.target == ev.currentTarget) {
       crosshairPosition.value = new Vector2(
         Math.round(ev.offsetX / document.gridCellSize.x),
         Math.round(ev.offsetY / document.gridCellSize.y)
       );
+      if (ev.button == 2) {
+        // context menu
+      }
     }
   }
 
@@ -246,8 +250,14 @@ export default defineComponent({
 
 <style scoped>
 .quantum-document {
-  background-color: var(--color);
+  /* Engineering Paper Style */
+  /* background-color: #fffdf8; */
+  /* --grid-color: #bed1d354; */
+  /* Standard Grid Papaer Style */
+  /* background-color: var(--color); */
+  background-color: white;
   --grid-color: rgba(71, 162, 223, 0.26);
+
   --selected-background-color: rgba(68, 148, 202, 0.24);
   --selected-color: rgba(57, 131, 180, 0.459);
   background-size: var(--grid-cell-size-x) var(--grid-cell-size-y);
@@ -257,10 +267,14 @@ export default defineComponent({
       transparent 1px
     ),
     linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
+  /* border: 0.5px solid rgb(212, 212, 212); */
   position: relative;
   touch-action: none;
 
-  height: 500px;
+  /* height: 500px; */
+  /* A4 Letter */
+  width: 100%;
+  min-height: 100%;
 }
 
 .quantum-block {
