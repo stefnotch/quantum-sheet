@@ -5,7 +5,7 @@
         <a-space :style="{ height: '36px', alignItems: 'revert' }">
           <div :style="{ width: '10px' }" />
           <h3 style="margin 0; width: 110px" @click=";" :style="{ cursor: 'pointer' }">QuantumSheet</h3>
-          <div :style="{ width: '10px' }" />
+          <div :style="{ width: '16px' }" />
           <a-dropdown placement="bottomLeft">
             <a-button ghost style="height: 36px; color: black;">File</a-button>
             <template #overlay>

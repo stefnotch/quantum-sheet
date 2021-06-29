@@ -1,6 +1,6 @@
 <template>
   <div
-    class="quantum-document"
+    class="quantum-document theme-paper-standard"
     ref="documentElement"
     tabindex="-1"
     :style="{
@@ -9,7 +9,7 @@
     }"
     @pointerdown="grid.pointerDown($event)"
     @paste="clipboard.paste"
-    @focus="documentInputElement.focus()"
+    @focus="documentInputElement.focus({preventScroll:true})"
   >
     <textarea
       class="input-element"
@@ -245,6 +245,75 @@ export default defineComponent({
       return (typeComponents as any)[typeName];
     }
 
+    onMounted(() => {
+      document
+        .createElement("expression-element", {
+          position: new Vector2(1, 0),
+        })
+        .inputExpression(["\\text", "(This may take a while to load...)"]);
+      document
+        .createElement("expression-element", {
+          position: new Vector2(2, 2),
+        })
+        .inputExpression(["Assign", "a", 5]);
+      document
+        .createElement("expression-element", {
+          position: new Vector2(14, 2),
+        })
+        .inputExpression(["\\text", "Assign variables with :="]);
+      document
+        .createElement("expression-element", {
+          position: new Vector2(2, 5),
+        })
+        .inputExpression([
+          "Equal",
+          ["Add", ["Divide", 34, 4], ["Power", "a", 3]],
+          null,
+        ]);
+      document
+        .createElement("expression-element", {
+          position: new Vector2(14, 5),
+        })
+        .inputExpression(["\\text", "Evaluate expressions with ="]);
+      document
+        .createElement("expression-element", {
+          position: new Vector2(2, 8),
+        })
+        .inputExpression([
+          "To",
+          [
+            "Add",
+            ["Subtract", "b", ["Divide", ["Multiply", 4, "d"], "d"]],
+            ["Multiply", 2, "b"],
+          ],
+          ["Missing", ""],
+          null,
+        ]);
+      document
+        .createElement("expression-element", {
+          position: new Vector2(14, 8),
+        })
+        .inputExpression([
+          "\\text",
+          "Symbolically evaluate expressions with ->",
+        ]);
+      document
+        .createElement("expression-element", {
+          position: new Vector2(2, 11),
+        })
+        .inputExpression([
+          "To",
+          ["EqualEqual", ["Add", ["Divide", ["Power", "x", 2], 0.25], 3], 19],
+          "solve",
+          null,
+        ]);
+      document
+        .createElement("expression-element", {
+          position: new Vector2(14, 11),
+        })
+        .inputExpression(["\\text", "Solve equalities with -> and solve"]);
+    });
+
     return {
       document,
       documentElement,
@@ -261,15 +330,20 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.quantum-document {
-  /* Engineering Paper Style */
-  /* background-color: #fffdf8; */
-  /* --grid-color: #bed1d354; */
+.theme-paper-standard {
   /* Standard Grid Papaer Style */
-  /* background-color: var(--color); */
-  background-color: white;
+  --color: white;
   --grid-color: rgba(71, 162, 223, 0.26);
-
+}
+.theme-paper-engineer {
+  /* Engineering Paper Style */
+  --color: #fffdf8;
+  --grid-color: #bed1d354;
+}
+.quantum-document {
+  /* --color: white; */
+  /* --grid-color: rgba(71, 162, 223, 0.26); */
+  background-color: var(--color);
   --selected-background-color: rgba(68, 148, 202, 0.24);
   --selected-color: rgba(57, 131, 180, 0.459);
   background-size: var(--grid-cell-size-x) var(--grid-cell-size-y);
