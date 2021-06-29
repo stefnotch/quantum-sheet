@@ -4,23 +4,23 @@
       <a-col :span="4">
         <a-space :style="{ height: '36px', alignItems: 'revert' }">
           <div :style="{ width: '10px' }" />
-          <h3 style="margin 0; width: 110px" @click=";" :style="{ cursor: 'pointer' }">QuantumSheet</h3>
+          <h3 style="margin 0; width: 110px" @click="" :style="{ cursor: 'pointer' }">QuantumSheet</h3>
           <div :style="{ width: '16px' }" />
           <a-dropdown placement="bottomLeft">
-            <a-button ghost style="height: 36px; color: black;">File</a-button>
+            <a-button ghost style="height: 36px; color: black">File</a-button>
             <template #overlay>
               <a-menu>
                 <a-menu-item>
-                  <a target="_blank" rel="noopener noreferrer" @click="docHandler.promptnewfile()" :style="{ color: 'black'}">New</a>
+                  <a target="_blank" rel="noopener noreferrer" @click="docHandler.promptnewfile()" :style="{ color: 'black' }">New</a>
                 </a-menu-item>
                 <a-menu-item>
-                  <a target="_blank" rel="noopener noreferrer" @click="docHandler.promptsavefile()" :style="{ color: 'black'}">Open</a>
+                  <a target="_blank" rel="noopener noreferrer" @click="docHandler.promptsavefile()" :style="{ color: 'black' }">Open</a>
                 </a-menu-item>
                 <a-menu-item>
-                  <a target="_blank" rel="noopener noreferrer" @click="docHandler.promptopenfile()" :style="{ color: 'black'}">Save as...</a>
+                  <a target="_blank" rel="noopener noreferrer" @click="docHandler.promptopenfile()" :style="{ color: 'black' }">Save as...</a>
                 </a-menu-item>
                 <a-menu-item>
-                  <a target="_blank" rel="noopener noreferrer" @click="docHandler.promptclosefile()" :style="{ color: 'black'}">Close</a>
+                  <a target="_blank" rel="noopener noreferrer" @click="docHandler.promptclosefile()" :style="{ color: 'black' }">Close</a>
                 </a-menu-item>
               </a-menu>
             </template>
@@ -38,7 +38,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, inject } from "vue";
+import { defineComponent, ref, inject } from 'vue'
 
 function useDocHandling($emitter: any) {
   function promptnewfile() {
@@ -68,9 +68,8 @@ export default defineComponent({
     const docHandler = useDocHandling($emitter)
     return {
       docHandler
-    };
-  },
-
+    }
+  }
 })
 </script>
 

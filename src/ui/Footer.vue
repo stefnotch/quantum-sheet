@@ -5,19 +5,15 @@
         <a-space :style="{ height: '36px' }">
           <div :style="{ width: '20px' }" />
           <a-tooltip :mouseEnterDelay="1">
-            <template #title>
-              Calculate
-            </template>
+            <template #title> Calculate </template>
             <a-button size="small" type="primary" @click="appActions.compute">
               <!-- <a-icon type="calculator"/> -->
               <CalculatorOutlined />
-              </a-button>
+            </a-button>
           </a-tooltip>
           <!-- Auto Calculate -->
           <a-tooltip>
-            <template #title>
-              Auto Calculate
-            </template>
+            <template #title> Auto Calculate </template>
             <a-switch size="small" disabled />
           </a-tooltip>
         </a-space>
@@ -35,12 +31,8 @@
           >
             <!-- :dropdownAlign="{ offset: [0, -4]}" -->
             <!-- :getPopupContainer="trigger => trigger.parentNode" -->
-            <a-select-option value="decimals">
-              Decimal
-            </a-select-option>
-            <a-select-option value="fractions">
-              Fraction
-            </a-select-option>
+            <a-select-option value="decimals"> Decimal </a-select-option>
+            <a-select-option value="fractions"> Fraction </a-select-option>
           </a-select>
           <a-input-number
             v-if="docOptions.mathOptions.numberformat == 'decimals'"
@@ -51,7 +43,6 @@
             :min="1"
             :max="10"
             :default-value="docOptions.mathOptions.decimals"
-
           />
           <!-- <a-select
             default-value="LaTeX"
@@ -71,9 +62,7 @@
           <div :style="{ width: '20px' }" />
 
           <a-tooltip>
-            <template #title>
-              Popout Keyboard
-            </template>
+            <template #title> Popout Keyboard </template>
             <a-button size="small" @click="appActions.togglevirtualkb">
               <!-- <a-icon type="appstore"/> -->
               <AppstoreOutlined />
@@ -84,9 +73,7 @@
 
           <!-- ScratchPad -->
           <a-tooltip>
-            <template #title>
-              Extended Work Area
-            </template>
+            <template #title> Extended Work Area </template>
             <a-space>
               <!-- <a-icon type="ExportOutlined" class="vert-icon" /> -->
               <ExportOutlined />
@@ -117,10 +104,10 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, reactive, inject } from "vue";
-import { ExportOutlined, CalculatorOutlined, AppstoreOutlined } from '@ant-design/icons-vue';
+import { defineComponent, ref, reactive, inject } from 'vue'
+import { ExportOutlined, CalculatorOutlined, AppstoreOutlined } from '@ant-design/icons-vue'
 
-function useDocOptions () {
+function useDocOptions() {
   const state = reactive({
     scrollPosition: null,
     outputFormat: 'LaTeX',
@@ -154,7 +141,7 @@ function useDocActions($emitter: any, docOptions: any, appActions: any) {
   return {
     handleChangeNformat,
     handleChangeOUTformat,
-    handleChangeDecimalPlaces,
+    handleChangeDecimalPlaces
   }
 }
 function useAppActions($emitter: any) {
@@ -171,7 +158,7 @@ function useAppActions($emitter: any) {
   return {
     handleChangeScratchPad,
     togglevirtualkb,
-    compute,
+    compute
   }
 }
 
@@ -193,7 +180,7 @@ export default defineComponent({
       docOptions,
       appActions
     }
-  },
+  }
 })
 </script>
 
@@ -210,7 +197,6 @@ export default defineComponent({
 .ant-space-item {
   height: 24px !important;
 }
-
 
 .vert-icon {
   vertical-align: -0.225em !important;

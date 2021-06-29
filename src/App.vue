@@ -1,27 +1,26 @@
 <template>
   <div>
-    <a-layout >
+    <a-layout>
       <Header />
-        <a-layout class="content">
-          <a-layout-content class="dwgtable center">
-            <quantum-document></quantum-document>
-          </a-layout-content>
-        </a-layout>
+      <a-layout class="content">
+        <a-layout-content class="dwgtable center">
+          <quantum-document></quantum-document>
+        </a-layout-content>
+      </a-layout>
       <Footer />
     </a-layout>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from "vue";
-import pkg from "./../package.json";
-import QuantumDocument from "./ui/QuantumDocument.vue";
-import Header from "./ui/Header.vue";
-import Footer from "./ui/Footer.vue";
-
+import { defineComponent, ref } from 'vue'
+import pkg from './../package.json'
+import QuantumDocument from './ui/QuantumDocument.vue'
+import Header from './ui/Header.vue'
+import Footer from './ui/Footer.vue'
 
 export default defineComponent({
-  name: "App",
+  name: 'App',
   components: {
     QuantumDocument,
     Header,
@@ -29,17 +28,17 @@ export default defineComponent({
   },
   setup(props, context) {
     if (import.meta.env.PROD) {
-      console.log(`${pkg.name} - ${pkg.version}`);
+      console.log(`${pkg.name} - ${pkg.version}`)
     }
-    return {};
-  },
-});
+    return {}
+  }
+})
 </script>
 
 <style scoped>
 .content {
   /* Background color = Scrollbar color */
-  background-color: #F1F1F1;
+  background-color: #f1f1f1;
   position: absolute;
   /* 100% minus Header and footer */
   height: calc(100% - 36px - 36px);
@@ -58,7 +57,6 @@ export default defineComponent({
   box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
   margin-top: 24px;
   margin-bottom: 24px;
-  
 }
 .extended {
   width: 90vw !important;

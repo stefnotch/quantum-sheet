@@ -4,37 +4,33 @@
   <!--Though, you gotta figure out the whole listeners and attributes stuff-->
 </template>
 <script lang="ts">
-import { defineComponent, PropType, ref, watch, shallowRef } from "vue";
-import {
-  UseExpressionElement,
-  ExpressionElementType,
-  ElementType,
-} from "../../model/document/elements/expression-element";
-import "mathlive/dist/mathlive-fonts.css";
-import MathLive, { MathfieldElement } from "mathlive";
-import { ElementCommands } from "./element-commands";
-import { Vector2 } from "../../model/vectors";
-import { parse, serialize } from "@cortex-js/compute-engine";
-import { dictionary } from "../../model/mathlive-custom-dictionary";
+import { defineComponent, PropType, ref, watch, shallowRef } from 'vue'
+import { UseExpressionElement, ExpressionElementType, ElementType } from '../../model/document/elements/expression-element'
+import 'mathlive/dist/mathlive-fonts.css'
+import MathLive, { MathfieldElement } from 'mathlive'
+import { ElementCommands } from './element-commands'
+import { Vector2 } from '../../model/vectors'
+import { parse, serialize } from '@cortex-js/compute-engine'
+import { dictionary } from '../../model/mathlive-custom-dictionary'
 
-export { ExpressionElementType };
+export { ExpressionElementType }
 
 function setMathfieldOptions(mathfield: MathfieldElement) {
-  const keybindings = mathfield.getOption("keybindings").concat([
+  const keybindings = mathfield.getOption('keybindings').concat([
     {
-      key: "ctrl+[Period]",
-      ifMode: "math",
-      command: ["insert", "\\xrightarrow{\\placeholder{}}"],
-    },
-  ]);
+      key: 'ctrl+[Period]',
+      ifMode: 'math',
+      command: ['insert', '\\xrightarrow{\\placeholder{}}']
+    }
+  ])
 
-  const shortcuts = mathfield.getOption("inlineShortcuts");
-  shortcuts["->"] = "\\xrightarrow{\\placeholder{}}";
+  const shortcuts = mathfield.getOption('inlineShortcuts')
+  shortcuts['->'] = '\\xrightarrow{\\placeholder{}}'
 
   mathfield.setOptions({
     inlineShortcuts: shortcuts,
-    keybindings: keybindings,
-  });
+    keybindings: keybindings
+  })
 }
 
 export default defineComponent({
@@ -44,40 +40,38 @@ export default defineComponent({
      */
     modelGetter: {
       type: Function as PropType<() => UseExpressionElement>,
-      required: true,
-    },
+      required: true
+    }
   },
   emits: {
-    "focused-element-commands": (value: ElementCommands | undefined) => true,
-    "move-cursor-out": (direction: Vector2) => true,
-    "delete-element": () => true,
+    'focused-element-commands': (value: ElementCommands | undefined) => true,
+    'move-cursor-out': (direction: Vector2) => true,
+    'delete-element': () => true
   },
   setup(props, context) {
-    const mathfieldContainer = ref<HTMLElement>();
-    const mathfield = shallowRef<MathfieldElement>();
-    const expressionElement = props.modelGetter();
+    const mathfieldContainer = ref<HTMLElement>()
+    const mathfield = shallowRef<MathfieldElement>()
+    const expressionElement = props.modelGetter()
 
     watch([expressionElement.expression, mathfield], ([value, _]) => {
       const latex = serialize(value, {
-        multiply: "\\cdot",
-        invisibleMultiply: "\\cdot",
-        dictionary: dictionary,
-      });
+        multiply: '\\cdot',
+        invisibleMultiply: '\\cdot',
+        dictionary: dictionary
+      })
       mathfield.value?.setValue(latex, {
         suppressChangeNotifications: true,
-        mode: "math",
-        format: "latex",
-      });
-    });
+        mode: 'math',
+        format: 'latex'
+      })
+    })
 
-    watch(expressionElement.focused, (value) =>
-      value ? mathfield.value?.focus?.() : mathfield.value?.blur?.()
-    );
+    watch(expressionElement.focused, (value) => (value ? mathfield.value?.focus?.() : mathfield.value?.blur?.()))
 
     function evaluateExpression() {
-      const expression = parse(mathfield.value?.getValue?.("latex") ?? "", {
-        dictionary: dictionary,
-      });
+      const expression = parse(mathfield.value?.getValue?.('latex') ?? '', {
+        dictionary: dictionary
+      })
       /*        {
           form: ["full"], // TODO: Mathjson can have objects like {num:"3"} instead of 3
           // @ts-ignore
@@ -93,62 +87,56 @@ export default defineComponent({
           //onError,
         }
       );*/
-      console.log(
-        "Parsing",
-        mathfield.value?.getValue?.("latex"),
-        "resulted in",
-        expression
-      );
+      console.log('Parsing', mathfield.value?.getValue?.('latex'), 'resulted in', expression)
       // TODO: Verify that the expression has no issues
       // TODO: Regarding multi letter variables
       // - Add all known variables point to dictionary
       // - If it was none if them, interpret it as separate, 1 letter variables
       // TODO: What about multi letter functions?
 
-      expressionElement.inputExpression(expression);
+      expressionElement.inputExpression(expression)
     }
 
     // TODO: Maintain your own list of shortcuts (because the default ones cause some issues)
     watch(
       mathfieldContainer,
       (value) => {
-        if (!value) return;
+        if (!value) return
         mathfield.value = new MathfieldElement({
-          defaultMode: "math",
+          defaultMode: 'math',
           // smartSuperscript: true,
           removeExtraneousParentheses: true,
           smartFence: true,
           plonkSound: null,
           keypressSound: null,
           onContentDidChange: (mathfield: MathLive.Mathfield) => {
-            console.log("content changed", mathfield.getValue("latex"));
+            console.log('content changed', mathfield.getValue('latex'))
             // TODO: Don't try to compute anything while I'm editing the mathfield
           },
           onFocus: (mathfield: MathLive.Mathfield) => {
-            expressionElement.setFocused(true);
-            context.emit("focused-element-commands", {
+            expressionElement.setFocused(true)
+            context.emit('focused-element-commands', {
               elementType: ElementType,
-              moveToStart: () =>
-                mathfield.executeCommand("moveToMathFieldStart"),
-              moveToEnd: () => mathfield.executeCommand("moveToMathFieldEnd"),
+              moveToStart: () => mathfield.executeCommand('moveToMathFieldStart'),
+              moveToEnd: () => mathfield.executeCommand('moveToMathFieldEnd'),
               insert: (text: string) => {
-                if (text.startsWith("\\")) {
-                  mathfield.insert(text, { mode: "latex" });
+                if (text.startsWith('\\')) {
+                  mathfield.insert(text, { mode: 'latex' })
                 } else {
-                  mathfield.insert(text);
+                  mathfield.insert(text)
                 }
-              },
-            });
+              }
+            })
           },
           onBlur: (mathfield: MathLive.Mathfield) => {
-            expressionElement.setFocused(false);
-            context.emit("focused-element-commands", undefined);
+            expressionElement.setFocused(false)
+            context.emit('focused-element-commands', undefined)
 
-            if (mathfield.getValue("latex").length == 0) {
-              context.emit("delete-element");
+            if (mathfield.getValue('latex').length == 0) {
+              context.emit('delete-element')
             } else {
-              console.log("onBlur");
-              evaluateExpression();
+              console.log('onBlur')
+              evaluateExpression()
             }
           },
           onMoveOutOf: (mathfield: MathLive.Mathfield, direction) => {
@@ -157,56 +145,52 @@ export default defineComponent({
                 forward: new Vector2(1, 0),
                 backward: new Vector2(-1, 0),
                 upward: new Vector2(0, -1),
-                downward: new Vector2(0, 1),
-              }[direction] ?? Vector2.zero;
+                downward: new Vector2(0, 1)
+              }[direction] ?? Vector2.zero
 
-            context.emit("move-cursor-out", directionVector);
-            return false;
+            context.emit('move-cursor-out', directionVector)
+            return false
           },
           onTabOutOf: (mathfield: MathLive.Mathfield, direction) => {
-            context.emit(
-              "move-cursor-out",
-              new Vector2(direction == "forward" ? 1 : -1, 0)
-            );
-            return true;
+            context.emit('move-cursor-out', new Vector2(direction == 'forward' ? 1 : -1, 0))
+            return true
           },
           onCommit: (mathfield) => {
-            mathfield.blur?.();
-            context.emit("move-cursor-out", new Vector2(0, 1));
-          },
-        });
+            mathfield.blur?.()
+            context.emit('move-cursor-out', new Vector2(0, 1))
+          }
+        })
 
-        setMathfieldOptions(mathfield.value);
+        setMathfieldOptions(mathfield.value)
 
-        mathfield.value.style.fontSize = "18px";
+        mathfield.value.style.fontSize = '18px'
 
         // Later down the road we can use "adoptedStyleSheets"
-        const caretCustomStyle = document.createElement("style");
+        const caretCustomStyle = document.createElement('style')
         caretCustomStyle.innerHTML = `.ML__caret:after {
           border-right-width: 0px !important;
           margin-right: 0px !important;
           width: 0px !important;
           box-shadow: 0px 0px 0px 1px var(--caret,hsl(var(--hue,212),40%,49%));
-         }`;
-        mathfield.value.shadowRoot?.appendChild?.(caretCustomStyle);
+         }`
+        mathfield.value.shadowRoot?.appendChild?.(caretCustomStyle)
 
-        value.innerHTML = "";
-        value.appendChild(mathfield.value);
+        value.innerHTML = ''
+        value.appendChild(mathfield.value)
 
         if (expressionElement.focused.value) {
-          mathfield.value.focus();
+          mathfield.value.focus()
         }
       },
       {
-        flush: "post",
+        flush: 'post'
       }
-    );
+    )
 
     return {
-      mathfieldContainer,
-    };
-  },
-});
+      mathfieldContainer
+    }
+  }
+})
 </script>
-<style scoped>
-</style>
+<style scoped></style>
