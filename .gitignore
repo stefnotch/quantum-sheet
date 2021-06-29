@@ -6,3 +6,4 @@ public/pyodide/
 npm-debug.log
 Thumbs.db
 [Dd]esktop.ini
+package-lock.json
