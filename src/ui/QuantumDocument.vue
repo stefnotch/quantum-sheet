@@ -11,6 +11,7 @@
     @paste="clipboard.paste"
     @focus="documentInputElement.focus({ preventScroll: true })"
   >
+    <!-- prettier-ignore -->
     <textarea
       class="input-element"
       ref="documentInputElement"
@@ -22,8 +23,8 @@
       @keydown="grid.keydown($event)"
       @keyup="grid.keyup($event)"
       @focus="
-        document.setSelection()
-        grid.showCrosshair.value = true
+        document.setSelection();
+        grid.showCrosshair.value = true;
       "
       @blur="grid.showCrosshair.value = false"
     ></textarea>
