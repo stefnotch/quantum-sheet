@@ -1,13 +1,13 @@
 <template>
   <div>
-    <a-layout>
+    <a-layout >
       <Header />
-      <a-layout class="content">
-        <a-layout-content class="dwgtable center">
-          <quantum-document></quantum-document>
-        </a-layout-content>
-      </a-layout>
-      <!-- <Footer /> -->
+        <a-layout class="content">
+          <a-layout-content class="dwgtable center">
+            <quantum-document></quantum-document>
+          </a-layout-content>
+        </a-layout>
+      <Footer />
     </a-layout>
   </div>
 </template>
@@ -17,6 +17,7 @@ import { defineComponent, ref } from "vue";
 import pkg from "./../package.json";
 import QuantumDocument from "./ui/QuantumDocument.vue";
 import Header from "./ui/Header.vue";
+import Footer from "./ui/Footer.vue";
 
 
 export default defineComponent({
@@ -24,7 +25,7 @@ export default defineComponent({
   components: {
     QuantumDocument,
     Header,
-    // Footer
+    Footer
   },
   setup(props, context) {
     if (import.meta.env.PROD) {
@@ -37,9 +38,11 @@ export default defineComponent({
 
 <style scoped>
 .content {
+  /* Background color = Scrollbar color */
+  background-color: #F1F1F1;
   position: absolute;
   /* 100% minus Header and footer */
-  height: calc(100% - 36px);
+  height: calc(100% - 36px - 36px);
   /* Header */
   top: 36px;
   /* Footer */
@@ -57,7 +60,7 @@ export default defineComponent({
   margin-bottom: 24px;
   
 }
-.withscratchpad {
+.extended {
   width: 90vw !important;
 }
 .center {

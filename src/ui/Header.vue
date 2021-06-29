@@ -11,16 +11,16 @@
             <template #overlay>
               <a-menu>
                 <a-menu-item>
-                  <a target="_blank" rel="noopener noreferrer" @click=";" :style="{ color: 'black'}">New</a>
+                  <a target="_blank" rel="noopener noreferrer" @click="docHandler.promptnewfile()" :style="{ color: 'black'}">New</a>
                 </a-menu-item>
                 <a-menu-item>
-                  <a target="_blank" rel="noopener noreferrer" @click=";" :style="{ color: 'black'}">Open</a>
+                  <a target="_blank" rel="noopener noreferrer" @click="docHandler.promptsavefile()" :style="{ color: 'black'}">Open</a>
                 </a-menu-item>
                 <a-menu-item>
-                  <a target="_blank" rel="noopener noreferrer" @click=";" :style="{ color: 'black'}">Save as...</a>
+                  <a target="_blank" rel="noopener noreferrer" @click="docHandler.promptopenfile()" :style="{ color: 'black'}">Save as...</a>
                 </a-menu-item>
                 <a-menu-item>
-                  <a target="_blank" rel="noopener noreferrer" @click=";" :style="{ color: 'black'}">Close</a>
+                  <a target="_blank" rel="noopener noreferrer" @click="docHandler.promptclosefile()" :style="{ color: 'black'}">Close</a>
                 </a-menu-item>
               </a-menu>
             </template>
@@ -37,16 +37,41 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent, ref, inject } from "vue";
 
-export default {
-  name: 'Page',
+function useDocHandling($emitter: any) {
+  function promptnewfile() {
+    console.log('newfile')
+    $emitter.emit('promptnewfile')
+  }
+  function promptopenfile() {
+    $emitter.emit('promptopenfile')
+  }
+  function promptsavefile() {
+    $emitter.emit('promptsavefile')
+  }
+  function promptclosefile() {
+    $emitter.emit('promptclosefile')
+  }
+  return {
+    promptnewfile,
+    promptopenfile,
+    promptsavefile,
+    promptclosefile
+  }
+}
+export default defineComponent({
   components: {},
   setup(props, context) {
-    return {};
+    const $emitter = inject('$emitter')
+    const docHandler = useDocHandling($emitter)
+    return {
+      docHandler
+    };
   },
 
-}
+})
 </script>
 
 <style scoped>

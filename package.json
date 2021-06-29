@@ -15,10 +15,12 @@
     "download:pyodide": "node ./utils/download-pyodide.js"
   },
   "dependencies": {
+    "@ant-design/icons-vue": "^6.0.1",
     "@cortex-js/compute-engine": "^0.4.2",
-    "ant-design-vue": "^2.2.0-beta.6",
     "@vueuse/core": "^5.0.3",
+    "ant-design-vue": "^2.2.0-beta.6",
     "mathlive": "0.69.4",
+    "mitt": "^3.0.0",
     "uuid": "^8.3.2",
     "vue": "^3.1.2"
   },

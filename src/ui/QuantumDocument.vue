@@ -113,7 +113,7 @@ function useGrid<T extends QuantumDocumentElementTypes>(
   }
 
   function pointerDown(ev: PointerEvent) {
-    console.log('pointerdown', ev)
+    // console.log('pointerdown', ev)
     if (ev.target == ev.currentTarget) {
       crosshairPosition.value = new Vector2(
         Math.round(ev.offsetX / document.gridCellSize.x),
@@ -314,6 +314,9 @@ export default defineComponent({
         .inputExpression(["\\text", "Solve equalities with -> and solve"]);
     });
 
+    // For serialization?
+    // console.log('document elements:',document.elements, JSON.stringify(document.elements))
+
     return {
       document,
       documentElement,
@@ -338,7 +341,7 @@ export default defineComponent({
 .theme-paper-engineer {
   /* Engineering Paper Style */
   --color: #fffdf8;
-  --grid-color: #bed1d354;
+  --grid-color: #c5dec467;
 }
 .quantum-document {
   /* --color: white; */
