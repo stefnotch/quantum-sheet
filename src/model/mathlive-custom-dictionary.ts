@@ -35,7 +35,7 @@ export const dictionary = LatexSyntax.getDictionary() as LatexDictionary<any>; /
 dictionary.find((v) => v.name === "EqualEqual")!.precedence = 265;
 
 // TODO: Check out the precedences for things like LessEqual
-// TODO: Document those custom symbols, because they're non-standard mathjson
+// TODO: Document those custom symbols, because they're non-standard mathjson. They're a part of the QuantumSheet backend
 
 // Evaluate should be special, as to not conflict with things like `lim_{n \to 3}`
 // `x^2 + 3x + c == 0 -> ` should evaluate the quadratic equation

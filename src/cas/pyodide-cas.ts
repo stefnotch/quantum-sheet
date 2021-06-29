@@ -145,6 +145,9 @@ function usePythonConverter() {
     expressionToPython: (expression: any) =>
       expressionToPython(
         format(expression, [
+          // TODO: This has changed: https://cortexjs.io/compute-engine/guides/forms/
+          // Sympy doesn't (?) accept all operations https://docs.sympy.org/latest/tutorial/manipulation.html
+          // (Or maybe it does? I haven't tried it out to be honest)
           "canonical-root",
           "canonical-subtract",
           "canonical-divide",
