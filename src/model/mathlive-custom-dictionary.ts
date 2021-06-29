@@ -1,6 +1,7 @@
 import { Expression, LatexSyntax } from "@cortex-js/compute-engine";
 import {
   LatexDictionary,
+  ParserFunction,
   Scanner,
 } from "@cortex-js/compute-engine/dist/types/latex-syntax/public";
 
@@ -35,10 +36,11 @@ export const dictionary = LatexSyntax.getDictionary() as LatexDictionary<any>; /
 dictionary.find((v) => v.name === "EqualEqual")!.precedence = 265;
 
 // TODO: Check out the precedences for things like LessEqual
-// TODO: Document those custom symbols, because they're non-standard mathjson
+// TODO: Document those custom symbols, because they're non-standard mathjson. They're a part of the QuantumSheet backend
 
 // Evaluate should be special, as to not conflict with things like `lim_{n \to 3}`
 // `x^2 + 3x + c == 0 -> ` should evaluate the quadratic equation
+
 dictionary.push({
   precedence: 260,
   name: "Evaluate",
@@ -54,7 +56,7 @@ dictionary.push({
         : expr[2]
     }}${emitter.wrap(expr[3], 260)}`;
   },
-  parse: function (lhs, scanner, minPrec, _latex) {
+  parse: <ParserFunction<number>>function (lhs, scanner, minPrec) {
     if (260 < minPrec) return [lhs, null];
     scanner.matchOptionalLatexArgument();
     //const solveArgument = scanner.matchRequiredLatexArgument(); // TODO: Add the solve keyword to known stuff
@@ -62,7 +64,7 @@ dictionary.push({
     scanner.skipSpace();
     if (scanner.match("<{>")) {
       let level = 1;
-      while (!scanner.atEnd() && level !== 0) {
+      while (!scanner.atEnd && level !== 0) {
         if (scanner.match("<{>")) {
           level += 1;
         } else if (scanner.match("<}>")) {

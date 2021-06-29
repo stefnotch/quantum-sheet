@@ -19,6 +19,24 @@ import { dictionary } from "../../model/mathlive-custom-dictionary";
 
 export { ExpressionElementType };
 
+function setMathfieldOptions(mathfield: MathfieldElement) {
+  const keybindings = mathfield.getOption("keybindings").concat([
+    {
+      key: "ctrl+[Period]",
+      ifMode: "math",
+      command: ["insert", "\\xrightarrow{\\placeholder{}}"],
+    },
+  ]);
+
+  const shortcuts = mathfield.getOption("inlineShortcuts");
+  shortcuts["->"] = "\\xrightarrow{\\placeholder{}}";
+
+  mathfield.setOptions({
+    inlineShortcuts: shortcuts,
+    keybindings: keybindings,
+  });
+}
+
 export default defineComponent({
   props: {
     /**
@@ -39,7 +57,7 @@ export default defineComponent({
     const mathfield = shallowRef<MathfieldElement>();
     const expressionElement = props.modelGetter();
 
-    watch(expressionElement.expression, (value) => {
+    watch([expressionElement.expression, mathfield], ([value, _]) => {
       const latex = serialize(value, {
         multiply: "\\cdot",
         invisibleMultiply: "\\cdot",
@@ -134,16 +152,14 @@ export default defineComponent({
             }
           },
           onMoveOutOf: (mathfield: MathLive.Mathfield, direction) => {
-            let directionVector = Vector2.zero;
-            if (direction == "forward") {
-              directionVector = new Vector2(1, 0);
-            } else if (direction == "backward") {
-              directionVector = new Vector2(-1, 0);
-            } else if (direction == "upward") {
-              directionVector = new Vector2(0, -1);
-            } else if (direction == "downward") {
-              directionVector = new Vector2(0, 1);
-            }
+            let directionVector =
+              {
+                forward: new Vector2(1, 0),
+                backward: new Vector2(-1, 0),
+                upward: new Vector2(0, -1),
+                downward: new Vector2(0, 1),
+              }[direction] ?? Vector2.zero;
+
             context.emit("move-cursor-out", directionVector);
             return false;
           },
@@ -154,34 +170,13 @@ export default defineComponent({
             );
             return true;
           },
-          onKeystroke: (mathfield, keystroke, ev) => {
-            //@ts-ignore
-            // TODO: This conflicts with vectors
-            if (mathfield.mode == "math" && keystroke == "[Enter]") {
-              mathfield.blur?.();
-              context.emit("move-cursor-out", new Vector2(0, 1));
-            }
-            return true;
+          onCommit: (mathfield) => {
+            mathfield.blur?.();
+            context.emit("move-cursor-out", new Vector2(0, 1));
           },
         });
 
-        mathfield.value.setOptions({
-          //@ts-ignore
-          keybindings: mathfield.value.getOption("keybindings").concat([
-            {
-              key: "ctrl+[Period]",
-              ifMode: "math",
-              command: ["insert", "\\xrightarrow{\\placeholder{}}"],
-            },
-          ]),
-        });
-
-        const shortcuts = mathfield.value.getOption("inlineShortcuts");
-        // @ts-ignore
-        shortcuts["->"] = "\\xrightarrow{\\placeholder{}}";
-        mathfield.value.setOptions({
-          inlineShortcuts: shortcuts,
-        });
+        setMathfieldOptions(mathfield.value);
 
         mathfield.value.style.fontSize = "18px";
 
