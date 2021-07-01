@@ -14,7 +14,7 @@ import { cas } from "../../cas";
 import { assert } from "../../assert";
 import { CasCommand } from "../../../cas/cas";
 import { getGetterNames, getVariableNames } from "../../../cas/cas-math";
-import { Expression } from "@cortex-js/compute-engine";
+import { Expression, match, substitute } from "@cortex-js/compute-engine";
 
 export const ElementType = "expression-element";
 
@@ -30,13 +30,15 @@ export interface UseExpressionElement extends UseQuantumElement {
 }
 
 function addPlaceholders(expression: Expression) {
+  // TODO: Use patterns and replacements https://cortexjs.io/compute-engine/guides/patterns-and-rules/
+
   if (Array.isArray(expression)) {
     const functionName = expression[0];
     const output = expression.slice();
     if (functionName == "Equal") {
       output[1] = addPlaceholders(expression[1]);
       output[2] = ["\\mathinner", ["Missing", ""]];
-    } else if (functionName == "To") {
+    } else if (functionName == "Evaluate") {
       output[1] = addPlaceholders(expression[1]);
       output[3] = ["\\mathinner", ["Missing", ""]];
     } else {
