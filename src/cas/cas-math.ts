@@ -1,6 +1,7 @@
 import { Expression } from "@cortex-js/compute-engine";
 
 // TODO: Ask mathlive creator about how to best do stuff like this
+// TODO: Use stuff from here https://github.com/cortex-js/compute-engine/blob/main/src/common/utils.ts
 
 export function getGetterNames(expression: Expression) {
   const getters = new Set<string>();

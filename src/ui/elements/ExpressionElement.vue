@@ -15,7 +15,7 @@ import MathLive, { MathfieldElement } from "mathlive";
 import { ElementCommands } from "./element-commands";
 import { Vector2 } from "../../model/vectors";
 import { parse, serialize } from "@cortex-js/compute-engine";
-import { dictionary } from "../../model/mathlive-custom-dictionary";
+import { dictionary } from "../../model/mathjson-custom-dictionary";
 
 export { ExpressionElementType };
 
@@ -49,7 +49,7 @@ export default defineComponent({
   },
   emits: {
     "focused-element-commands": (value: ElementCommands | undefined) => true,
-    "move-cursor-out": (direction: Vector2) => true,
+    "move-cursor-out": (direction: Vector2) => true, // TODO: Mathlive supports getting the screen position of the cursor. Use that!
     "delete-element": () => true,
   },
   setup(props, context) {
@@ -57,62 +57,58 @@ export default defineComponent({
     const mathfield = shallowRef<MathfieldElement>();
     const expressionElement = props.modelGetter();
 
-    watch([expressionElement.expression, mathfield], ([value, _]) => {
-      const latex = serialize(value, {
-        multiply: "\\cdot",
-        invisibleMultiply: "\\cdot",
-        dictionary: dictionary,
-      });
-      mathfield.value?.setValue(latex, {
-        suppressChangeNotifications: true,
-        mode: "math",
-        format: "latex",
-      });
-    });
-
+    // Change mathfield focus
     watch(expressionElement.focused, (value) =>
       value ? mathfield.value?.focus?.() : mathfield.value?.blur?.()
     );
 
+    // Show expression when the document-expression changes
+    watch([expressionElement.expression, mathfield], ([value, _]) => {
+      const latex = serialize(value, {
+        multiply: "\\cdot",
+        invisibleMultiply: "\\cdot",
+        invisiblePlus: "+",
+        dictionary: dictionary,
+        // groupSeparator
+      });
+
+      mathfield.value?.setValue(latex, {
+        suppressChangeNotifications: true,
+      });
+    });
+
+    /**
+     * Evaluate the expression that the user has typed
+     */
     function evaluateExpression() {
       const expression = parse(mathfield.value?.getValue?.("latex") ?? "", {
         dictionary: dictionary,
+        promoteUnknownFunctions: /$^/,
       });
-      /*        {
-          form: ["full"], // TODO: Mathjson can have objects like {num:"3"} instead of 3
-          // @ts-ignore
-          /*promoteUnknownSymbols: {
-            test: (value) => {
-              console.log(value);
-              return false;
-            },
-          },/
-          //promoteUnknownSymbols: /^[a-zA-Z]([a-zA-Z]|$)/,
-          //promoteUnknownFunctions: /^[fge][fg]$/,
-          //dictionary: // TODO:
-          //onError,
-        }
-      );*/
+
       console.log(
-        "Parsing",
+        "Evaluating ",
         mathfield.value?.getValue?.("latex"),
-        "resulted in",
-        expression
+        "(Mathjson form: ",
+        expression,
+        ")"
       );
       // TODO: Verify that the expression has no issues
       // TODO: Regarding multi letter variables
       // - Add all known variables point to dictionary
       // - If it was none if them, interpret it as separate, 1 letter variables
       // TODO: What about multi letter functions?
+      // TODO: Add user-defined stuff to dictionary
 
       expressionElement.inputExpression(expression);
     }
 
-    // TODO: Maintain your own list of shortcuts (because the default ones cause some issues)
+    // Create the mathfield
     watch(
       mathfieldContainer,
       (value) => {
         if (!value) return;
+
         mathfield.value = new MathfieldElement({
           defaultMode: "math",
           // smartSuperscript: true,
@@ -121,8 +117,7 @@ export default defineComponent({
           plonkSound: null,
           keypressSound: null,
           onContentDidChange: (mathfield: MathLive.Mathfield) => {
-            console.log("content changed", mathfield.getValue("latex"));
-            // TODO: Don't try to compute anything while I'm editing the mathfield
+            // TODO: If the expression is simple enough, we can optionally show a preview of the result
           },
           onFocus: (mathfield: MathLive.Mathfield) => {
             expressionElement.setFocused(true);
@@ -141,13 +136,12 @@ export default defineComponent({
             });
           },
           onBlur: (mathfield: MathLive.Mathfield) => {
-            expressionElement.setFocused(false);
             context.emit("focused-element-commands", undefined);
+            expressionElement.setFocused(false);
 
             if (mathfield.getValue("latex").length == 0) {
               context.emit("delete-element");
             } else {
-              console.log("onBlur");
               evaluateExpression();
             }
           },
@@ -180,15 +174,17 @@ export default defineComponent({
 
         mathfield.value.style.fontSize = "18px";
 
-        // Later down the road we can use "adoptedStyleSheets"
-        const caretCustomStyle = document.createElement("style");
-        caretCustomStyle.innerHTML = `.ML__caret:after {
+        // TODO: Remove this hack once this gets fixed https://github.com/arnog/mathlive/issues/1056
+        {
+          const caretCustomStyle = document.createElement("style");
+          caretCustomStyle.innerHTML = `.ML__caret:after {
           border-right-width: 0px !important;
           margin-right: 0px !important;
           width: 0px !important;
           box-shadow: 0px 0px 0px 1px var(--caret,hsl(var(--hue,212),40%,49%));
          }`;
-        mathfield.value.shadowRoot?.appendChild?.(caretCustomStyle);
+          mathfield.value.shadowRoot?.appendChild?.(caretCustomStyle);
+        }
 
         value.innerHTML = "";
         value.appendChild(mathfield.value);
