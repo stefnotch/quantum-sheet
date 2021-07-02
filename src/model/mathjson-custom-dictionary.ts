@@ -27,11 +27,13 @@ https://github.com/cortex-js/compute-engine/blob/680462ea46b9d5c4c53d046d807bd9e
  * `->` being used to symbolically evaluate something
  */
 export const dictionary = LatexSyntax.getDictionary() as LatexDictionary<any> // A bit of a hack
-// console.log(dictionary);
+// console.log(dictionary)
 
 // `a == b =` should be parsed as `(a == b) =`
 // Basically, it should first check whether the two are equivalent and then calculate the result
 dictionary.find((v) => v.name === 'EqualEqual')!.precedence = 265
+
+dictionary.find((v) => v.name === 'Equal')!.associativity = 'left'
 
 // TODO: Check out the precedences for things like LessEqual
 // TODO: Document those custom symbols, because they're non-standard mathjson. They're a part of the QuantumSheet backend
@@ -46,6 +48,7 @@ dictionary.push({
   name: EVALUATE,
   optionalLatexArg: 1,
   requiredLatexArg: 1,
+  associativity: 'left',
   trigger: { infix: '\\xrightarrow' },
   serialize: <SerializerFunction<number>>function (emitter, expr) {
     console.log(expr)

@@ -137,9 +137,9 @@ function usePythonConverter() {
           // Sympy doesn't accept all operations https://docs.sympy.org/latest/tutorial/manipulation.html
           'canonical-root',
           'canonical-subtract',
-          'canonical-divide' // This one probably needs to be changed. The others seem fine
+          'canonical-divide', // This one probably needs to be changed. The others seem fine
         ])
-      )
+      ),
   }
 }
 
@@ -175,7 +175,7 @@ function getOrCreateWorker(): Promise<PyodideWorker> {
       onerror: null,
       postMessage: function (message: any, options?: PostMessageOptions | Transferable[]) {
         sharedWorker.port.postMessage(message, options as any)
-      }
+      },
     }
 
     return new Promise((resolve, reject) => {
@@ -290,7 +290,8 @@ export function usePyodide() {
       .join(',')
 
     let pythonExpression = ''
-    // Only parse the expression if there is an "Equal" or "Solve" or "Apply" at the root
+    // For now, only parse the expression if there is an "Equal" or "Solve" or "Apply" at the root
+    // TODO: Handle nested "Equal", "Solve", "Apply"s. For example, 3x=5 -> computed solution goes here = numerical solution goes here
     if (command.expression[0] == 'Equal') {
       // TODO: If the expression is only a single getter or something simple, don't call the CAS
       pythonExpression = `${expressionToPython(command.expression[1])}\n\t.subs({${substitutions}})\n\t.evalf()`
@@ -328,7 +329,7 @@ export function usePyodide() {
       id: command.id,
       data: {},
       symbols: symbolNames,
-      command: pythonExpression
+      command: pythonExpression,
     } as WorkerMessage)
   }
 
@@ -348,6 +349,6 @@ export function usePyodide() {
 
   return {
     executeCommand,
-    cancelCommand
+    cancelCommand,
   }
 }
