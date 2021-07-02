@@ -1,3 +1,6 @@
+/**
+ * A simple readonly Vector2
+ */
 export class Vector2 {
   readonly x: number;
   readonly y: number;

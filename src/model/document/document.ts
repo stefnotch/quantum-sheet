@@ -1,26 +1,28 @@
 // Not recursive! The expression tree on the other hand will be recursive.
 
-import { UseQuantumElement, QuantumElementCreationOptions } from './document-element'
+import { UseQuantumElement, QuantumElementCreationOptions, QuantumElementType } from './document-element'
 import { Vector2 } from '../vectors'
 import { readonly, shallowReactive, shallowRef, ref, watch } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import arrayUtils from '../array-utils'
 import { UseScopeElement, ScopeElementType } from './elements/scope-element'
 
-// TODO: Make stuff readonly
-export type QuantumDocumentElementTypes = {
-  [key: string]: {
-    typeName: string
-    useElement: (block: UseQuantumElement) => UseQuantumElement
-    serializeElement(element: UseQuantumElement): string
-    deserializeElement(data: string): UseQuantumElement
-  }
-} & typeof ScopeElementType.documentType
+export type QuantumDocumentElementTypes = QuantumElementType<UseQuantumElement, string>['documentType'] & typeof ScopeElementType.documentType
 
 // type NameToElementType<T extends {useElement: (...args: any) => UseQuantumElement}> = T extends {useElement: (...args: any) => infer R} ? R : any;
 
+/**
+ * A top level document, containing a list of elements.
+ */
 export interface UseQuantumDocument<TElements extends QuantumDocumentElementTypes> {
+  /**
+   * How large the grid cells are, in pixels
+   */
   readonly gridCellSize: Readonly<Vector2>
+
+  /**
+   * Which elements the document contains
+   */
   readonly elementTypes: Readonly<TElements>
 
   /**

@@ -128,16 +128,6 @@ function usePythonConverter() {
     }
   }
 
-  const fakeDictionary = new Proxy(
-    { fakeKey: 1 },
-    {
-      get(target, name) {
-        console.error("Tried to access a dictionary key");
-        throw new Error("Tried to access a dictionary key");
-      },
-    }
-  );
-
   return {
     encodeName,
     decodeName,
@@ -155,6 +145,9 @@ function usePythonConverter() {
   };
 }
 
+/**
+ * Interface for a pyodide web worker or shared worker
+ */
 interface PyodideWorker {
   onmessage: ((ev: MessageEvent) => any) | null;
   onmessageerror: ((ev: MessageEvent) => any) | null;
@@ -164,6 +157,11 @@ interface PyodideWorker {
   postMessage(message: any, options?: PostMessageOptions): void;
 }
 
+/**
+ * Creates a pyodide web worker, unless one already exists.
+ * In a development environment, it'll create a shared worker instead.
+ * @returns
+ */
 function getOrCreateWorker(): Promise<PyodideWorker> {
   const workerUrl = `${import.meta.env.BASE_URL}pyodide-worker.js`;
 

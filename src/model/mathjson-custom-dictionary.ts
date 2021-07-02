@@ -3,7 +3,10 @@ import {
   LatexDictionary,
   ParserFunction,
   Scanner,
+  SerializerFunction,
 } from "@cortex-js/compute-engine/dist/types/latex-syntax/public";
+
+const MISSING = "Missing";
 
 /*
 References:
@@ -41,26 +44,35 @@ dictionary.find((v) => v.name === "EqualEqual")!.precedence = 265;
 // Evaluate should be special, as to not conflict with things like `lim_{n \to 3}`
 // `x^2 + 3x + c == 0 -> ` should evaluate the quadratic equation
 
+export const EVALUATE = "Evaluate";
+
 dictionary.push({
   precedence: 260,
-  name: "Evaluate",
+  name: EVALUATE,
   optionalLatexArg: 1,
   requiredLatexArg: 1,
   trigger: { infix: "\\xrightarrow" },
-  serialize: function (emitter, expr) {
+  serialize: <SerializerFunction<number>>function (emitter, expr) {
+    console.log(expr);
     if (!Array.isArray(expr)) throw new Error("Expect array expression");
 
-    return `${emitter.wrap(expr[1], 260)}\\xrightarrow{${
-      Array.isArray(expr[2]) && expr[2][0] == "Missing"
-        ? "\\placeholder{}"
-        : expr[2]
-    }}${emitter.wrap(expr[3], 260)}`;
+    return (
+      emitter.wrap(expr[1], 260) +
+      `\\xrightarrow{${
+        Array.isArray(expr[2]) && expr[2][0] == MISSING // TODO: Make this more elegant
+          ? "\\placeholder{}"
+          : expr[2]
+      }}` +
+      emitter.wrap(expr[3], 260)
+    );
   },
   parse: <ParserFunction<number>>function (lhs, scanner, minPrec) {
     if (260 < minPrec) return [lhs, null];
+    if (!scanner.match("\\xrightarrow")) return [lhs, null];
+
     scanner.matchOptionalLatexArgument();
     //const solveArgument = scanner.matchRequiredLatexArgument(); // TODO: Add the solve keyword to known stuff
-    let solveArgument = "";
+    let solveArgument: string | string[] = "";
     scanner.skipSpace();
     if (scanner.match("<{>")) {
       let level = 1;
@@ -76,17 +88,12 @@ dictionary.push({
         }
       }
     }
+    if (solveArgument.startsWith("\\placeholder")) {
+      solveArgument = [MISSING, solveArgument.replace(/^\\placeholder/, "")];
+    }
 
     const rhs = scanner.matchExpression(260);
-    return [
-      null,
-      [
-        "Evaluate",
-        lhs,
-        solveArgument == "\\placeholder" ? ["Missing", ""] : solveArgument,
-        rhs,
-      ],
-    ];
+    return [null, ["Evaluate", lhs, solveArgument, rhs]];
   },
 });
 
