@@ -12,13 +12,13 @@ import QuantumDocument from './ui/QuantumDocument.vue'
 export default defineComponent({
   name: 'App',
   components: {
-    QuantumDocument
+    QuantumDocument,
   },
   setup(props, context) {
     if (import.meta.env.PROD) {
       console.log(`${pkg.name} - ${pkg.version}`)
     }
     return {}
-  }
+  },
 })
 </script>

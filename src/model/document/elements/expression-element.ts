@@ -273,7 +273,7 @@ function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
     getters,
     variables,
     expression,
-    inputExpression
+    inputExpression,
   }
 }
 
@@ -292,7 +292,7 @@ export const ExpressionElementType: QuantumElementType<UseExpressionElement, typ
       typeName: ElementType,
       useElement: useExpressionElement,
       serializeElement: serializeElement,
-      deserializeElement: deserializeElement
-    }
-  }
+      deserializeElement: deserializeElement,
+    },
+  },
 }

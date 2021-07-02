@@ -137,7 +137,7 @@ function useScopeElement(block: UseQuantumElement): UseScopeElement {
       position: position,
       index: 0,
       data: shallowRef(),
-      getters: []
+      getters: [],
     })
 
     const newVariableArray = reactive([importerVariable])
@@ -157,7 +157,7 @@ function useScopeElement(block: UseQuantumElement): UseScopeElement {
       position: position,
       index: -1,
       data: shallowRef<any>(null),
-      getters: []
+      getters: [],
     })
 
     const variableArray =
@@ -204,7 +204,7 @@ function useScopeElement(block: UseQuantumElement): UseScopeElement {
         variable.index = index
       },
       {
-        immediate: true
+        immediate: true,
       }
     )
 
@@ -218,14 +218,14 @@ function useScopeElement(block: UseQuantumElement): UseScopeElement {
 
     return {
       setData,
-      remove
+      remove,
     }
   }
 
   function addGetter(name: string, position: ComputedRef<Vector2>) {
     const getter: ScopedGetter = reactive({
       position: position,
-      variable: undefined
+      variable: undefined,
     })
     const data = computed(() => getter.variable?.data)
 
@@ -245,7 +245,7 @@ function useScopeElement(block: UseQuantumElement): UseScopeElement {
           if (
             isInRange(value, {
               start: getter.variable.position,
-              end: nextVariable?.position
+              end: nextVariable?.position,
             })
           ) {
             return
@@ -276,7 +276,7 @@ function useScopeElement(block: UseQuantumElement): UseScopeElement {
 
     return {
       data,
-      remove
+      remove,
     }
   }
 
@@ -287,7 +287,7 @@ function useScopeElement(block: UseQuantumElement): UseScopeElement {
     variableMap: variableMap,
     setName,
     addVariable,
-    addGetter
+    addGetter,
   }
 }
 
@@ -306,7 +306,7 @@ export const ScopeElementType: QuantumElementType<UseScopeElement, typeof Elemen
       typeName: ElementType,
       useElement: useScopeElement,
       serializeElement: serializeElement,
-      deserializeElement: deserializeElement
-    }
-  }
+      deserializeElement: deserializeElement,
+    },
+  },
 }

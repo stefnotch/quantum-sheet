@@ -5,7 +5,7 @@
     tabindex="-1"
     :style="{
       '--grid-cell-size-x': `${document.gridCellSize.x}px`,
-      '--grid-cell-size-y': `${document.gridCellSize.y}px`
+      '--grid-cell-size-y': `${document.gridCellSize.y}px`,
     }"
     @pointerdown="grid.pointerDown($event)"
     @paste="clipboard.paste"
@@ -64,7 +64,7 @@ function useClipboard<T extends QuantumDocumentElementTypes>(document: UseQuantu
   return {
     cut,
     copy,
-    paste
+    paste,
   }
 }
 
@@ -80,7 +80,7 @@ function useGrid<T extends QuantumDocumentElementTypes>(
     let pos = unref(gridPosition)
     return {
       left: pos.x * document.gridCellSize.x + 'px',
-      top: pos.y * document.gridCellSize.y + 'px'
+      top: pos.y * document.gridCellSize.y + 'px',
     }
   }
 
@@ -96,7 +96,7 @@ function useGrid<T extends QuantumDocumentElementTypes>(
     if (ev.data) {
       let element = document.createElement(ExpressionElementType.typeName, {
         position: crosshairPosition.value,
-        resizeable: false
+        resizeable: false,
       })
       document.setFocus(element)
       nextTick(() => {
@@ -160,7 +160,7 @@ function useGrid<T extends QuantumDocumentElementTypes>(
     keyup,
 
     moveCrosshairOut,
-    focusUnderCrosshair
+    focusUnderCrosshair,
   }
 }
 
@@ -172,17 +172,17 @@ type TypeComponents<T extends UseQuantumDocument<any>> = T extends UseQuantumDoc
 export default defineComponent({
   components: {
     ExpressionElement,
-    ScopeElement
+    ScopeElement,
   },
   setup() {
     const document = useDocument({
       ...ExpressionElementType.documentType,
-      ...ScopeElementType.documentType
+      ...ScopeElementType.documentType,
     })
 
     const typeComponents: TypeComponents<typeof document> = {
       [ExpressionElementType.typeName]: ExpressionElement,
-      [ScopeElementType.typeName]: ScopeElement
+      [ScopeElementType.typeName]: ScopeElement,
     }
 
     const documentElement = ref<HTMLElement>()
@@ -209,9 +209,9 @@ export default defineComponent({
       grid,
       clipboard,
       getTypeComponent,
-      log
+      log,
     }
-  }
+  },
 })
 </script>
 

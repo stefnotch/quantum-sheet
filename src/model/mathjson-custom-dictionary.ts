@@ -89,7 +89,7 @@ dictionary.push({
 
     const rhs = scanner.matchExpression(260)
     return [null, ['Evaluate', lhs, solveArgument, rhs]]
-  }
+  },
 })
 
 // TODO: Add a proper text parser
@@ -99,5 +99,5 @@ dictionary.push({
   serialize: function (emitter, expr) {
     if (!Array.isArray(expr)) throw new Error('Expect array expression')
     return `\\text{${expr[1]}}`
-  }
+  },
 })
