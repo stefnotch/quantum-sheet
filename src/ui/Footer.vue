@@ -7,7 +7,6 @@
           <a-tooltip :mouseEnterDelay="1">
             <template #title> Calculate </template>
             <a-button size="small" type="primary" @click="appActions.compute">
-              <!-- <a-icon type="calculator"/> -->
               <CalculatorOutlined />
             </a-button>
           </a-tooltip>
@@ -29,8 +28,6 @@
             @change="docActions.handleChangeNformat"
             dropdownClassName="custom-dropdown"
           >
-            <!-- :dropdownAlign="{ offset: [0, -4]}" -->
-            <!-- :getPopupContainer="trigger => trigger.parentNode" -->
             <a-select-option value="decimals"> Decimal </a-select-option>
             <a-select-option value="fractions"> Fraction </a-select-option>
           </a-select>
@@ -64,7 +61,6 @@
           <a-tooltip>
             <template #title> Popout Keyboard </template>
             <a-button size="small" @click="appActions.togglevirtualkb">
-              <!-- <a-icon type="appstore"/> -->
               <AppstoreOutlined />
             </a-button>
           </a-tooltip>
@@ -75,7 +71,6 @@
           <a-tooltip>
             <template #title> Extended Work Area </template>
             <a-space>
-              <!-- <a-icon type="ExportOutlined" class="vert-icon" /> -->
               <ExportOutlined />
               <a-switch size="small" @change="appActions.handleChangeScratchPad" />
             </a-space>
