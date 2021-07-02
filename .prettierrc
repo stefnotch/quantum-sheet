@@ -1,0 +1,8 @@
+{
+  "trailingComma": "none",
+  "tabWidth": 2,
+  "semi": false,
+  "singleQuote": true,
+  "printWidth": 150,
+  "brace_style": "collapse,preserve-inline"
+}
