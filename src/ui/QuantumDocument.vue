@@ -8,6 +8,12 @@
       '--grid-cell-size-y': `${document.gridCellSize.y}px`
     }"
     @pointerdown="grid.pointerDown($event)"
+    @contextmenu="
+      (e) => {
+        e.preventDefault()
+        return false
+      }
+    "
     @paste="clipboard.paste"
     @focus="documentInputElement.focus({ preventScroll: true })"
   >
@@ -49,7 +55,7 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, readonly, ref, Ref, nextTick, unref, onMounted } from 'vue'
+import { defineComponent, readonly, ref, Ref, nextTick, unref, onMounted, inject } from 'vue'
 import { useDocument, UseQuantumDocument, QuantumDocumentElementTypes } from '../model/document/document'
 import ExpressionElement, { ExpressionElementType } from './elements/ExpressionElement.vue'
 import ScopeElement, { ScopeElementType } from './elements/ScopeStartElement.vue'
@@ -117,18 +123,13 @@ function useGrid<T extends QuantumDocumentElementTypes>(
   function keydown(ev: KeyboardEvent) {
     if (ev.isComposing) return
 
-    let direction = Vector2.zero
-    if (ev.key == 'ArrowLeft') {
-      direction = new Vector2(-1, 0)
-    } else if (ev.key == 'ArrowRight') {
-      direction = new Vector2(1, 0)
-    } else if (ev.key == 'ArrowUp') {
-      direction = new Vector2(0, -1)
-    } else if (ev.key == 'ArrowDown') {
-      direction = new Vector2(0, 1)
-    } else {
-      return
-    }
+    let direction =
+      {
+        ArrowLeft: new Vector2(-1, 0),
+        ArrowRight: new Vector2(1, 0),
+        ArrowUp: new Vector2(0, -1),
+        ArrowDown: new Vector2(0, 1)
+      }[ev.key] ?? Vector2.zero
 
     crosshairPosition.value = crosshairPosition.value.add(direction)
     focusUnderCrosshair()
@@ -207,19 +208,9 @@ export default defineComponent({
     onMounted(() => {
       document
         .createElement('expression-element', {
-          position: new Vector2(1, 0)
-        })
-        .inputExpression(['\\text', '(This may take a while to load...)'])
-      document
-        .createElement('expression-element', {
           position: new Vector2(2, 2)
         })
         .inputExpression(['Assign', 'a', 5])
-      document
-        .createElement('expression-element', {
-          position: new Vector2(14, 2)
-        })
-        .inputExpression(['\\text', 'Assign variables with :='])
       document
         .createElement('expression-element', {
           position: new Vector2(2, 5)
@@ -227,33 +218,20 @@ export default defineComponent({
         .inputExpression(['Equal', ['Add', ['Divide', 34, 4], ['Power', 'a', 3]], null])
       document
         .createElement('expression-element', {
-          position: new Vector2(14, 5)
-        })
-        .inputExpression(['\\text', 'Evaluate expressions with ='])
-      document
-        .createElement('expression-element', {
           position: new Vector2(2, 8)
         })
         .inputExpression(['To', ['Add', ['Subtract', 'b', ['Divide', ['Multiply', 4, 'd'], 'd']], ['Multiply', 2, 'b']], ['Missing', ''], null])
       document
         .createElement('expression-element', {
-          position: new Vector2(14, 8)
-        })
-        .inputExpression(['\\text', 'Symbolically evaluate expressions with ->'])
-      document
-        .createElement('expression-element', {
           position: new Vector2(2, 11)
         })
         .inputExpression(['To', ['EqualEqual', ['Add', ['Divide', ['Power', 'x', 2], 0.25], 3], 19], 'solve', null])
-      document
-        .createElement('expression-element', {
-          position: new Vector2(14, 11)
-        })
-        .inputExpression(['\\text', 'Solve equalities with -> and solve'])
     })
 
     // For serialization?
-    // console.log('document elements:',document.elements, JSON.stringify(document.elements))
+    console.log('document elements serialized:', document.elements, JSON.stringify(document.elements))
+    const $emitter: any = inject('$emitter')
+    $emitter.on('promptsavefile', () => console.log('saving', document.elements, JSON.stringify(document.elements)))
 
     return {
       document,

@@ -5,6 +5,7 @@
       <a-layout class="content">
         <a-layout-content class="dwgtable center">
           <quantum-document></quantum-document>
+          <!-- <LandingPage /> -->
         </a-layout-content>
       </a-layout>
       <Footer />
@@ -18,10 +19,12 @@ import pkg from './../package.json'
 import QuantumDocument from './ui/QuantumDocument.vue'
 import Header from './ui/Header.vue'
 import Footer from './ui/Footer.vue'
+import LandingPage from './ui/LandingPage.vue'
 
 export default defineComponent({
   name: 'App',
   components: {
+    LandingPage,
     QuantumDocument,
     Header,
     Footer
@@ -51,7 +54,7 @@ export default defineComponent({
 }
 .dwgtable {
   /* transition: margin 700ms; */
-  width: 21cm;
+  min-width: 21cm;
   min-height: 29.7cm;
   background: white;
   box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;

@@ -276,6 +276,7 @@ function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
 }
 
 function serializeElement(element: UseExpressionElement): string {
+  console.log('Serial element', element, JSON.stringify(element))
   throw new Error(`Serialization not implemented yet`)
 }
 
