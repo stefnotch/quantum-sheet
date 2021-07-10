@@ -20,8 +20,8 @@ function setMathfieldOptions(mathfield: MathfieldElement) {
     {
       key: 'ctrl+[Period]',
       ifMode: 'math',
-      command: ['insert', '\\xrightarrow{\\placeholder{}}']
-    }
+      command: ['insert', '\\xrightarrow{\\placeholder{}}'],
+    },
   ])
 
   const shortcuts = mathfield.getOption('inlineShortcuts')
@@ -29,7 +29,7 @@ function setMathfieldOptions(mathfield: MathfieldElement) {
 
   mathfield.setOptions({
     inlineShortcuts: shortcuts,
-    keybindings: keybindings
+    keybindings: keybindings,
   })
 }
 
@@ -40,13 +40,13 @@ export default defineComponent({
      */
     modelGetter: {
       type: Function as PropType<() => UseExpressionElement>,
-      required: true
-    }
+      required: true,
+    },
   },
   emits: {
     'focused-element-commands': (value: ElementCommands | undefined) => true,
     'move-cursor-out': (direction: Vector2) => true, // TODO: Mathlive supports getting the screen position of the cursor. Use that!
-    'delete-element': () => true
+    'delete-element': () => true,
   },
   setup(props, context) {
     const mathfieldContainer = ref<HTMLElement>()
@@ -62,12 +62,12 @@ export default defineComponent({
         multiply: '\\cdot',
         invisibleMultiply: '\\cdot',
         invisiblePlus: '+',
-        dictionary: dictionary
+        dictionary: dictionary,
         // groupSeparator
       })
 
       mathfield.value?.setValue(latex, {
-        suppressChangeNotifications: true
+        suppressChangeNotifications: true,
       })
     })
 
@@ -77,7 +77,7 @@ export default defineComponent({
     function evaluateExpression() {
       const expression = parse(mathfield.value?.getValue?.('latex') ?? '', {
         dictionary: dictionary,
-        promoteUnknownFunctions: /$^/
+        promoteUnknownFunctions: /$^/,
       })
 
       console.log('Evaluating ', mathfield.value?.getValue?.('latex'), '(Mathjson form: ', expression, ')')
@@ -119,7 +119,7 @@ export default defineComponent({
                 } else {
                   mathfield.insert(text)
                 }
-              }
+              },
             })
           },
           onBlur: (mathfield: MathLive.Mathfield) => {
@@ -138,7 +138,7 @@ export default defineComponent({
                 forward: new Vector2(1, 0),
                 backward: new Vector2(-1, 0),
                 upward: new Vector2(0, -1),
-                downward: new Vector2(0, 1)
+                downward: new Vector2(0, 1),
               }[direction] ?? Vector2.zero
 
             context.emit('move-cursor-out', directionVector)
@@ -151,7 +151,7 @@ export default defineComponent({
           onCommit: (mathfield) => {
             mathfield.blur?.()
             context.emit('move-cursor-out', new Vector2(0, 1))
-          }
+          },
         })
 
         setMathfieldOptions(mathfield.value)
@@ -178,14 +178,14 @@ export default defineComponent({
         }
       },
       {
-        flush: 'post'
+        flush: 'post',
       }
     )
 
     return {
-      mathfieldContainer
+      mathfieldContainer,
     }
-  }
+  },
 })
 </script>
 <style scoped></style>

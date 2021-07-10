@@ -1,44 +1,35 @@
-import { QuantumElementType, UseQuantumElement } from "../document-element";
-import {
-  ref,
-  Ref,
-  reactive,
-  shallowRef,
-  watch,
-  watchEffect,
-  computed,
-  ComputedRef,
-} from "vue";
-import { Vector2 } from "../../vectors";
-import arrayUtils from "../../array-utils";
-import { assert } from "../../assert";
+import { QuantumElementType, UseQuantumElement } from '../document-element'
+import { ref, Ref, reactive, shallowRef, watch, watchEffect, computed, ComputedRef } from 'vue'
+import { Vector2 } from '../../vectors'
+import arrayUtils from '../../array-utils'
+import { assert } from '../../assert'
 
-export const ElementType = "scope-element";
+export const ElementType = 'scope-element'
 
 export interface UseScopeElement extends UseQuantumElement {
   /**
    * Name of the scope, used for named imports
    */
-  name: Ref<string>;
+  name: Ref<string>
 
   /**
    * A closed scope does not auto-import variables from its parent scope
    */
-  closed: Ref<boolean>;
+  closed: Ref<boolean>
 
   /**
    * Variables defined in this scope
    * 0th variable is always the import-variable
    */
-  variableMap: ReadonlyMap<string, ScopedVariable[]>;
+  variableMap: ReadonlyMap<string, ScopedVariable[]>
 
   // Note: I'll try to not use childScopes for now. I think I can get away without them.
 
-  setName(value: string): void;
+  setName(value: string): void
 
-  addVariable(name: string, position: ComputedRef<Vector2>): UseScopedVariable;
+  addVariable(name: string, position: ComputedRef<Vector2>): UseScopedVariable
 
-  addGetter(name: string, position: ComputedRef<Vector2>): UseScopedGetter;
+  addGetter(name: string, position: ComputedRef<Vector2>): UseScopedGetter
 }
 
 // TODO: Scope end element
@@ -50,8 +41,8 @@ export interface UseScopedVariable {
    * - `null` is a variable without data
    * - anything else is data
    */
-  setData(data: any): void; // TODO: Use MathJson type
-  remove(): void;
+  setData(data: any): void // TODO: Use MathJson type
+  remove(): void
 }
 
 export interface UseScopedGetter {
@@ -60,8 +51,8 @@ export interface UseScopedGetter {
    * - `null` is a variable without data
    * - anything else is data
    */
-  data: ComputedRef<any>;
-  remove(): void;
+  data: ComputedRef<any>
+  remove(): void
 }
 
 // Internal interfaces
@@ -69,74 +60,68 @@ interface ScopedVariable {
   /**
    * Variable position
    */
-  readonly position: Vector2;
+  readonly position: Vector2
 
   /**
    * Variable index in array
    */
-  index: number;
+  index: number
 
   /**
    * Shallow ref variable data
    *
    */
-  data: any;
+  data: any
 
   /**
    * Variable getters
    */
-  getters: ScopedGetter[];
+  getters: ScopedGetter[]
 }
 
 interface ScopedGetter {
   /**
    * Getter position
    */
-  readonly position: Vector2;
+  readonly position: Vector2
 
   /**
    * Getter variable
    */
-  variable: ScopedVariable | undefined;
+  variable: ScopedVariable | undefined
 }
 
-function removeVariable(
-  variableArray: ScopedVariable[],
-  variable: ScopedVariable
-) {
-  if (variable.index < 0) return;
+function removeVariable(variableArray: ScopedVariable[], variable: ScopedVariable) {
+  if (variable.index < 0) return
 
   if (variable.getters.length > 0) {
-    const prev = arrayUtils.tryGetElement(variableArray, variable.index - 1);
-    assert(prev, "Expected prev variable to exist");
+    const prev = arrayUtils.tryGetElement(variableArray, variable.index - 1)
+    assert(prev, 'Expected prev variable to exist')
 
-    prev.getters = prev.getters.concat(variable.getters);
-    variable.getters.forEach((v) => (v.variable = prev));
-    variable.getters = [];
+    prev.getters = prev.getters.concat(variable.getters)
+    variable.getters.forEach((v) => (v.variable = prev))
+    variable.getters = []
   }
 
   // Remove variable and update indices
-  variableArray.splice(variable.index, 1);
+  variableArray.splice(variable.index, 1)
   for (let i = variable.index; i < variableArray.length; i++) {
-    variableArray[i].index = i;
+    variableArray[i].index = i
   }
-  variable.index = -1;
+  variable.index = -1
 }
 
 function isInRange(value: Vector2, range: { start?: Vector2; end?: Vector2 }) {
-  return (
-    (!range.start || range.start.compareTo(value) <= 0) &&
-    (!range.end || value.compareTo(range.end) < 0)
-  );
+  return (!range.start || range.start.compareTo(value) <= 0) && (!range.end || value.compareTo(range.end) < 0)
 }
 
 function useScopeElement(block: UseQuantumElement): UseScopeElement {
-  const name = ref("");
-  const closed = ref(false);
-  const variableMap = reactive(new Map<string, ScopedVariable[]>());
+  const name = ref('')
+  const closed = ref(false)
+  const variableMap = reactive(new Map<string, ScopedVariable[]>())
 
   function setName(value: string) {
-    name.value = value;
+    name.value = value
   }
 
   /*const imports = computed(() => {
@@ -147,29 +132,23 @@ function useScopeElement(block: UseQuantumElement): UseScopeElement {
     });
   })*/
 
-  function createVariableArray(
-    name: string,
-    position: ComputedRef<Vector2>
-  ): ScopedVariable[] {
+  function createVariableArray(name: string, position: ComputedRef<Vector2>): ScopedVariable[] {
     const importerVariable: ScopedVariable = reactive({
       position: position,
       index: 0,
       data: shallowRef(),
       getters: [],
-    });
+    })
 
-    const newVariableArray = reactive([importerVariable]);
-    watch(
-      [() => newVariableArray.length, () => importerVariable.getters.length],
-      ([variableArrayLength, gettersLength]) => {
-        if (variableArrayLength <= 1 && gettersLength == 0) {
-          variableMap.delete(name);
-        }
+    const newVariableArray = reactive([importerVariable])
+    watch([() => newVariableArray.length, () => importerVariable.getters.length], ([variableArrayLength, gettersLength]) => {
+      if (variableArrayLength <= 1 && gettersLength == 0) {
+        variableMap.delete(name)
       }
-    );
+    })
 
-    variableMap.set(name, newVariableArray);
-    return newVariableArray;
+    variableMap.set(name, newVariableArray)
+    return newVariableArray
   }
 
   function addVariable(name: string, position: ComputedRef<Vector2>) {
@@ -179,151 +158,126 @@ function useScopeElement(block: UseQuantumElement): UseScopeElement {
       index: -1,
       data: shallowRef<any>(null),
       getters: [],
-    });
+    })
 
     const variableArray =
       variableMap.get(name) ??
       createVariableArray(
         name,
         computed(() => block.position.value)
-      );
+      )
 
     watch(
       () => variable.position,
       (value) => {
         // Remove (or bail out)
         if (variable.index >= 0) {
-          assert(
-            variableArray[variable.index] == variable,
-            `Expected variable ${variable} to be in ${variableArray} at index ${variable.index}`
-          );
+          assert(variableArray[variable.index] == variable, `Expected variable ${variable} to be in ${variableArray} at index ${variable.index}`)
 
-          const prev = arrayUtils.tryGetElement(
-            variableArray,
-            variable.index - 1
-          );
-          const next = arrayUtils.tryGetElement(
-            variableArray,
-            variable.index + 1
-          );
+          const prev = arrayUtils.tryGetElement(variableArray, variable.index - 1)
+          const next = arrayUtils.tryGetElement(variableArray, variable.index + 1)
 
-          if (
-            isInRange(value, { start: prev?.position, end: next?.position })
-          ) {
-            return;
+          if (isInRange(value, { start: prev?.position, end: next?.position })) {
+            return
           }
 
-          removeVariable(variableArray, variable);
+          removeVariable(variableArray, variable)
         }
 
         // Add
-        const { index } = arrayUtils.getBinaryInsertIndex(variableArray, (v) =>
-          v.position.compareTo(value)
-        );
+        const { index } = arrayUtils.getBinaryInsertIndex(variableArray, (v) => v.position.compareTo(value))
 
-        const prev = arrayUtils.tryGetElement(variableArray, index - 1);
+        const prev = arrayUtils.tryGetElement(variableArray, index - 1)
         // Take some getters from prev
         if (prev?.getters) {
-          variable.getters = prev.getters.filter(
-            (v) => value.compareTo(v.position) <= 0
-          );
+          variable.getters = prev.getters.filter((v) => value.compareTo(v.position) <= 0)
           variable.getters.forEach((v) => {
-            v.variable = variable;
-          });
-          prev.getters = prev.getters.filter(
-            (v) => v.position.compareTo(value) < 0
-          );
+            v.variable = variable
+          })
+          prev.getters = prev.getters.filter((v) => v.position.compareTo(value) < 0)
         }
         // Update variable indices
         for (let i = index; i < variableArray.length; i++) {
-          variableArray[i].index = i + 1;
+          variableArray[i].index = i + 1
         }
-        variableArray.splice(index, 0, variable);
-        variable.index = index;
+        variableArray.splice(index, 0, variable)
+        variable.index = index
       },
       {
         immediate: true,
       }
-    );
+    )
 
     function setData(data: any) {
-      variable.data = data;
+      variable.data = data
     }
 
     function remove() {
-      removeVariable(variableArray, variable);
+      removeVariable(variableArray, variable)
     }
 
     return {
       setData,
       remove,
-    };
+    }
   }
 
   function addGetter(name: string, position: ComputedRef<Vector2>) {
     const getter: ScopedGetter = reactive({
       position: position,
       variable: undefined,
-    });
-    const data = computed(() => getter.variable?.data);
+    })
+    const data = computed(() => getter.variable?.data)
 
     const variableArray =
       variableMap.get(name) ??
       createVariableArray(
         name,
         computed(() => block.position.value)
-      );
+      )
 
     watch(
       () => getter.position,
       (value) => {
         if (getter.variable) {
           // If the getter is still in the correct position, bail out
-          const nextVariable = arrayUtils.tryGetElement(
-            variableArray,
-            getter.variable.index + 1
-          );
+          const nextVariable = arrayUtils.tryGetElement(variableArray, getter.variable.index + 1)
           if (
             isInRange(value, {
               start: getter.variable.position,
               end: nextVariable?.position,
             })
           ) {
-            return;
+            return
           }
 
           // Remove getter from old variable
-          arrayUtils.remove(getter.variable.getters, getter);
-          getter.variable = undefined;
+          arrayUtils.remove(getter.variable.getters, getter)
+          getter.variable = undefined
         }
 
-        const { index } = arrayUtils.getBinaryInsertIndex(variableArray, (v) =>
-          v.position.compareTo(value)
-        );
+        const { index } = arrayUtils.getBinaryInsertIndex(variableArray, (v) => v.position.compareTo(value))
 
-        const variable = arrayUtils.tryGetElement(variableArray, index - 1);
-        assert(
-          variable,
-          `Getter position ${getter.position} outside of block ${block.position}`
-        );
+        const variable = arrayUtils.tryGetElement(variableArray, index - 1)
+        assert(variable, `Getter position ${getter.position} outside of block ${block.position}`)
 
         // Add getter to variable
-        variable.getters.push(getter);
-        getter.variable = variable;
+        variable.getters.push(getter)
+        getter.variable = variable
       },
       { immediate: true }
-    );
+    )
 
     function remove() {
-      if (!getter.variable) return;
-      arrayUtils.remove(getter.variable.getters, getter);
-      getter.variable = undefined;
+      if (!getter.variable) return
+      arrayUtils.remove(getter.variable.getters, getter)
+      getter.variable = undefined
     }
 
     return {
       data,
       remove,
-    };
+    }
   }
 
   return {
@@ -334,21 +288,18 @@ function useScopeElement(block: UseQuantumElement): UseScopeElement {
     setName,
     addVariable,
     addGetter,
-  };
+  }
 }
 
 function serializeElement(element: UseScopeElement): string {
-  throw new Error(`Serialization not implemented yet`);
+  throw new Error(`Serialization not implemented yet`)
 }
 
 function deserializeElement(data: string): UseScopeElement {
-  throw new Error(`Serialization not implemented yet`);
+  throw new Error(`Serialization not implemented yet`)
 }
 
-export const ScopeElementType: QuantumElementType<
-  UseScopeElement,
-  typeof ElementType
-> = {
+export const ScopeElementType: QuantumElementType<UseScopeElement, typeof ElementType> = {
   typeName: ElementType,
   documentType: {
     [ElementType]: {
@@ -358,4 +309,4 @@ export const ScopeElementType: QuantumElementType<
       deserializeElement: deserializeElement,
     },
   },
-};
+}

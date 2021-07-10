@@ -89,7 +89,7 @@ function useElementList() {
         elements.splice(index, 0, element)
       },
       {
-        immediate: true
+        immediate: true,
       }
     )
 
@@ -121,7 +121,7 @@ function useElementList() {
   return {
     elements,
     watchElement,
-    getElementAt
+    getElementAt,
   }
 }
 
@@ -139,7 +139,7 @@ function useElementSelection() {
         }
       },
       {
-        immediate: true
+        immediate: true,
       }
     )
 
@@ -157,7 +157,7 @@ function useElementSelection() {
   return {
     selectedElements,
     setSelection,
-    watchElement
+    watchElement,
   }
 }
 
@@ -180,7 +180,7 @@ function useElementFocus() {
         }
       },
       {
-        immediate: true
+        immediate: true,
       }
     )
 
@@ -201,7 +201,7 @@ function useElementFocus() {
   return {
     focusedElement,
     watchElement,
-    setFocus
+    setFocus,
   }
 }
 
@@ -246,7 +246,7 @@ function useQuantumElement(
     setSize,
     setSelected,
     setFocused,
-    setScope
+    setScope,
   }
 }
 
@@ -263,7 +263,7 @@ export function useDocument<TElements extends QuantumDocumentElementTypes>(eleme
   const elementFocus = useElementFocus()
 
   const rootScope = createElement(ScopeElementType.typeName, {
-    position: Vector2.zero
+    position: Vector2.zero,
   }) // TODO: Scope size:
 
   function createElement<T extends keyof TElements>(typeName: T, options: QuantumElementCreationOptions): ReturnType<TElements[T]['useElement']> {
@@ -316,6 +316,6 @@ variableManager: shallowReadonly(
     getElementAt: elementList.getElementAt,
     getElementById,
     setSelection: elementSelection.setSelection,
-    setFocus: elementFocus.setFocus
+    setFocus: elementFocus.setFocus,
   }
 }

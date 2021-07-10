@@ -27,14 +27,14 @@ export default defineComponent({
     LandingPage,
     QuantumDocument,
     Header,
-    Footer
+    Footer,
   },
   setup(props, context) {
     if (import.meta.env.PROD) {
       console.log(`${pkg.name} - ${pkg.version}`)
     }
     return {}
-  }
+  },
 })
 </script>
 

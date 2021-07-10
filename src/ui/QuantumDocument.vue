@@ -5,7 +5,7 @@
     tabindex="-1"
     :style="{
       '--grid-cell-size-x': `${document.gridCellSize.x}px`,
-      '--grid-cell-size-y': `${document.gridCellSize.y}px`
+      '--grid-cell-size-y': `${document.gridCellSize.y}px`,
     }"
     @pointerdown="grid.pointerDown($event)"
     @contextmenu="
@@ -70,7 +70,7 @@ function useClipboard<T extends QuantumDocumentElementTypes>(document: UseQuantu
   return {
     cut,
     copy,
-    paste
+    paste,
   }
 }
 
@@ -86,7 +86,7 @@ function useGrid<T extends QuantumDocumentElementTypes>(
     let pos = unref(gridPosition)
     return {
       left: pos.x * document.gridCellSize.x + 'px',
-      top: pos.y * document.gridCellSize.y + 'px'
+      top: pos.y * document.gridCellSize.y + 'px',
     }
   }
 
@@ -106,7 +106,7 @@ function useGrid<T extends QuantumDocumentElementTypes>(
     if (ev.data) {
       let element = document.createElement(ExpressionElementType.typeName, {
         position: crosshairPosition.value,
-        resizeable: false
+        resizeable: false,
       })
       document.setFocus(element)
       nextTick(() => {
@@ -128,7 +128,7 @@ function useGrid<T extends QuantumDocumentElementTypes>(
         ArrowLeft: new Vector2(-1, 0),
         ArrowRight: new Vector2(1, 0),
         ArrowUp: new Vector2(0, -1),
-        ArrowDown: new Vector2(0, 1)
+        ArrowDown: new Vector2(0, 1),
       }[ev.key] ?? Vector2.zero
 
     crosshairPosition.value = crosshairPosition.value.add(direction)
@@ -165,7 +165,7 @@ function useGrid<T extends QuantumDocumentElementTypes>(
     keyup,
 
     moveCrosshairOut,
-    focusUnderCrosshair
+    focusUnderCrosshair,
   }
 }
 
@@ -177,17 +177,17 @@ type TypeComponents<T extends UseQuantumDocument<any>> = T extends UseQuantumDoc
 export default defineComponent({
   components: {
     ExpressionElement,
-    ScopeElement
+    ScopeElement,
   },
   setup() {
     const document = useDocument({
       ...ExpressionElementType.documentType,
-      ...ScopeElementType.documentType
+      ...ScopeElementType.documentType,
     })
 
     const typeComponents: TypeComponents<typeof document> = {
       [ExpressionElementType.typeName]: ExpressionElement,
-      [ScopeElementType.typeName]: ScopeElement
+      [ScopeElementType.typeName]: ScopeElement,
     }
 
     const documentElement = ref<HTMLElement>()
@@ -208,22 +208,22 @@ export default defineComponent({
     onMounted(() => {
       document
         .createElement('expression-element', {
-          position: new Vector2(2, 2)
+          position: new Vector2(2, 2),
         })
         .inputExpression(['Assign', 'a', 5])
       document
         .createElement('expression-element', {
-          position: new Vector2(2, 5)
+          position: new Vector2(2, 5),
         })
         .inputExpression(['Equal', ['Add', ['Divide', 34, 4], ['Power', 'a', 3]], null])
       document
         .createElement('expression-element', {
-          position: new Vector2(2, 8)
+          position: new Vector2(2, 8),
         })
         .inputExpression(['To', ['Add', ['Subtract', 'b', ['Divide', ['Multiply', 4, 'd'], 'd']], ['Multiply', 2, 'b']], ['Missing', ''], null])
       document
         .createElement('expression-element', {
-          position: new Vector2(2, 11)
+          position: new Vector2(2, 11),
         })
         .inputExpression(['To', ['EqualEqual', ['Add', ['Divide', ['Power', 'x', 2], 0.25], 3], 19], 'solve', null])
     })
@@ -242,9 +242,9 @@ export default defineComponent({
       grid,
       clipboard,
       getTypeComponent,
-      log
+      log,
     }
-  }
+  },
 })
 </script>
 

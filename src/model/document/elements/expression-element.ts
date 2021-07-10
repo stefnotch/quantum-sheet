@@ -183,6 +183,7 @@ function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
       return
     }
 
+    // TODO: Huh, what's this https://github.com/cortex-js/compute-engine/blob/main/src/compute-engine/dictionary/core.ts ?
     // TODO:
     /*
       - Topmost can optionally be ["Assign", variables, executeable-expression]
@@ -273,7 +274,7 @@ function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
     getters,
     variables,
     expression,
-    inputExpression
+    inputExpression,
   }
 }
 
@@ -293,7 +294,7 @@ export const ExpressionElementType: QuantumElementType<UseExpressionElement, typ
       typeName: ElementType,
       useElement: useExpressionElement,
       serializeElement: serializeElement,
-      deserializeElement: deserializeElement
-    }
-  }
+      deserializeElement: deserializeElement,
+    },
+  },
 }
