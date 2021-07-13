@@ -5,7 +5,7 @@
 </template>
 <script lang="ts">
 import { defineComponent, PropType, ref, watch, shallowRef } from 'vue'
-import { UseExpressionElement, ExpressionElementType, ElementType } from '../../model/document/elements/expression-element'
+import { ExpressionElement, ExpressionElementType, ElementType } from '../../model/document/elements/expression-element'
 import 'mathlive/dist/mathlive-fonts.css'
 import MathLive, { MathfieldElement } from 'mathlive'
 import { ElementCommands } from './element-commands'
@@ -39,7 +39,7 @@ export default defineComponent({
      * Gets the associated document-element
      */
     modelGetter: {
-      type: Function as PropType<() => UseExpressionElement>,
+      type: Function as PropType<() => ExpressionElement>,
       required: true,
     },
   },

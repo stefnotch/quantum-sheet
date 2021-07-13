@@ -55,7 +55,7 @@ import ExpressionElement, { ExpressionElementType } from './elements/ExpressionE
 import ScopeElement, { ScopeElementType } from './elements/ScopeStartElement.vue'
 import { useFocusedElementCommands, ElementCommands } from './elements/element-commands'
 import { Vector2 } from '../model/vectors'
-import { UseQuantumElement } from '../model/document/document-element'
+import { QuantumElement } from '../model/document/document-element'
 
 function useClipboard<T extends QuantumDocumentElementTypes>(document: UseQuantumDocument<T>) {
   function cut(ev: ClipboardEvent) {}
@@ -134,7 +134,7 @@ function useGrid<T extends QuantumDocumentElementTypes>(
     if (ev.isComposing) return
   }
 
-  function moveCrosshairOut(element: UseQuantumElement, direction: Vector2) {
+  function moveCrosshairOut(element: QuantumElement, direction: Vector2) {
     let pos = element.position.value.add(new Vector2(direction.x > 0 ? element.size.value.x : 0, direction.y > 0 ? element.size.value.y : 0))
 
     crosshairPosition.value = pos.add(direction)
@@ -175,10 +175,9 @@ export default defineComponent({
     ScopeElement,
   },
   setup() {
-    const document = useDocument({
-      ...ExpressionElementType.documentType,
-      ...ScopeElementType.documentType,
-    })
+    const document = useDocument({ [ExpressionElementType.typeName]: ExpressionElementType, [ScopeElementType.typeName]: ScopeElementType })
+
+    // let z = new document.elementTypes['scope-element'].elementType(null as any)
 
     const typeComponents: TypeComponents<typeof document> = {
       [ExpressionElementType.typeName]: ExpressionElement,
