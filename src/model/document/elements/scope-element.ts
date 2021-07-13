@@ -196,8 +196,6 @@ export class ScopeElement extends QuantumElement {
   }
 }
 
-let x = ScopeElement
-
 export const ScopeElementType: QuantumElementType<typeof ScopeElement, typeof ElementType> = {
   typeName: ElementType,
   elementType: ScopeElement,

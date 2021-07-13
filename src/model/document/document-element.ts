@@ -12,59 +12,10 @@ export type QuantumElementType<
   U extends string = string
 > = {
   readonly typeName: U
-  elementType: T // new (...args: any[]) => QuantumElement // &
+  elementType: T
   serializeElement(element: T): JsonType
   deserializeElement(data: JsonType): T
 }
-/*
-type QuantumElementTypeSmol<T extends typeof QuantumElement & { new (options: QuantumElementCreationOptions): QuantumElement }, U extends string> = {
-  readonly typeName: string
-  readonly elementType: T
-  deserializeElement(data: JsonType): T
-}
-
-function doc<T extends readonly QuantumElementTypeSmol<typeof QuantumElement & { new (options: QuantumElementCreationOptions): QuantumElement }, string>[]>(value: T): {
-  [key in T[number]["typeName"]]: T[number]
-} {
-  return null as any
-}
-
-let result1 = doc([{
-  typeName: "cat",
-  elementType: null as any as typeof ScopeElement,
-  deserializeElement: (data) => null as any as typeof ScopeElement
-},{
-  typeName: "cat",
-  elementType: null as any as typeof ScopeElement,
-  deserializeElement: (data) => null as any as typeof ScopeElement
-}] as const)
-let dog: keyof typeof result1 = "" as any
-let paw = new result1[dog].elementType({})
-
-type QuantumDoc<Keys extends string> = {
-  [key in Keys]: QuantumElementTypeSmol<typeof QuantumElement & { new (options: QuantumElementCreationOptions): QuantumElement }, key>
-}
-
-function n<T extends QuantumDoc<Keys>, Keys extends string>(value: T): T {
-  return null as any
-}
-
-let x = n({
-  cat: {
-    deserializeElement: (data) => null as any as typeof ScopeElement,
-    typeName: 'dog',
-    elementType: null as any as typeof ScopeElement,
-  },
-})
-
-let testNames = ['cat', 'dog', 'cow'] as const
-
-function objectifyTestNames<T extends readonly string[]>(n: T): { [k in T[number]]: k } {
-  return null as any
-}
-
-let result = objectifyTestNames(testNames)
-*/
 
 /**
  * Please be careful to not put elements into anything reactive

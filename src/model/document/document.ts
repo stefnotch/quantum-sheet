@@ -3,28 +3,14 @@
 import { QuantumElementCreationOptions, QuantumElementType, QuantumElement } from './document-element'
 import { Vector2 } from '../vectors'
 import { readonly, shallowReactive, shallowRef, ref, watch } from 'vue'
-import { v4 as uuidv4 } from 'uuid'
 import arrayUtils from '../array-utils'
 import { ScopeElement, ScopeElementType } from './elements/scope-element'
-
-/*
-export type QuantumDocumentElementTypes = QuantumElementType & typeof ScopeElementType
-
-function doc<T extends readonly QuantumElementType[]>(
-  value: T
-): {
-  [key in T[number]['typeName']]: T[number]
-} {
-  return null as any
-}*/
 
 export type QuantumDocumentElementTypes<T extends readonly QuantumElementType[] = readonly QuantumElementType[]> = {
   [key in T[number]['typeName']]: T[number]
 } & { ['scope-element']: typeof ScopeElementType }
 
 type QReturnType<T extends new (...args: any) => any> = T extends new (...args: any) => infer R ? R : any
-
-// type NameToElementType<T extends {useElement: (...args: any) => UseQuantumElement}> = T extends {useElement: (...args: any) => infer R} ? R : any;
 
 /**
  * A top level document, containing a list of elements.
