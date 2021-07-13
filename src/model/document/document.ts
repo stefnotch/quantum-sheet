@@ -1,20 +1,35 @@
 // Not recursive! The expression tree on the other hand will be recursive.
 
-import { UseQuantumElement, QuantumElementCreationOptions, QuantumElementType } from './document-element'
+import { QuantumElementCreationOptions, QuantumElementType, QuantumElement } from './document-element'
 import { Vector2 } from '../vectors'
 import { readonly, shallowReactive, shallowRef, ref, watch } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import arrayUtils from '../array-utils'
-import { UseScopeElement, ScopeElementType } from './elements/scope-element'
+import { ScopeElement, ScopeElementType } from './elements/scope-element'
 
-export type QuantumDocumentElementTypes = QuantumElementType<UseQuantumElement, string>['documentType'] & typeof ScopeElementType.documentType
+/*
+export type QuantumDocumentElementTypes = QuantumElementType & typeof ScopeElementType
+
+function doc<T extends readonly QuantumElementType[]>(
+  value: T
+): {
+  [key in T[number]['typeName']]: T[number]
+} {
+  return null as any
+}*/
+
+export type QuantumDocumentElementTypes<T extends readonly QuantumElementType[] = readonly QuantumElementType[]> = {
+  [key in T[number]['typeName']]: T[number]
+} & { ['scope-element']: typeof ScopeElementType }
+
+type QReturnType<T extends new (...args: any) => any> = T extends new (...args: any) => infer R ? R : any
 
 // type NameToElementType<T extends {useElement: (...args: any) => UseQuantumElement}> = T extends {useElement: (...args: any) => infer R} ? R : any;
 
 /**
  * A top level document, containing a list of elements.
  */
-export interface UseQuantumDocument<TElements extends QuantumDocumentElementTypes> {
+export interface UseQuantumDocument<TElements extends QuantumDocumentElementTypes<readonly QuantumElementType[]>> {
   /**
    * How large the grid cells are, in pixels
    */
@@ -28,50 +43,50 @@ export interface UseQuantumDocument<TElements extends QuantumDocumentElementType
   /**
    * Shallow reactive elements array
    */
-  readonly elements: ReadonlyArray<UseQuantumElement>
+  readonly elements: ReadonlyArray<QuantumElement>
 
   /**
    * Creates an element with a given type
    * @param typeName Element type name
    * @param options Element options
    */
-  createElement<T extends keyof TElements>(typeName: T, options: QuantumElementCreationOptions): ReturnType<TElements[T]['useElement']>
+  createElement<T extends keyof TElements>(typeName: T, options: QuantumElementCreationOptions): QReturnType<TElements[T]['elementType']>
 
   /**
    * Deletes an element
    * @param element Element
    */
-  deleteElement(element: UseQuantumElement): void
+  deleteElement(element: QuantumElement): void
 
   /**
    * Gets the element at a given position
    * @param position Position
    */
-  getElementAt(position: Vector2): UseQuantumElement | undefined
+  getElementAt(position: Vector2): QuantumElement | undefined
 
   /**
    * Gets the element with the given id
    * @param id Element id
    * @param type Element type name
    */
-  getElementById<T extends keyof TElements>(id: string, typeName: T): ReturnType<TElements[T]['useElement']> | undefined
+  getElementById<T extends keyof TElements>(id: string, typeName: T): QReturnType<TElements[T]['elementType']> | undefined
 
   /**
    * Set the element selection
    * @param elements Elements to select
    */
-  setSelection(...elements: UseQuantumElement[]): void
+  setSelection(...elements: QuantumElement[]): void
 
   /**
    * Sets the element focus
    */
-  setFocus(element?: UseQuantumElement): void
+  setFocus(element?: QuantumElement): void
 }
 
 function useElementList() {
-  const elements = shallowReactive<UseQuantumElement[]>([])
+  const elements = shallowReactive<QuantumElement[]>([])
 
-  function watchElement(element: UseQuantumElement) {
+  function watchElement(element: QuantumElement) {
     const stopHandle = watch(
       element.position,
       (value, oldValue) => {
@@ -81,7 +96,7 @@ function useElementList() {
         // TODO: Refactor the scope setting
         const prev = arrayUtils.tryGetElement(elements, index - 1)
         if (prev?.typeName == ScopeElementType.typeName) {
-          element.setScope(prev as UseScopeElement)
+          element.setScope(prev as ScopeElement)
         } else {
           element.setScope(prev?.scope.value)
         }
@@ -126,9 +141,9 @@ function useElementList() {
 }
 
 function useElementSelection() {
-  const selectedElements = shallowReactive<Set<UseQuantumElement>>(new Set())
+  const selectedElements = shallowReactive<Set<QuantumElement>>(new Set())
 
-  function watchElement(element: UseQuantumElement) {
+  function watchElement(element: QuantumElement) {
     const stopHandle = watch(
       element.selected,
       (value) => {
@@ -149,7 +164,7 @@ function useElementSelection() {
     }
   }
 
-  function setSelection(...elements: UseQuantumElement[]) {
+  function setSelection(...elements: QuantumElement[]) {
     selectedElements.forEach((e) => e.setSelected(false))
     elements.forEach((e) => e.setSelected(true))
   }
@@ -162,9 +177,9 @@ function useElementSelection() {
 }
 
 function useElementFocus() {
-  const focusedElement = shallowRef<UseQuantumElement>()
+  const focusedElement = shallowRef<QuantumElement>()
 
-  function watchElement(element: UseQuantumElement) {
+  function watchElement(element: QuantumElement) {
     const stopHandle = watch(
       element.focused,
       (value) => {
@@ -190,7 +205,7 @@ function useElementFocus() {
     }
   }
 
-  function setFocus(element?: UseQuantumElement) {
+  function setFocus(element?: QuantumElement) {
     if (element) {
       element.setFocused(true)
     } else {
@@ -205,56 +220,13 @@ function useElementFocus() {
   }
 }
 
-function useQuantumElement(
-  typeName: string,
-  options: QuantumElementCreationOptions
-  /* Here internal document stuff can be passed */
-): UseQuantumElement {
-  const position = ref(options.position ?? Vector2.zero)
-  const size = ref(new Vector2(5, 2)) // TODO: Size stuff
-  const resizeable = ref(options.resizeable ?? false)
-  const selected = ref(false)
-  const focused = ref(false)
-  const scope = ref<UseScopeElement>()
-
-  function setPosition(value: Vector2) {
-    position.value = value
-  }
-  function setSize(value: Vector2) {
-    size.value = value
-  }
-  function setSelected(value: boolean) {
-    selected.value = value
-  }
-  function setFocused(value: boolean) {
-    focused.value = value
-  }
-  function setScope(value: UseScopeElement | undefined) {
-    scope.value = value
-  }
-
-  return {
-    id: uuidv4(),
-    typeName: typeName,
-    position,
-    size,
-    resizeable,
-    selected,
-    focused,
-    scope,
-    setPosition,
-    setSize,
-    setSelected,
-    setFocused,
-    setScope,
-  }
-}
-
 /**
  * Create a document
  * @param elementTypes Element types in the document
  */
-export function useDocument<TElements extends QuantumDocumentElementTypes>(elementTypes: TElements): UseQuantumDocument<TElements> {
+export function useDocument<TElements extends QuantumDocumentElementTypes<readonly QuantumElementType[]>>(
+  elementTypes: TElements
+): UseQuantumDocument<TElements> {
   const gridCellSize = readonly(new Vector2(20, 20))
 
   const elementRemoveCallbacks = new Map<string, () => void>()
@@ -266,11 +238,12 @@ export function useDocument<TElements extends QuantumDocumentElementTypes>(eleme
     position: Vector2.zero,
   }) // TODO: Scope size:
 
-  function createElement<T extends keyof TElements>(typeName: T, options: QuantumElementCreationOptions): ReturnType<TElements[T]['useElement']> {
+  function createElement<T extends keyof TElements>(typeName: T, options: QuantumElementCreationOptions): QReturnType<TElements[T]['elementType']> {
     let elementType = elementTypes[typeName]
     if (!elementType) throw new Error(`Unknown element type ${typeName}`)
 
-    const element = elementType.useElement(useQuantumElement('' + typeName, options)) as ReturnType<TElements[T]['useElement']>
+    const element = new (elementType.elementType as any)(options) as QuantumElement
+    //elementType.useElement(useQuantumElement('' + typeName, options)) as ReturnType<TElements[T]['useElement']>
 
     let stopHandles = [elementList.watchElement(element), elementSelection.watchElement(element), elementFocus.watchElement(element)]
     elementRemoveCallbacks.set(element.id, () => {
@@ -286,10 +259,10 @@ variableManager: shallowReadonly(
       ),*/
 
     // Weird, Typescript doesn't like whatever I cooked up
-    return element
+    return element as any
   }
 
-  function deleteElement(element: UseQuantumElement) {
+  function deleteElement(element: QuantumElement) {
     let removeCallback = elementRemoveCallbacks.get(element.id)
     if (removeCallback) {
       removeCallback()
@@ -297,7 +270,7 @@ variableManager: shallowReadonly(
     }
   }
 
-  function getElementById<T extends keyof TElements>(id: string, typeName?: T): ReturnType<TElements[T]['useElement']> | undefined {
+  function getElementById<T extends keyof TElements>(id: string, typeName?: T): QReturnType<TElements[T]['elementType']> | undefined {
     let element = elementList.elements.find((e) => e.id == id)
     if (element && typeName && element.typeName != typeName) {
       throw new Error(`Wrong type, passed ${typeName} but element has ${element.typeName}`)

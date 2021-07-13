@@ -1,61 +1,41 @@
-import {
-  UseQuantumElement,
-  QuantumElementType,
-  QuantumElement,
-  QuantumElementCreationOptions,
-  QuantumElementType1,
-} from "../document-element";
-import {
-  ref,
-  Ref,
-  watch,
-  reactive,
-  shallowRef,
-  computed,
-  watchEffect,
-  shallowReactive,
-} from "vue";
-import { UseScopedVariable, UseScopedGetter } from "./scope-element";
-import { cas } from "../../cas";
-import { assert } from "../../assert";
-import { CasCommand } from "../../../cas/cas";
-import { getGetterNames, getVariableNames } from "../../../cas/cas-math";
-import { Expression, match, substitute } from "@cortex-js/compute-engine";
+import { QuantumElementType, QuantumElement, QuantumElementCreationOptions } from '../document-element'
+import { ref, Ref, watch, reactive, shallowRef, computed, watchEffect, shallowReactive } from 'vue'
+import { UseScopedVariable, UseScopedGetter } from './scope-element'
+import { cas } from '../../cas'
+import { assert } from '../../assert'
+import { CasCommand } from '../../../cas/cas'
+import { getGetterNames, getVariableNames } from '../../../cas/cas-math'
+import { Expression, match, substitute } from '@cortex-js/compute-engine'
 
 export const ElementType = 'expression-element'
 
 export class ExpressionElement extends QuantumElement {
-  typeName: typeof ElementType = ElementType;
+  typeName: typeof ElementType = ElementType
 
-  readonly expression = shallowRef<Expression>([]);
+  readonly expression = shallowRef<Expression>([])
   // TODO: Make the getters readonly to the outside
-  readonly getters: Map<string, UseScopedGetter> = shallowReactive(
-    new Map<string, UseScopedGetter>()
-  );
-  readonly variables: Map<string, UseScopedVariable> = shallowReactive(
-    new Map<string, UseScopedVariable>()
-  );
+  readonly getters: Map<string, UseScopedGetter> = shallowReactive(new Map<string, UseScopedGetter>())
+  readonly variables: Map<string, UseScopedVariable> = shallowReactive(new Map<string, UseScopedVariable>())
 
-  private readonly runningCasExpression: Ref<CasCommand | undefined> =
-    shallowRef();
-  private readonly blockPosition = computed(() => this.position.value);
+  private readonly runningCasExpression: Ref<CasCommand | undefined> = shallowRef()
+  private readonly blockPosition = computed(() => this.position.value)
 
   constructor(options: QuantumElementCreationOptions) {
-    super(options);
+    super(options)
     watch(this.scope, (value) => {
       if (value) {
         // TODO: Re-create getters and variables when the scope changes
-        this.clearVariableValues();
-        this.clearPlaceholders();
-        this.evaluateLater();
+        this.clearVariableValues()
+        this.clearPlaceholders()
+        this.evaluateLater()
       } else {
-        this.setGetters(new Set<string>());
-        this.setVariables(new Set<string>());
+        this.setGetters(new Set<string>())
+        this.setVariables(new Set<string>())
         if (this.runningCasExpression.value) {
-          cas.cancelCommand(this.runningCasExpression.value);
+          cas.cancelCommand(this.runningCasExpression.value)
         }
       }
-    });
+    })
   }
 
   /**
@@ -64,120 +44,120 @@ export class ExpressionElement extends QuantumElement {
    */
   inputExpression(value: Expression) {
     // TODO: Make expression value readonly
-    this.setGetters(getGetterNames(value));
-    this.setVariables(getVariableNames(value));
+    this.setGetters(getGetterNames(value))
+    this.setVariables(getVariableNames(value))
 
-    assert(this.scope.value, "Expected the block to have a scope");
+    assert(this.scope.value, 'Expected the block to have a scope')
 
-    this.setExpression(addPlaceholders(value));
+    this.setExpression(addPlaceholders(value))
     // Cascading invalidation, only the topmost ones will be valid commands
-    this.clearVariableValues();
-    this.evaluateLater();
+    this.clearVariableValues()
+    this.evaluateLater()
   }
 
   setExpression(value: Expression) {
-    this.expression.value = value;
+    this.expression.value = value
   }
 
   setGetters(getterNames: ReadonlySet<string>) {
-    const namesToAdd = new Set<string>(getterNames);
+    const namesToAdd = new Set<string>(getterNames)
     this.getters.forEach((getter, variableName) => {
       if (!namesToAdd.has(variableName)) {
-        getter.remove();
-        this.getters.delete(variableName);
+        getter.remove()
+        this.getters.delete(variableName)
       } else {
-        namesToAdd.delete(variableName);
+        namesToAdd.delete(variableName)
       }
-    });
+    })
 
     if (namesToAdd.size > 0) {
-      const scope = this.scope.value;
-      assert(scope, "Expected the block to have a scope");
+      const scope = this.scope.value
+      assert(scope, 'Expected the block to have a scope')
       namesToAdd.forEach((variableName) => {
-        const newGetter = scope.addGetter(variableName, this.blockPosition);
+        const newGetter = scope.addGetter(variableName, this.blockPosition)
         watch(newGetter.data, (value) => {
-          this.clearVariableValues();
-          this.clearPlaceholders();
-          if (value !== undefined && value !== null) this.evaluateLater();
-        });
-        this.getters.set(variableName, newGetter);
-      });
+          this.clearVariableValues()
+          this.clearPlaceholders()
+          if (value !== undefined && value !== null) this.evaluateLater()
+        })
+        this.getters.set(variableName, newGetter)
+      })
     }
   }
 
   setVariables(variableNames: ReadonlySet<string>) {
-    const namesToAdd = new Set<string>(variableNames);
+    const namesToAdd = new Set<string>(variableNames)
 
     this.variables.forEach((variable, variableName) => {
       if (!namesToAdd.has(variableName)) {
-        variable.remove();
-        this.variables.delete(variableName);
+        variable.remove()
+        this.variables.delete(variableName)
       } else {
-        namesToAdd.delete(variableName);
+        namesToAdd.delete(variableName)
       }
-    });
+    })
     if (namesToAdd.size > 0) {
-      const scope = this.scope.value;
-      assert(scope, "Expected the block to have a scope");
+      const scope = this.scope.value
+      assert(scope, 'Expected the block to have a scope')
       namesToAdd.forEach((variableName) => {
-        const newVariable = scope.addVariable(variableName, this.blockPosition);
-        this.variables.set(variableName, newVariable);
-      });
+        const newVariable = scope.addVariable(variableName, this.blockPosition)
+        this.variables.set(variableName, newVariable)
+      })
     }
   }
 
   clearVariableValues() {
-    this.variables.forEach((v) => v.setData(null));
+    this.variables.forEach((v) => v.setData(null))
   }
 
   clearPlaceholders() {
     // TODO: Reduce flashing (make this slightly delayed or something)
     function clearPlaceholders(expression: Expression) {
       if (Array.isArray(expression)) {
-        const functionName = expression[0];
-        const output = expression.slice();
-        if (functionName == "Equal") {
-          output[1] = addPlaceholders(expression[1]);
-          output[2] = ["\\mathinner", ["Missing", ""]];
-        } else if (functionName == "Evaluate") {
-          output[1] = addPlaceholders(expression[1]);
-          output[3] = ["\\mathinner", ["Missing", ""]];
+        const functionName = expression[0]
+        const output = expression.slice()
+        if (functionName == 'Equal') {
+          output[1] = addPlaceholders(expression[1])
+          output[2] = ['\\mathinner', ['Missing', '']]
+        } else if (functionName == 'Evaluate') {
+          output[1] = addPlaceholders(expression[1])
+          output[3] = ['\\mathinner', ['Missing', '']]
         } else {
           for (let i = 1; i < expression.length; i++) {
-            output[i] = addPlaceholders(expression[i]);
+            output[i] = addPlaceholders(expression[i])
           }
         }
-        return output;
+        return output
       } else {
-        return expression;
+        return expression
       }
     }
 
-    this.setExpression(clearPlaceholders(this.expression.value));
+    this.setExpression(clearPlaceholders(this.expression.value))
   }
 
   evaluateLater() {
     if (this.runningCasExpression.value) {
-      cas.cancelCommand(this.runningCasExpression.value);
+      cas.cancelCommand(this.runningCasExpression.value)
     }
 
     // Check if all getters that should have a value actually do have a value
-    const gettersData = new Map<string, any>();
-    let allDataDefined = true;
+    const gettersData = new Map<string, any>()
+    let allDataDefined = true
     this.getters.forEach((value, key) => {
-      const data = value.data.value;
+      const data = value.data.value
       if (data === undefined) {
         // It's a symbol
       } else if (data === null) {
         // Variable is missing its data
-        allDataDefined = false;
+        allDataDefined = false
       } else {
-        gettersData.set(key, data);
+        gettersData.set(key, data)
       }
-    });
+    })
 
     if (!allDataDefined || !this.expression.value) {
-      return;
+      return
     }
 
     // TODO:
@@ -196,110 +176,82 @@ export class ExpressionElement extends QuantumElement {
           - "Add", "Subtract", "Multiply", "Divide", ===, <, and so on
       */
 
-    const self = this;
+    const self = this
     // TODO: Fix c:=8+4=
-    function evaluateExpression(
-      expression: any,
-      callback: (result: any) => void
-    ) {
+    function evaluateExpression(expression: any, callback: (result: any) => void) {
       if (Array.isArray(expression)) {
-        const functionName = expression[0];
-        if (functionName == "Equal") {
+        const functionName = expression[0]
+        if (functionName == 'Equal') {
           evaluateExpression(expression[1], (result) => {
-            const casExpression = expression.slice();
-            casExpression[1] = result;
+            const casExpression = expression.slice()
+            casExpression[1] = result
 
             self.runningCasExpression.value = new CasCommand(
               gettersData, // TODO: Don't pass in all getters (or pass in a reference to the getters?)
               casExpression,
               (result) => {
                 // TODO: Fix this for nested equals signs/expressions
-                const output = expression.slice();
-                output[2] = ["\\mathinner", result]; // A part of the expression, namely the one with the placeholder, gets replaced
-                self.setExpression(output);
-                callback(result);
+                const output = expression.slice()
+                output[2] = ['\\mathinner', result] // A part of the expression, namely the one with the placeholder, gets replaced
+                self.setExpression(output)
+                callback(result)
               }
-            );
-            cas.executeCommand(self.runningCasExpression.value);
-          });
-        } else if (functionName == "Evaluate") {
+            )
+            cas.executeCommand(self.runningCasExpression.value)
+          })
+        } else if (functionName == 'Evaluate') {
           evaluateExpression(expression[1], (result) => {
-            const casExpression = expression.slice();
-            casExpression[1] = result;
+            const casExpression = expression.slice()
+            casExpression[1] = result
 
             self.runningCasExpression.value = new CasCommand(
               gettersData, // TODO: Don't pass in all getters (or pass in a reference to the getters?)
               casExpression,
               (result) => {
                 // TODO: Fix this for nested equals signs/expressions
-                const output = expression.slice();
-                output[3] = ["\\mathinner", result];
-                self.setExpression(output);
-                callback(result);
+                const output = expression.slice()
+                output[3] = ['\\mathinner', result]
+                self.setExpression(output)
+                callback(result)
               }
-            );
-            cas.executeCommand(self.runningCasExpression.value);
-          });
-        } else if (functionName == "Apply") {
+            )
+            cas.executeCommand(self.runningCasExpression.value)
+          })
+        } else if (functionName == 'Apply') {
           // TODO:
         } else {
-          callback(expression);
+          callback(expression)
         }
       } else {
-        callback(expression);
+        callback(expression)
       }
     }
 
-    if (
-      Array.isArray(this.expression.value) &&
-      this.expression.value[0] == "Assign"
-    ) {
+    if (Array.isArray(this.expression.value) && this.expression.value[0] == 'Assign') {
       evaluateExpression(this.expression.value[2], (result) => {
         this.runningCasExpression.value = new CasCommand(
           gettersData, // TODO: Don't pass in all getters (or pass in a reference to the getters?)
-          ["Equal", result, null],
+          ['Equal', result, null],
           (result) => {
             // TODO: Support assigning to multiple variables
-            assert(
-              this.variables.size === 1,
-              "Assigning to multiple variables not supported yet"
-            );
-            this.variables.forEach((v) => v.setData(result));
+            assert(this.variables.size === 1, 'Assigning to multiple variables not supported yet')
+            this.variables.forEach((v) => v.setData(result))
           }
-        );
-        cas.executeCommand(this.runningCasExpression.value);
-      });
+        )
+        cas.executeCommand(this.runningCasExpression.value)
+      })
     } else {
-      assert(this.variables.size === 0, "Expected no variables");
-      evaluateExpression(this.expression.value, (result) => {});
+      assert(this.variables.size === 0, 'Expected no variables')
+      evaluateExpression(this.expression.value, (result) => {})
     }
   }
 }
 
-export const ExpressionElementType1: QuantumElementType1<
-  ExpressionElement,
-  typeof ElementType
-> = {
+export const ExpressionElementType: QuantumElementType<typeof ExpressionElement, typeof ElementType> = {
   typeName: ElementType,
-  documentType: {
-    [ElementType]: {
-      typeName: ElementType,
-      elementType: ExpressionElement,
-      serializeElement: (element) => null,
-      deserializeElement: (stuff) => null as any,
-    },
-  },
-};
-
-export interface UseExpressionElement extends UseQuantumElement {
-  getters: ReadonlyMap<string, UseScopedGetter>
-  variables: ReadonlyMap<string, UseScopedVariable>
-  expression: Ref<Expression>
-  /**
-   * User expression input
-   * @param value Expression that the user typed
-   */
-  inputExpression(value: Expression): void
+  elementType: ExpressionElement,
+  serializeElement: (element) => null,
+  deserializeElement: (stuff) => null as any,
 }
 
 function addPlaceholders(expression: Expression) {
@@ -323,259 +275,4 @@ function addPlaceholders(expression: Expression) {
   } else {
     return expression
   }
-}
-
-function useExpressionElement(block: UseQuantumElement): UseExpressionElement {
-  const expression = shallowRef()
-  const getters = shallowReactive(new Map<string, UseScopedGetter>())
-  const variables = shallowReactive(new Map<string, UseScopedVariable>())
-  const runningCasExpression: Ref<CasCommand | undefined> = shallowRef()
-  const blockPosition = computed(() => block.position.value)
-
-  function setExpression(value: Expression) {
-    expression.value = value
-  }
-
-  function setGetters(getterNames: ReadonlySet<string>) {
-    const namesToAdd = new Set<string>(getterNames)
-    getters.forEach((getter, variableName) => {
-      if (!namesToAdd.has(variableName)) {
-        getter.remove()
-        getters.delete(variableName)
-      } else {
-        namesToAdd.delete(variableName)
-      }
-    })
-
-    if (namesToAdd.size > 0) {
-      const scope = block.scope.value
-      assert(scope, 'Expected the block to have a scope')
-      namesToAdd.forEach((variableName) => {
-        const newGetter = scope.addGetter(variableName, blockPosition)
-        watch(newGetter.data, (value) => {
-          clearVariableValues()
-          clearPlaceholders()
-          if (value !== undefined && value !== null) evaluateLater()
-        })
-        getters.set(variableName, newGetter)
-      })
-    }
-  }
-
-  function setVariables(variableNames: ReadonlySet<string>) {
-    const namesToAdd = new Set<string>(variableNames)
-
-    variables.forEach((variable, variableName) => {
-      if (!namesToAdd.has(variableName)) {
-        variable.remove()
-        variables.delete(variableName)
-      } else {
-        namesToAdd.delete(variableName)
-      }
-    })
-    if (namesToAdd.size > 0) {
-      const scope = block.scope.value
-      assert(scope, 'Expected the block to have a scope')
-      namesToAdd.forEach((variableName) => {
-        const newVariable = scope.addVariable(variableName, blockPosition)
-        variables.set(variableName, newVariable)
-      })
-    }
-  }
-
-  function clearVariableValues() {
-    variables.forEach((v) => v.setData(null))
-  }
-
-  function clearPlaceholders() {
-    // TODO: Reduce flashing (make this slightly delayed or something)
-    function clearPlaceholders(expression: Expression) {
-      if (Array.isArray(expression)) {
-        const functionName = expression[0]
-        const output = expression.slice()
-        if (functionName == 'Equal') {
-          output[1] = addPlaceholders(expression[1])
-          output[2] = ['\\mathinner', ['Missing', '']]
-        } else if (functionName == 'Evaluate') {
-          output[1] = addPlaceholders(expression[1])
-          output[3] = ['\\mathinner', ['Missing', '']]
-        } else {
-          for (let i = 1; i < expression.length; i++) {
-            output[i] = addPlaceholders(expression[i])
-          }
-        }
-        return output
-      } else {
-        return expression
-      }
-    }
-
-    setExpression(clearPlaceholders(expression.value))
-  }
-
-  function inputExpression(value: Expression) {
-    // TODO: Make expression value readonly
-    setGetters(getGetterNames(value))
-    setVariables(getVariableNames(value))
-
-    assert(block.scope.value, 'Expected the block to have a scope')
-
-    setExpression(addPlaceholders(value))
-    // Cascading invalidation, only the topmost ones will be valid commands
-    clearVariableValues()
-    evaluateLater()
-  }
-
-  watch(block.scope, (value) => {
-    if (value) {
-      // TODO: Re-create getters and variables when the scope changes
-      clearVariableValues()
-      clearPlaceholders()
-      evaluateLater()
-    } else {
-      setGetters(new Set<string>())
-      setVariables(new Set<string>())
-      if (runningCasExpression.value) {
-        cas.cancelCommand(runningCasExpression.value)
-      }
-    }
-  })
-
-  function evaluateLater() {
-    if (runningCasExpression.value) {
-      cas.cancelCommand(runningCasExpression.value)
-    }
-
-    // Check if all getters that should have a value actually do have a value
-    const gettersData = new Map<string, any>()
-    let allDataDefined = true
-    getters.forEach((value, key) => {
-      const data = value.data.value
-      if (data === undefined) {
-        // It's a symbol
-      } else if (data === null) {
-        // Variable is missing its data
-        allDataDefined = false
-      } else {
-        gettersData.set(key, data)
-      }
-    })
-
-    if (!allDataDefined || !expression.value) {
-      return
-    }
-
-    // TODO: Huh, what's this https://github.com/cortex-js/compute-engine/blob/main/src/compute-engine/dictionary/core.ts ?
-    // TODO:
-    /*
-      - Topmost can optionally be ["Assign", variables, executeable-expression]
-        - Variables can be "variable" or ["???", "variable", "variable", ...]
-          - Variables will always remain sorted!
-        
-        - Executeable Expression topmost can optionally be
-          - ["Equal", executeable-expression, options, ["Result???", null|result]] = (but only use 2 decimal places) = cm = m
-          - ["Solve", executeable-expression, options, ["Result???", null|result]] --solve, n-->
-          - ["Apply", executeable-expression, options, ["Result???", null|result]] | apply *3 | apply +2
-          - Or it can be a simple-expression
-        
-        - Simple Expression can contain 
-          - "Add", "Subtract", "Multiply", "Divide", ===, <, and so on
-      */
-
-    // TODO: Fix c:=8+4=
-    function evaluateExpression(expression: any, callback: (result: any) => void) {
-      if (Array.isArray(expression)) {
-        const functionName = expression[0]
-        if (functionName == 'Equal') {
-          evaluateExpression(expression[1], (result) => {
-            const casExpression = expression.slice()
-            casExpression[1] = result
-
-            runningCasExpression.value = new CasCommand(
-              gettersData, // TODO: Don't pass in all getters (or pass in a reference to the getters?)
-              casExpression,
-              (result) => {
-                // TODO: Fix this for nested equals signs/expressions
-                const output = expression.slice()
-                output[2] = ['\\mathinner', result] // A part of the expression, namely the one with the placeholder, gets replaced
-                setExpression(output)
-                callback(result)
-              }
-            )
-            cas.executeCommand(runningCasExpression.value)
-          })
-        } else if (functionName == 'Evaluate') {
-          evaluateExpression(expression[1], (result) => {
-            const casExpression = expression.slice()
-            casExpression[1] = result
-
-            runningCasExpression.value = new CasCommand(
-              gettersData, // TODO: Don't pass in all getters (or pass in a reference to the getters?)
-              casExpression,
-              (result) => {
-                // TODO: Fix this for nested equals signs/expressions
-                const output = expression.slice()
-                output[3] = ['\\mathinner', result]
-                setExpression(output)
-                callback(result)
-              }
-            )
-            cas.executeCommand(runningCasExpression.value)
-          })
-        } else if (functionName == 'Apply') {
-          // TODO:
-        } else {
-          callback(expression)
-        }
-      } else {
-        callback(expression)
-      }
-    }
-
-    if (Array.isArray(expression.value) && expression.value[0] == 'Assign') {
-      evaluateExpression(expression.value[2], (result) => {
-        runningCasExpression.value = new CasCommand(
-          gettersData, // TODO: Don't pass in all getters (or pass in a reference to the getters?)
-          ['Equal', result, null],
-          (result) => {
-            // TODO: Support assigning to multiple variables
-            assert(variables.size === 1, 'Assigning to multiple variables not supported yet')
-            variables.forEach((v) => v.setData(result))
-          }
-        )
-        cas.executeCommand(runningCasExpression.value)
-      })
-    } else {
-      assert(variables.size === 0, 'Expected no variables')
-      evaluateExpression(expression.value, (result) => {})
-    }
-  }
-
-  return {
-    ...block,
-    getters,
-    variables,
-    expression,
-    inputExpression,
-  }
-}
-
-function serializeElement(element: UseExpressionElement): string {
-  throw new Error(`Serialization not implemented yet`)
-}
-
-function deserializeElement(data: string): UseExpressionElement {
-  throw new Error(`Serialization not implemented yet`)
-}
-
-export const ExpressionElementType: QuantumElementType<UseExpressionElement, typeof ElementType> = {
-  typeName: ElementType,
-  documentType: {
-    [ElementType]: {
-      typeName: ElementType,
-      useElement: useExpressionElement,
-      serializeElement: serializeElement,
-      deserializeElement: deserializeElement,
-    },
-  },
 }
