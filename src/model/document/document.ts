@@ -228,7 +228,7 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
     let elementType = elementTypes[typeName]
     if (!elementType) throw new Error(`Unknown element type ${typeName}`)
 
-    const element = new (elementType.elementType as any)(options) as QuantumElement
+    const element = new elementType.elementType(options)
     //elementType.useElement(useQuantumElement('' + typeName, options)) as ReturnType<TElements[T]['useElement']>
 
     let stopHandles = [elementList.watchElement(element), elementSelection.watchElement(element), elementFocus.watchElement(element)]

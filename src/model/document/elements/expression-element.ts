@@ -247,7 +247,7 @@ export class ExpressionElement extends QuantumElement {
   }
 }
 
-export const ExpressionElementType: QuantumElementType<typeof ExpressionElement, typeof ElementType> = {
+export const ExpressionElementType: QuantumElementType<ExpressionElement, typeof ExpressionElement, typeof ElementType> = {
   typeName: ElementType,
   elementType: ExpressionElement,
   serializeElement: (element) => null,

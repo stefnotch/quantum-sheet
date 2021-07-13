@@ -6,15 +6,18 @@ import { v4 as uuidv4 } from 'uuid'
 type JsonType = null | boolean | number | string | JsonType[] | { [prop: string]: JsonType }
 
 export type QuantumElementType<
-  T extends typeof QuantumElement & { new (options: QuantumElementCreationOptions): QuantumElement } = typeof QuantumElement & {
-    new (options: QuantumElementCreationOptions): QuantumElement
-  },
+  T extends QuantumElement = QuantumElement,
+  TCtor extends QuantumElementConstructor<T> = QuantumElementConstructor<T>,
   U extends string = string
 > = {
   readonly typeName: U
-  elementType: T
+  elementType: TCtor
   serializeElement(element: T): JsonType
   deserializeElement(data: JsonType): T
+}
+
+export interface QuantumElementConstructor<T> {
+  new (options: QuantumElementCreationOptions): T
 }
 
 /**

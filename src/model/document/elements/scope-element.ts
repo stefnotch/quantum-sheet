@@ -196,7 +196,7 @@ export class ScopeElement extends QuantumElement {
   }
 }
 
-export const ScopeElementType: QuantumElementType<typeof ScopeElement, typeof ElementType> = {
+export const ScopeElementType: QuantumElementType<ScopeElement, typeof ScopeElement, typeof ElementType> = {
   typeName: ElementType,
   elementType: ScopeElement,
   serializeElement: (element) => null,

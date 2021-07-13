@@ -177,7 +177,7 @@ export default defineComponent({
   setup() {
     const document = useDocument({ [ExpressionElementType.typeName]: ExpressionElementType, [ScopeElementType.typeName]: ScopeElementType })
 
-    // let z = new document.elementTypes['scope-element'].elementType(null as any)
+    // let z = new document.elementTypes['scope-element'].elementType({})
 
     const typeComponents: TypeComponents<typeof document> = {
       [ExpressionElementType.typeName]: ExpressionElement,
