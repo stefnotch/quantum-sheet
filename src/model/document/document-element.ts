@@ -1,4 +1,4 @@
-import { ref, Ref } from 'vue'
+import { markRaw, ref, Ref, shallowRef } from 'vue'
 import { Vector2 } from '../vectors'
 import type { ScopeElement } from './elements/scope-element'
 import { v4 as uuidv4 } from 'uuid'
@@ -33,9 +33,10 @@ export abstract class QuantumElement {
   readonly resizeable: Ref<boolean> = ref(false)
   readonly selected: Ref<boolean> = ref(false)
   readonly focused: Ref<boolean> = ref(false)
-  readonly scope: Ref<ScopeElement | undefined> = ref<ScopeElement>()
+  readonly scope: Ref<ScopeElement | undefined> = shallowRef<ScopeElement>()
 
   constructor(options: QuantumElementCreationOptions) {
+    markRaw(this) // Prevents this from accidentally becoming reactive and stops the variables from being unwrapped
     if (options.position) {
       this.position.value = options.position
     }

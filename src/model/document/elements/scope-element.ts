@@ -48,6 +48,7 @@ export class ScopeElement extends QuantumElement {
   })*/
 
   private createVariableArray(name: string, position: ComputedRef<Vector2>): ScopedVariable[] {
+    // First variable, used to import values from the scope above
     const importerVariable: ScopedVariable = reactive({
       position: position,
       index: 0,
