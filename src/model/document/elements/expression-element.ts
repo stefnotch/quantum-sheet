@@ -22,8 +22,11 @@ export class ExpressionElement extends QuantumElement {
   private readonly runningCasExpression: Ref<CasCommand | undefined> = shallowRef()
   private readonly blockPosition = computed(() => this.position.value)
 
-  constructor(options: QuantumElementCreationOptions) {
+  constructor(options: QuantumExpressionElementCreationOptions) {
     super(options)
+    if (options.expression) this.setExpression(options.expression)
+    if (options.getters) this.setGetters(options.getters)
+    if (options.variables) this.setVariables(options.variables)
     watch(this.scope, (value) => {
       if (value) {
         // TODO: Re-create getters and variables when the scope changes
@@ -249,6 +252,15 @@ export class ExpressionElement extends QuantumElement {
   }
 }
 
+/**
+ * Parameters to pass when creating an element
+ */
+export interface QuantumExpressionElementCreationOptions extends QuantumElementCreationOptions {
+  expression?: Expression
+  getters?: ReadonlySet<string>
+  variables?: ReadonlySet<string>
+}
+
 export const ExpressionElementType: QuantumElementType<ExpressionElement, typeof ExpressionElement, typeof ElementType> = {
   typeName: ElementType,
   elementType: ExpressionElement,
@@ -279,12 +291,13 @@ export const ExpressionElementType: QuantumElementType<ExpressionElement, typeof
       position: new Vector2(element?.position?.x, element?.position?.y),
       size: new Vector2(element?.size.x, element?.size.y),
       resizable: JSON.parse(element?.resizable),
+      scope: ScopeElementType.deserializeElement(element.scope),
     })
+    // expressionElement.setScope(ScopeElementType.deserializeElement(element.scope)) // scope
     // expression-element properties
     expressionElement.setExpression(element.expression) // expression
     expressionElement.setGetters(new Set(JSON.parse(element.getters))) // getters
     // expressionElement.setVariables(JSON.parse(element.variables)) // variables
-    expressionElement.setScope(ScopeElementType.deserializeElement(element.scope)) // scope
     return expressionElement
   },
 }

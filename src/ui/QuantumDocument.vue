@@ -213,6 +213,7 @@ export default defineComponent({
 
     function deserialize() {
       // convert from string here : JSON.parse()
+      // Just for testing
       const serializedDocument = {
         expressionElements: [
           {
