@@ -30,6 +30,7 @@
     ></textarea>
 
     <button @click="serialize()">Serialize</button>
+    <button @click="deserialize()">DeSerialize</button>
     <div class="grid-crosshair" :style="grid.gridToStyle(grid.crosshairPosition.value)" v-show="grid.showCrosshair.value">+</div>
     <div
       class="quantum-block"
@@ -203,9 +204,22 @@ export default defineComponent({
 
     function serialize() {
       console.log('serializing', JSON.stringify(document.elements))
-      console.log('ExpressionElementType', ExpressionElementType)
+      // console.log('ExpressionElementType', ExpressionElementType)
       document.serializeDocument()
-      ExpressionElementType.serializeElement(document.elements[1])
+      // ExpressionElementType.serializeElement(document.elements[1])
+      // ExpressionElementType.serializeElement(getTypeComponent('expression-element'))
+    }
+
+    function deserialize() {
+      const element = {
+        expression: '["Assign","a",{"num":"3"}]',
+        getters: '{}',
+        position: '{"x":21,"y":13}',
+        typeName: 'expression-element',
+        variables: '{}',
+      }
+      document.deserializeDocument()
+      ExpressionElementType.deserializeElement(element)
       // ExpressionElementType.serializeElement(getTypeComponent('expression-element'))
     }
 
@@ -221,6 +235,7 @@ export default defineComponent({
       log,
 
       serialize,
+      deserialize,
     }
   },
 })

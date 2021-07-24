@@ -5,12 +5,15 @@ import { Vector2 } from '../vectors'
 import { readonly, shallowReactive, shallowRef, ref, watch } from 'vue'
 import arrayUtils from '../array-utils'
 import { ScopeElement, ScopeElementType } from './elements/scope-element'
+import { ExpressionElement, ExpressionElementType } from './elements/expression-element'
+
+type JsonType = null | boolean | number | string | JsonType[] | { [prop: string]: JsonType }
 
 export type QuantumDocumentElementTypes<T extends readonly QuantumElementType[] = readonly QuantumElementType[]> = {
   [key in T[number]['typeName']]: T[number]
-} & { ['scope-element']: typeof ScopeElementType }
+} & { ['scope-element']: typeof ScopeElementType } & { ['expression-element']: typeof ExpressionElementType }
 
-type QReturnType<T extends new (...args: any) => any> = T extends new (...args: any) => infer R ? R : any
+type QReturnType<T extends new (...args: any[]) => any> = T extends new (...args: any[]) => infer R ? R : any
 
 /**
  * A top level document, containing a list of elements.
@@ -58,6 +61,12 @@ export interface UseQuantumDocument<TElements extends QuantumDocumentElementType
   getElementById<T extends keyof TElements>(id: string, typeName: T): QReturnType<TElements[T]['elementType']> | undefined
 
   /**
+   * Gets the element with the given id
+   * @param type Element type name
+   */
+  // getElementsByType<T extends keyof TElements>(id: string, typeName: T): QReturnType<TElements[T]['elementType']>[] | undefined
+
+  /**
    * Set the element selection
    * @param elements Elements to select
    */
@@ -68,7 +77,8 @@ export interface UseQuantumDocument<TElements extends QuantumDocumentElementType
    */
   setFocus(element?: QuantumElement): void
 
-  serializeDocument(): void
+  serializeDocument(): JsonType
+  deserializeDocument(): void
 }
 
 function useElementList() {
@@ -268,8 +278,30 @@ variableManager: shallowReadonly(
     return element as any
   }
 
+  function getElementsByType<T extends keyof TElements>(typeName: T): QReturnType<TElements[T]['elementType']>[] | undefined {
+    let elements = elementList.elements.filter((e) => e.typeName == typeName)
+
+    // Yeah, Typescript really does dislike this XD
+    return elements as any[]
+  }
+
   function serializeDocument() {
+    var serializedData: JsonType[] = []
     console.log('Serializing document', elementList.elements)
+    const ExpressionElements = getElementsByType(ExpressionElementType.typeName)
+    console.log('ExpressionElements:', ExpressionElements)
+    // ExpressionElementType.serializeElement(ExpressionElements[0])
+    ExpressionElements?.forEach((element: ExpressionElement) => {
+      serializedData.push(ExpressionElementType.serializeElement(element))
+    })
+    // ScopeElement
+    // Other Elements
+    return serializedData
+  }
+
+  function deserializeDocument() {
+    console.log('DeSerializing file')
+
     // const s = elementList.elements[1].serializeElement()
     // console.log(s)
     // ExpressionElementType.serializeElement(elementList.elements[1])
@@ -288,5 +320,6 @@ variableManager: shallowReadonly(
     setFocus: elementFocus.setFocus,
 
     serializeDocument,
+    deserializeDocument,
   }
 }

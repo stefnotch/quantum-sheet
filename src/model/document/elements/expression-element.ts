@@ -246,10 +246,18 @@ export class ExpressionElement extends QuantumElement {
     }
   }
 
-  serializeElement(element: ExpressionElement) {
-    console.log('serializing me', element)
-    return null
-  }
+  // serializeElement(element: ExpressionElement) {
+  //   console.log('serializing me', element)
+  //   const serializedElement = {
+  //     typeName: element.typeName,
+  //     expression: JSON.stringify(this.expression.value),
+  //     position: JSON.stringify(this.position.value),
+  //     getters: JSON.stringify(this.getters),
+  //     variables: JSON.stringify(this.variables),
+  //   }
+  //   console.log(serializedElement)
+  //   return serializedElement
+  // }
 }
 
 export const ExpressionElementType: QuantumElementType<ExpressionElement, typeof ExpressionElement, typeof ElementType> = {
