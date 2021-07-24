@@ -7,6 +7,8 @@ import { CasCommand } from '../../../cas/cas'
 import { getGetterNames, getVariableNames } from '../../../cas/cas-math'
 import { Expression, match, substitute } from '@cortex-js/compute-engine'
 
+import { Vector2 } from '../../vectors'
+
 export const ElementType = 'expression-element'
 
 export class ExpressionElement extends QuantumElement {
@@ -245,19 +247,6 @@ export class ExpressionElement extends QuantumElement {
       evaluateExpression(this.expression.value, (result) => {})
     }
   }
-
-  // serializeElement(element: ExpressionElement) {
-  //   console.log('serializing me', element)
-  //   const serializedElement = {
-  //     typeName: element.typeName,
-  //     expression: JSON.stringify(this.expression.value),
-  //     position: JSON.stringify(this.position.value),
-  //     getters: JSON.stringify(this.getters),
-  //     variables: JSON.stringify(this.variables),
-  //   }
-  //   console.log(serializedElement)
-  //   return serializedElement
-  // }
 }
 
 export const ExpressionElementType: QuantumElementType<ExpressionElement, typeof ExpressionElement, typeof ElementType> = {
@@ -266,23 +255,32 @@ export const ExpressionElementType: QuantumElementType<ExpressionElement, typeof
   serializeElement: (element: ExpressionElement) => {
     // console.log('serializing me in type', element)
     const serializedElement = {
-      id: JSON.stringify(element.id),
-      typeName: JSON.stringify(element.typeName),
-      size: JSON.stringify(element.size.value),
-      resizeable: JSON.stringify(element.resizeable.value),
-      selected: JSON.stringify(element.selected.value),
-      focused: JSON.stringify(element.focused.value),
+      id: element.id,
+      typeName: element.typeName,
+      size: element.size.value,
+      resizeable: element.resizeable.value,
+      selected: element.selected.value,
+      focused: element.focused.value,
       // scope: JSON.stringify(element.scope.value),
       // typeName: element.typeName,
-      expression: JSON.stringify(element.expression.value),
-      position: JSON.stringify(element.position.value),
-      getters: JSON.stringify(element.getters),
-      variables: JSON.stringify(element.variables),
+      expression: element.expression.value,
+      position: element.position.value,
+      getters: element.getters,
+      variables: element.variables,
     }
     // console.log(serializedElement)
-    return serializedElement
+    return JSON.stringify(serializedElement)
   },
-  deserializeElement: (stuff) => null as any,
+  deserializeElement: (element) => {
+    // null as any
+    return new ExpressionElement({
+      // document-element properties
+      position: new Vector2(JSON.parse(element?.position).x, JSON.parse(element?.position).y),
+      resizeable: JSON.parse(element?.resizeable),
+      size: new Vector2(JSON.parse(element?.size).x, JSON.parse(element?.size).y),
+      //
+    })
+  },
 }
 
 function addPlaceholders(expression: Expression) {

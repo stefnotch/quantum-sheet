@@ -212,15 +212,25 @@ export default defineComponent({
     }
 
     function deserialize() {
-      const element = {
-        expression: '["Assign","a",{"num":"3"}]',
-        getters: '{}',
-        position: '{"x":21,"y":13}',
-        typeName: 'expression-element',
-        variables: '{}',
+      const serializedDocument = {
+        expressionElements: [
+          {
+            id: '"c63252c0-8838-4f9c-acc3-766ebe7773f2"',
+            typeName: '"expression-element"',
+            size: '{"x":5,"y":2}',
+            resizeable: 'false',
+            selected: 'false',
+            focused: 'false',
+            expression: '["Assign","a",{"num":"3"}]',
+            position: '{"x":15,"y":8}',
+            getters: '{}',
+            variables: '{}',
+          },
+        ],
+        scopeElement: [],
       }
-      document.deserializeDocument()
-      ExpressionElementType.deserializeElement(element)
+      document.deserializeDocument(serializedDocument)
+      // ExpressionElementType.deserializeElement(document)
       // ExpressionElementType.serializeElement(getTypeComponent('expression-element'))
     }
 

@@ -307,12 +307,15 @@ variableManager: shallowReadonly(
     return serializedData
   }
 
-  function deserializeDocument(serializedData: JsonType) {
-    console.log('DeSerializing file')
+  function deserializeDocument(serializedData: SerializedDataType) {
+    console.log('DeSerializing file', serializedData)
 
     // const s = elementList.elements[1].serializeElement()
     // console.log(s)
     // ExpressionElementType.serializeElement(elementList.elements[1])
+    serializedData?.expressionElements?.forEach((element: JsonType) => {
+      ExpressionElementType.deserializeElement(element)
+    })
     return null
   }
 
