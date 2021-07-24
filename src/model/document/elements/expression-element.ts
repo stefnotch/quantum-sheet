@@ -266,7 +266,14 @@ export const ExpressionElementType: QuantumElementType<ExpressionElement, typeof
   serializeElement: (element: ExpressionElement) => {
     // console.log('serializing me in type', element)
     const serializedElement = {
-      typeName: element.typeName,
+      id: JSON.stringify(element.id),
+      typeName: JSON.stringify(element.typeName),
+      size: JSON.stringify(element.size.value),
+      resizeable: JSON.stringify(element.resizeable.value),
+      selected: JSON.stringify(element.selected.value),
+      focused: JSON.stringify(element.focused.value),
+      // scope: JSON.stringify(element.scope.value),
+      // typeName: element.typeName,
       expression: JSON.stringify(element.expression.value),
       position: JSON.stringify(element.position.value),
       getters: JSON.stringify(element.getters),

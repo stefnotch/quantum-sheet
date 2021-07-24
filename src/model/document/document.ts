@@ -9,6 +9,11 @@ import { ExpressionElement, ExpressionElementType } from './elements/expression-
 
 type JsonType = null | boolean | number | string | JsonType[] | { [prop: string]: JsonType }
 
+type SerializedDataType = {
+  expressionElements: JsonType[]
+  scopeElement: JsonType[]
+}
+
 export type QuantumDocumentElementTypes<T extends readonly QuantumElementType[] = readonly QuantumElementType[]> = {
   [key in T[number]['typeName']]: T[number]
 } & { ['scope-element']: typeof ScopeElementType } & { ['expression-element']: typeof ExpressionElementType }
@@ -78,7 +83,7 @@ export interface UseQuantumDocument<TElements extends QuantumDocumentElementType
   setFocus(element?: QuantumElement): void
 
   serializeDocument(): JsonType
-  deserializeDocument(): void
+  deserializeDocument(serializedData: JsonType): void
 }
 
 function useElementList() {
@@ -286,13 +291,16 @@ variableManager: shallowReadonly(
   }
 
   function serializeDocument() {
-    var serializedData: JsonType[] = []
+    var serializedData: SerializedDataType = {
+      expressionElements: [],
+      scopeElement: [],
+    }
     // console.log('Serializing document', elementList.elements)
     const ExpressionElements = getElementsByType(ExpressionElementType.typeName)
     // console.log('ExpressionElements:', ExpressionElements)
     // ExpressionElementType.serializeElement(ExpressionElements[0])
     ExpressionElements?.forEach((element: ExpressionElement) => {
-      serializedData.push(serializedData.push(ExpressionElementType.serializeElement(element)))
+      serializedData.expressionElements.push(ExpressionElementType.serializeElement(element))
     })
     // ScopeElement
     // Other Elements
