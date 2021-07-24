@@ -30,7 +30,7 @@ export abstract class QuantumElement {
   readonly position: Ref<Vector2> = ref(Vector2.zero)
   // can include a fractional part
   readonly size: Ref<Vector2> = ref(new Vector2(5, 2)) // TODO: Size stuff
-  readonly resizeable: Ref<boolean> = ref(false)
+  readonly resizable: Ref<boolean> = ref(false)
   readonly selected: Ref<boolean> = ref(false)
   readonly focused: Ref<boolean> = ref(false)
   readonly scope: Ref<ScopeElement | undefined> = shallowRef<ScopeElement>()
@@ -38,7 +38,7 @@ export abstract class QuantumElement {
   constructor(options: QuantumElementCreationOptions) {
     markRaw(this) // Prevents this from accidentally becoming reactive and stops the variables from being unwrapped
     options.position ? (this.position.value = options.position) : null
-    options.resizeable ? (this.resizeable.value = options.resizeable) : null
+    options.resizable ? (this.resizable.value = options.resizable) : null
     options.size ? (this.size.value = options.size) : null
     /* When moving a block, we know its target index. Therefore we know what neighbors the block has after insertion. (And the "scope start/getters" and "scope end/setters" nicely guarantee that the neighbor stuff will always be correct. ((If we do not have getters in the tree, in case of a getter, we could increment the index until we find a setter but then the whole blocks stuff becomes relevant and honestly, that's not fun anymore)))
 ^ Therefore, we can totally keep track of which scope every block is in. It's super cheap. (Block --> scope)
@@ -75,6 +75,6 @@ variableManager: shallowReadonly(
  */
 export interface QuantumElementCreationOptions {
   position?: Vector2
-  resizeable?: boolean
+  resizable?: boolean
   size?: Vector2
 }

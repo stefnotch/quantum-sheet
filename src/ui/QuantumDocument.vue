@@ -99,7 +99,7 @@ function useGrid<T extends QuantumDocumentElementTypes>(
     if (ev.data) {
       let element = document.createElement(ExpressionElementType.typeName, {
         position: crosshairPosition.value,
-        resizeable: false,
+        resizable: false,
       })
       document.setFocus(element)
       nextTick(() => {
@@ -218,7 +218,7 @@ export default defineComponent({
             id: '"c63252c0-8838-4f9c-acc3-766ebe7773f2"',
             typeName: '"expression-element"',
             size: '{"x":5,"y":2}',
-            resizeable: 'false',
+            resizable: 'false',
             selected: 'false',
             focused: 'false',
             expression: '["Assign","a",{"num":"3"}]',

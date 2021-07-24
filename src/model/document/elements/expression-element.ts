@@ -258,7 +258,7 @@ export const ExpressionElementType: QuantumElementType<ExpressionElement, typeof
       id: element.id,
       typeName: element.typeName,
       size: element.size.value,
-      resizeable: element.resizeable.value,
+      resizable: element.resizable.value,
       selected: element.selected.value,
       focused: element.focused.value,
       // scope: JSON.stringify(element.scope.value),
@@ -276,7 +276,7 @@ export const ExpressionElementType: QuantumElementType<ExpressionElement, typeof
     return new ExpressionElement({
       // document-element properties
       position: new Vector2(JSON.parse(element?.position).x, JSON.parse(element?.position).y),
-      resizeable: JSON.parse(element?.resizeable),
+      resizable: JSON.parse(element?.resizable),
       size: new Vector2(JSON.parse(element?.size).x, JSON.parse(element?.size).y),
       //
     })
