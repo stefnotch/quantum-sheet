@@ -67,6 +67,8 @@ export interface UseQuantumDocument<TElements extends QuantumDocumentElementType
    * Sets the element focus
    */
   setFocus(element?: QuantumElement): void
+
+  serializeDocument(): void
 }
 
 function useElementList() {
@@ -266,6 +268,14 @@ variableManager: shallowReadonly(
     return element as any
   }
 
+  function serializeDocument() {
+    console.log('Serializing document', elementList.elements)
+    // const s = elementList.elements[1].serializeElement()
+    // console.log(s)
+    // ExpressionElementType.serializeElement(elementList.elements[1])
+    return null
+  }
+
   return {
     gridCellSize,
     elementTypes: elementTypes,
@@ -276,5 +286,7 @@ variableManager: shallowReadonly(
     getElementById,
     setSelection: elementSelection.setSelection,
     setFocus: elementFocus.setFocus,
+
+    serializeDocument,
   }
 }

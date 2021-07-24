@@ -28,6 +28,8 @@
       "
       @blur="grid.showCrosshair.value = false"
     ></textarea>
+
+    <button @click="serialize()">Serialize</button>
     <div class="grid-crosshair" :style="grid.gridToStyle(grid.crosshairPosition.value)" v-show="grid.showCrosshair.value">+</div>
     <div
       class="quantum-block"
@@ -199,6 +201,14 @@ export default defineComponent({
       return (typeComponents as any)[typeName]
     }
 
+    function serialize() {
+      console.log('serializing', JSON.stringify(document.elements))
+      console.log('ExpressionElementType', ExpressionElementType)
+      document.serializeDocument()
+      ExpressionElementType.serializeElement(document.elements[1])
+      // ExpressionElementType.serializeElement(getTypeComponent('expression-element'))
+    }
+
     return {
       document,
       documentElement,
@@ -209,6 +219,8 @@ export default defineComponent({
       clipboard,
       getTypeComponent,
       log,
+
+      serialize,
     }
   },
 })

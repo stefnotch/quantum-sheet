@@ -245,12 +245,28 @@ export class ExpressionElement extends QuantumElement {
       evaluateExpression(this.expression.value, (result) => {})
     }
   }
+
+  serializeElement(element: ExpressionElement) {
+    console.log('serializing me', element)
+    return null
+  }
 }
 
 export const ExpressionElementType: QuantumElementType<ExpressionElement, typeof ExpressionElement, typeof ElementType> = {
   typeName: ElementType,
   elementType: ExpressionElement,
-  serializeElement: (element) => null,
+  serializeElement: (element: ExpressionElement) => {
+    console.log('serializing me in type', element)
+    const serializedElement = {
+      typeName: element.typeName,
+      expression: JSON.stringify(element.expression.value),
+      position: JSON.stringify(element.position.value),
+      getters: JSON.stringify(element.getters),
+      variables: JSON.stringify(element.variables),
+    }
+    console.log(serializedElement)
+    return serializedElement
+  },
   deserializeElement: (stuff) => null as any,
 }
 
