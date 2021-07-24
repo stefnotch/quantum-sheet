@@ -37,9 +37,9 @@ export abstract class QuantumElement {
 
   constructor(options: QuantumElementCreationOptions) {
     markRaw(this) // Prevents this from accidentally becoming reactive and stops the variables from being unwrapped
-    options.position ? (this.position.value = options.position) : null
-    options.resizable ? (this.resizable.value = options.resizable) : null
-    options.size ? (this.size.value = options.size) : null
+    if (options.position) this.position.value = options.position
+    if (options.resizable) this.resizable.value = options.resizable
+    if (options.size) this.size.value = options.size
     /* When moving a block, we know its target index. Therefore we know what neighbors the block has after insertion. (And the "scope start/getters" and "scope end/setters" nicely guarantee that the neighbor stuff will always be correct. ((If we do not have getters in the tree, in case of a getter, we could increment the index until we find a setter but then the whole blocks stuff becomes relevant and honestly, that's not fun anymore)))
 ^ Therefore, we can totally keep track of which scope every block is in. It's super cheap. (Block --> scope)
 */

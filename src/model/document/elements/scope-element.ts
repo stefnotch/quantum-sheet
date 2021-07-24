@@ -200,7 +200,21 @@ export class ScopeElement extends QuantumElement {
 export const ScopeElementType: QuantumElementType<ScopeElement, typeof ScopeElement, typeof ElementType> = {
   typeName: ElementType,
   elementType: ScopeElement,
-  serializeElement: (element) => null,
+  // serializeElement: (element) => null,
+  serializeElement: (element: ScopeElement) => {
+    // console.log('serializing me in type', element)
+    const serializedElement = {
+      id: element.id,
+      name: element.name.value,
+      position: { x: element.position.value.x, y: element.position.value.y },
+      size: { x: element.size.value.x, y: element.size.value.y },
+      resizable: element.resizable.value,
+      closed: element.closed.value,
+      // scope: JSON.stringify(element.scope.value),
+    }
+    console.log('Serialized Scope: ', serializedElement)
+    return serializedElement
+  },
   deserializeElement: (stuff) => null as any,
 }
 

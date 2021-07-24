@@ -212,19 +212,42 @@ export default defineComponent({
     }
 
     function deserialize() {
+      // convert from string here : JSON.parse()
       const serializedDocument = {
         expressionElements: [
           {
-            id: '"c63252c0-8838-4f9c-acc3-766ebe7773f2"',
-            typeName: '"expression-element"',
-            size: '{"x":5,"y":2}',
-            resizable: 'false',
-            selected: 'false',
-            focused: 'false',
-            expression: '["Assign","a",{"num":"3"}]',
-            position: '{"x":15,"y":8}',
-            getters: '{}',
-            variables: '{}',
+            id: 'a6b4c7ca-6b18-41cc-ae2d-45344f604759',
+            position: {
+              x: 29,
+              y: 11,
+            },
+            size: {
+              x: 5,
+              y: 2,
+            },
+            resizable: false,
+            expression: [
+              'Assign',
+              'a',
+              {
+                num: '3',
+              },
+            ],
+            getters: '[]',
+            scope: {
+              id: '5861c25c-ee13-4c14-88b2-42583c92b14e',
+              name: '',
+              position: {
+                x: 0,
+                y: 0,
+              },
+              size: {
+                x: 5,
+                y: 2,
+              },
+              resizable: false,
+              closed: false,
+            },
           },
         ],
         scopeElement: [],

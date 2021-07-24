@@ -239,7 +239,8 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
 
   const rootScope = createElement(ScopeElementType.typeName, {
     position: Vector2.zero,
-  }) // TODO: Scope size:
+    size: Vector2.zero,
+  })
 
   function createElement<T extends keyof TElements>(typeName: T, options: QuantumElementCreationOptions): QReturnType<TElements[T]['elementType']> {
     let elementType = elementTypes[typeName]

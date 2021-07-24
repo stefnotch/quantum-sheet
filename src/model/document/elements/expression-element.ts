@@ -1,6 +1,6 @@
 import { QuantumElementType, QuantumElement, QuantumElementCreationOptions } from '../document-element'
 import { ref, Ref, watch, reactive, shallowRef, computed, watchEffect, shallowReactive } from 'vue'
-import { UseScopedVariable, UseScopedGetter } from './scope-element'
+import { UseScopedVariable, UseScopedGetter, ScopeElementType } from './scope-element'
 import { cas } from '../../cas'
 import { assert } from '../../assert'
 import { CasCommand } from '../../../cas/cas'
@@ -256,30 +256,36 @@ export const ExpressionElementType: QuantumElementType<ExpressionElement, typeof
     // console.log('serializing me in type', element)
     const serializedElement = {
       id: element.id,
-      typeName: element.typeName,
-      size: element.size.value,
+      // typeName: element.typeName, // unnecessary
+      position: { x: element.position.value.x, y: element.position.value.y },
+      size: { x: element.size.value.x, y: element.size.value.y },
       resizable: element.resizable.value,
-      selected: element.selected.value,
-      focused: element.focused.value,
-      // scope: JSON.stringify(element.scope.value),
-      // typeName: element.typeName,
+      // selected: element.selected.value, // unnecessary
+      // focused: element.focused.value, // unnecessary
       expression: element.expression.value,
-      position: element.position.value,
-      getters: element.getters,
-      variables: element.variables,
+      getters: JSON.stringify(Array.from(element.getters.values())),
+      // variables: element.variables,
+      scope: typeof element.scope.value !== 'undefined' ? ScopeElementType.serializeElement(element.scope.value) : null,
     }
     // console.log(serializedElement)
-    return JSON.stringify(serializedElement)
+    // return JSON.stringify(serializedElement)
+    return serializedElement
   },
   deserializeElement: (element) => {
     // null as any
-    return new ExpressionElement({
+    const expressionElement = new ExpressionElement({
       // document-element properties
-      position: new Vector2(JSON.parse(element?.position).x, JSON.parse(element?.position).y),
+      // id:
+      position: new Vector2(element?.position?.x, element?.position?.y),
+      size: new Vector2(element?.size.x, element?.size.y),
       resizable: JSON.parse(element?.resizable),
-      size: new Vector2(JSON.parse(element?.size).x, JSON.parse(element?.size).y),
-      //
     })
+    // expression-element properties
+    expressionElement.setExpression(element.expression) // expression
+    expressionElement.setGetters(new Set(JSON.parse(element.getters))) // getters
+    // expressionElement.setVariables(JSON.parse(element.variables)) // variables
+    expressionElement.setScope(ScopeElementType.deserializeElement(element.scope)) // scope
+    return expressionElement
   },
 }
 
