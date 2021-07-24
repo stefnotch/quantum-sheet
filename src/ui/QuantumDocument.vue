@@ -256,6 +256,7 @@ export default defineComponent({
       document.deserializeDocument(serializedDocument)
       // ExpressionElementType.deserializeElement(document)
       // ExpressionElementType.serializeElement(getTypeComponent('expression-element'))
+      // document.createElement('expression-element', CreationOptions.ElementOptions).inputExpression(CreationOptions.ExpressionOptions.Expression)
     }
 
     return {

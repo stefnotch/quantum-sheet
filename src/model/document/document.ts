@@ -7,7 +7,7 @@ import arrayUtils from '../array-utils'
 import { ScopeElement, ScopeElementType } from './elements/scope-element'
 import { ExpressionElement, ExpressionElementType } from './elements/expression-element'
 
-type JsonType = null | boolean | number | string | JsonType[] | { [prop: string]: JsonType }
+type JsonType = null | boolean | number | string | JsonType[] | Vector2 | { [prop: string]: JsonType }
 
 type SerializedDataType = {
   expressionElements: JsonType[]
@@ -311,11 +311,8 @@ variableManager: shallowReadonly(
   function deserializeDocument(serializedData: SerializedDataType) {
     console.log('DeSerializing file', serializedData)
 
-    // const s = elementList.elements[1].serializeElement()
-    // console.log(s)
-    // ExpressionElementType.serializeElement(elementList.elements[1])
     serializedData?.expressionElements?.forEach((element: JsonType) => {
-      ExpressionElementType.deserializeElement(element)
+      const CreationOptions = ExpressionElementType.deserializeElement(element)
     })
     return null
   }

@@ -22,11 +22,11 @@ export class ExpressionElement extends QuantumElement {
   private readonly runningCasExpression: Ref<CasCommand | undefined> = shallowRef()
   private readonly blockPosition = computed(() => this.position.value)
 
-  constructor(options: QuantumExpressionElementCreationOptions) {
+  constructor(options: QuantumElementCreationOptions) {
     super(options)
-    if (options.expression) this.setExpression(options.expression)
-    if (options.getters) this.setGetters(options.getters)
-    if (options.variables) this.setVariables(options.variables)
+    // if (options.expression) this.setExpression(options.expression)
+    // if (options.getters) this.setGetters(options.getters)
+    // if (options.variables) this.setVariables(options.variables)
     watch(this.scope, (value) => {
       if (value) {
         // TODO: Re-create getters and variables when the scope changes
@@ -255,11 +255,11 @@ export class ExpressionElement extends QuantumElement {
 /**
  * Parameters to pass when creating an element
  */
-export interface QuantumExpressionElementCreationOptions extends QuantumElementCreationOptions {
-  expression?: Expression
-  getters?: ReadonlySet<string>
-  variables?: ReadonlySet<string>
-}
+// export interface QuantumExpressionElementCreationOptions extends QuantumElementCreationOptions {
+//   expression?: Expression
+//   getters?: ReadonlySet<string>
+//   variables?: ReadonlySet<string>
+// }
 
 export const ExpressionElementType: QuantumElementType<ExpressionElement, typeof ExpressionElement, typeof ElementType> = {
   typeName: ElementType,
@@ -275,9 +275,9 @@ export const ExpressionElementType: QuantumElementType<ExpressionElement, typeof
       // selected: element.selected.value, // unnecessary
       // focused: element.focused.value, // unnecessary
       expression: element.expression.value,
-      getters: JSON.stringify(Array.from(element.getters.values())),
-      // variables: element.variables,
-      scope: typeof element.scope.value !== 'undefined' ? ScopeElementType.serializeElement(element.scope.value) : null,
+      // getters: JSON.stringify(Array.from(element.getters.values())), // evaluated from Expression upon inputExpression
+      // variables: element.variables, // evaluated from Expression upon inputExpression
+      // scope: typeof element.scope.value !== 'undefined' ? ScopeElementType.serializeElement(element.scope.value) : null, // evaluated from Expression upon inputExpression
     }
     // console.log(serializedElement)
     // return JSON.stringify(serializedElement)
@@ -285,18 +285,19 @@ export const ExpressionElementType: QuantumElementType<ExpressionElement, typeof
   },
   deserializeElement: (element) => {
     // null as any
-    const expressionElement = new ExpressionElement({
+    const expressionElement = {
       // document-element properties
       // id:
       position: new Vector2(element?.position?.x, element?.position?.y),
       size: new Vector2(element?.size.x, element?.size.y),
       resizable: JSON.parse(element?.resizable),
-      scope: ScopeElementType.deserializeElement(element.scope),
-    })
+      expression: element.expression,
+      // scope: ScopeElementType.deserializeElement(element.scope), // evaluated from Expression upon inputExpression
+    }
     // expressionElement.setScope(ScopeElementType.deserializeElement(element.scope)) // scope
     // expression-element properties
-    expressionElement.setExpression(element.expression) // expression
-    expressionElement.setGetters(new Set(JSON.parse(element.getters))) // getters
+    // expressionElement.setExpression(element.expression) // expression
+    // expressionElement.setGetters(new Set(JSON.parse(element.getters))) // getters // evaluated from Expression upon inputExpression
     // expressionElement.setVariables(JSON.parse(element.variables)) // variables
     return expressionElement
   },
