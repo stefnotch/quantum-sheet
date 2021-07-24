@@ -203,9 +203,10 @@ export default defineComponent({
     }
 
     function serialize() {
-      console.log('serializing', JSON.stringify(document.elements))
+      // console.log('serializing', JSON.stringify(document.elements))
       // console.log('ExpressionElementType', ExpressionElementType)
-      document.serializeDocument()
+      const serializedData = document.serializeDocument()
+      console.log('serializedData', serializedData)
       // ExpressionElementType.serializeElement(document.elements[1])
       // ExpressionElementType.serializeElement(getTypeComponent('expression-element'))
     }

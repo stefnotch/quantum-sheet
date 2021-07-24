@@ -287,19 +287,19 @@ variableManager: shallowReadonly(
 
   function serializeDocument() {
     var serializedData: JsonType[] = []
-    console.log('Serializing document', elementList.elements)
+    // console.log('Serializing document', elementList.elements)
     const ExpressionElements = getElementsByType(ExpressionElementType.typeName)
-    console.log('ExpressionElements:', ExpressionElements)
+    // console.log('ExpressionElements:', ExpressionElements)
     // ExpressionElementType.serializeElement(ExpressionElements[0])
     ExpressionElements?.forEach((element: ExpressionElement) => {
-      serializedData.push(ExpressionElementType.serializeElement(element))
+      serializedData.push(serializedData.push(ExpressionElementType.serializeElement(element)))
     })
     // ScopeElement
     // Other Elements
     return serializedData
   }
 
-  function deserializeDocument() {
+  function deserializeDocument(serializedData: JsonType) {
     console.log('DeSerializing file')
 
     // const s = elementList.elements[1].serializeElement()

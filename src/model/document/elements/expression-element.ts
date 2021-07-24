@@ -264,7 +264,7 @@ export const ExpressionElementType: QuantumElementType<ExpressionElement, typeof
   typeName: ElementType,
   elementType: ExpressionElement,
   serializeElement: (element: ExpressionElement) => {
-    console.log('serializing me in type', element)
+    // console.log('serializing me in type', element)
     const serializedElement = {
       typeName: element.typeName,
       expression: JSON.stringify(element.expression.value),
@@ -272,7 +272,7 @@ export const ExpressionElementType: QuantumElementType<ExpressionElement, typeof
       getters: JSON.stringify(element.getters),
       variables: JSON.stringify(element.variables),
     }
-    console.log(serializedElement)
+    // console.log(serializedElement)
     return serializedElement
   },
   deserializeElement: (stuff) => null as any,
