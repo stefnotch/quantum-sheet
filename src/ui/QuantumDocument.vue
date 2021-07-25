@@ -217,10 +217,10 @@ export default defineComponent({
       const serializedDocument = {
         expressionElements: [
           {
-            id: 'a6b4c7ca-6b18-41cc-ae2d-45344f604759',
+            id: '4ae4369a-f5ed-4ab5-a057-d72cd4a7ae04',
             position: {
-              x: 29,
-              y: 11,
+              x: 11,
+              y: 9,
             },
             size: {
               x: 5,
@@ -234,21 +234,6 @@ export default defineComponent({
                 num: '3',
               },
             ],
-            getters: '[]',
-            scope: {
-              id: '5861c25c-ee13-4c14-88b2-42583c92b14e',
-              name: '',
-              position: {
-                x: 0,
-                y: 0,
-              },
-              size: {
-                x: 5,
-                y: 2,
-              },
-              resizable: false,
-              closed: false,
-            },
           },
         ],
         scopeElement: [],

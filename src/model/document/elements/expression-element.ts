@@ -272,9 +272,9 @@ export const ExpressionElementType: QuantumElementType<ExpressionElement, typeof
       // document-element properties
       // id:
       creationOptions: {
-        position: new Vector2(element?.position?.x, element?.position?.y),
-        size: new Vector2(element?.size.x, element?.size.y),
-        resizable: element?.resizable,
+        position: new Vector2(element.position.x, element.position.y),
+        size: new Vector2(element.size.x, element.size.y),
+        resizable: element.resizable,
       },
       // expression element properties
       expression: element.expression,
