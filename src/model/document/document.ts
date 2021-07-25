@@ -7,7 +7,7 @@ import arrayUtils from '../array-utils'
 import { ScopeElement, ScopeElementType } from './elements/scope-element'
 import { ExpressionElement, ExpressionElementType } from './elements/expression-element'
 
-type JsonType = null | boolean | number | string | JsonType[] | Vector2 | { [prop: string]: JsonType }
+type JsonType = undefined | null | boolean | number | string | JsonType[] | Vector2 | { [prop: string]: JsonType }
 
 type SerializedDataType = {
   elements: JsonType[]
