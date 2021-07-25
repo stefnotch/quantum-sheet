@@ -19,16 +19,16 @@
     "@vueuse/core": "^5.1.3",
     "mathlive": "0.69.4",
     "uuid": "^8.3.2",
-    "vue": "^3.1.4"
+    "vue": "^3.1.5"
   },
   "devDependencies": {
     "@shockpkg/archive-files": "^1.11.0",
     "@types/uuid": "^8.3.1",
     "@vitejs/plugin-vue": "^1.2.5",
-    "@vue/compiler-sfc": "^3.1.4",
+    "@vue/compiler-sfc": "^3.1.5",
     "fs-extra": "^10.0.0",
     "gh-pages": "^3.2.3",
-    "node-fetch": "3.0.0-beta.9",
+    "node-fetch": "3.0.0-beta.10",
     "vite": "^2.4.2"
   }
 }
