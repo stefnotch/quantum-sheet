@@ -203,12 +203,8 @@ export default defineComponent({
     }
 
     function serialize() {
-      // console.log('serializing', JSON.stringify(document.elements))
-      // console.log('ExpressionElementType', ExpressionElementType)
       const serializedData = document.serializeDocument()
       console.log('serializedData', serializedData)
-      // ExpressionElementType.serializeElement(document.elements[1])
-      // ExpressionElementType.serializeElement(getTypeComponent('expression-element'))
     }
 
     function deserialize() {
@@ -253,18 +249,7 @@ export default defineComponent({
           },
         ],
       }
-      // const deserializedDocument =
       document.deserializeDocument(serializedDocument)
-      // console.log('deserializedData', deserializedData)
-      // console.log('deserializedDocument', deserializedDocument)
-      // document = deserializedDocument
-
-      // deserializedData?.expressionElements?.forEach((element: ExpressionElement) => {
-      //   serializedData.expressionElements.push(ExpressionElementType.serializeElement(element))
-      // })
-      // ExpressionElementType.deserializeElement(document)
-      // ExpressionElementType.serializeElement(getTypeComponent('expression-element'))
-      // document.createElement('expression-element', CreationOptions.ElementOptions).inputExpression(CreationOptions.ExpressionOptions.Expression)
     }
 
     return {
