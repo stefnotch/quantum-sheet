@@ -231,6 +231,9 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
     const element = new elementType.elementType(options)
     //elementType.useElement(useQuantumElement('' + typeName, options)) as ReturnType<TElements[T]['useElement']>
 
+    // TODO: I think we can use the effectScope API here https://github.com/vuejs/rfcs/blob/master/active-rfcs/0041-reactivity-effect-scope.md
+    // (Replacing the stopHandles)
+
     let stopHandles = [elementList.watchElement(element), elementSelection.watchElement(element), elementFocus.watchElement(element)]
     elementRemoveCallbacks.set(element.id, () => {
       stopHandles.forEach((stopHandle) => stopHandle())
