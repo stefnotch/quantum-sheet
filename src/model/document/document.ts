@@ -87,8 +87,11 @@ export interface UseQuantumDocument<TElements extends QuantumDocumentElementType
    */
   setFocus(element?: QuantumElement): void
 
+  /**
+   * Serialize & Deserialize a document
+   */
   serializeDocument(): JsonType
-  deserializeDocument(serializedData: JsonType): UseQuantumDocument<TElements>
+  deserializeDocument(serializedData: JsonType): void
 }
 
 function useElementList() {
@@ -301,10 +304,7 @@ variableManager: shallowReadonly(
       expressionElements: [],
       scopeElement: [],
     }
-    // console.log('Serializing document', elementList.elements)
     const ExpressionElements = getElementsByType(ExpressionElementType.typeName)
-    // console.log('ExpressionElements:', ExpressionElements)
-    // ExpressionElementType.serializeElement(ExpressionElements[0])
     ExpressionElements?.forEach((element: ExpressionElement) => {
       serializedData.expressionElements.push(ExpressionElementType.serializeElement(element))
     })
@@ -315,13 +315,10 @@ variableManager: shallowReadonly(
 
   function deserializeDocument(serializedData: SerializedDataType) {
     console.log('DeSerializing file', serializedData)
-    // const newDocument = useDocument({ [ExpressionElementType.typeName]: ExpressionElementType, [ScopeElementType.typeName]: ScopeElementType })
     serializedData?.expressionElements?.forEach((element: JsonType) => {
       var newElement = ExpressionElementType.deserializeElement(element)
       createElement('expression-element', newElement?.creationOptions).inputExpression(newElement?.expression)
     })
-    // document.createElement('expression-element', CreationOptions.ElementOptions).inputExpression(CreationOptions.ExpressionOptions.Expression)
-    // return newDocument
   }
 
   return {

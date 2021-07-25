@@ -252,35 +252,18 @@ export class ExpressionElement extends QuantumElement {
   }
 }
 
-/**
- * Parameters to pass when creating an element
- */
-// export interface QuantumExpressionElementCreationOptions extends QuantumElementCreationOptions {
-//   expression?: Expression
-//   getters?: ReadonlySet<string>
-//   variables?: ReadonlySet<string>
-// }
-
 export const ExpressionElementType: QuantumElementType<ExpressionElement, typeof ExpressionElement, typeof ElementType> = {
   typeName: ElementType,
   elementType: ExpressionElement,
   serializeElement: (element: ExpressionElement) => {
-    // console.log('serializing me in type', element)
     const serializedElement = {
       id: element.id, // unnecessary?
-      // typeName: element.typeName, // unnecessary
       position: { x: element.position.value.x, y: element.position.value.y },
       size: { x: element.size.value.x, y: element.size.value.y },
       resizable: element.resizable.value,
-      // selected: element.selected.value, // unnecessary
-      // focused: element.focused.value, // unnecessary
+      // expression element properties
       expression: element.expression.value,
-      // getters: JSON.stringify(Array.from(element.getters.values())), // evaluated from Expression upon inputExpression
-      // variables: element.variables, // evaluated from Expression upon inputExpression
-      // scope: typeof element.scope.value !== 'undefined' ? ScopeElementType.serializeElement(element.scope.value) : null, // evaluated from Expression upon inputExpression
     }
-    // console.log(serializedElement)
-    // return JSON.stringify(serializedElement)
     return serializedElement
   },
   deserializeElement: (element) => {
@@ -293,14 +276,9 @@ export const ExpressionElementType: QuantumElementType<ExpressionElement, typeof
         size: new Vector2(element?.size.x, element?.size.y),
         resizable: element?.resizable,
       },
+      // expression element properties
       expression: element.expression,
-      // scope: ScopeElementType.deserializeElement(element.scope), // evaluated from Expression upon inputExpression
     }
-    // expressionElement.setScope(ScopeElementType.deserializeElement(element.scope)) // scope
-    // expression-element properties
-    // expressionElement.setExpression(element.expression) // expression
-    // expressionElement.setGetters(new Set(JSON.parse(element.getters))) // getters // evaluated from Expression upon inputExpression
-    // expressionElement.setVariables(JSON.parse(element.variables)) // variables
     return expressionElement
   },
 }

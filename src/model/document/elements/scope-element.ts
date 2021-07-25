@@ -202,7 +202,6 @@ export const ScopeElementType: QuantumElementType<ScopeElement, typeof ScopeElem
   elementType: ScopeElement,
   // serializeElement: (element) => null,
   serializeElement: (element: ScopeElement) => {
-    // console.log('serializing me in type', element)
     const serializedElement = {
       id: element.id,
       name: element.name.value,
