@@ -13,7 +13,7 @@ export type QuantumElementType<
   readonly typeName: U
   elementType: TCtor
   serializeElement(element: T): JsonType
-  deserializeElement(data: any): JsonType
+  deserializeElement(data: any): any
 }
 
 export interface QuantumElementConstructor<T> {

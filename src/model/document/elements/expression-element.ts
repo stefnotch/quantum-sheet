@@ -267,7 +267,7 @@ export const ExpressionElementType: QuantumElementType<ExpressionElement, typeof
   serializeElement: (element: ExpressionElement) => {
     // console.log('serializing me in type', element)
     const serializedElement = {
-      id: element.id,
+      id: element.id, // unnecessary?
       // typeName: element.typeName, // unnecessary
       position: { x: element.position.value.x, y: element.position.value.y },
       size: { x: element.size.value.x, y: element.size.value.y },
@@ -288,9 +288,11 @@ export const ExpressionElementType: QuantumElementType<ExpressionElement, typeof
     const expressionElement = {
       // document-element properties
       // id:
-      position: new Vector2(element?.position?.x, element?.position?.y),
-      size: new Vector2(element?.size.x, element?.size.y),
-      resizable: JSON.parse(element?.resizable),
+      creationOptions: {
+        position: new Vector2(element?.position?.x, element?.position?.y),
+        size: new Vector2(element?.size.x, element?.size.y),
+        resizable: element?.resizable,
+      },
       expression: element.expression,
       // scope: ScopeElementType.deserializeElement(element.scope), // evaluated from Expression upon inputExpression
     }

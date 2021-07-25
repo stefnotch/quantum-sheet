@@ -253,7 +253,15 @@ export default defineComponent({
         ],
         scopeElement: [],
       }
+      // const deserializedDocument =
       document.deserializeDocument(serializedDocument)
+      // console.log('deserializedData', deserializedData)
+      // console.log('deserializedDocument', deserializedDocument)
+      // document = deserializedDocument
+
+      // deserializedData?.expressionElements?.forEach((element: ExpressionElement) => {
+      //   serializedData.expressionElements.push(ExpressionElementType.serializeElement(element))
+      // })
       // ExpressionElementType.deserializeElement(document)
       // ExpressionElementType.serializeElement(getTypeComponent('expression-element'))
       // document.createElement('expression-element', CreationOptions.ElementOptions).inputExpression(CreationOptions.ExpressionOptions.Expression)
