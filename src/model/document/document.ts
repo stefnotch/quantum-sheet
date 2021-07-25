@@ -10,14 +10,8 @@ import { ExpressionElement, ExpressionElementType } from './elements/expression-
 type JsonType = null | boolean | number | string | JsonType[] | Vector2 | { [prop: string]: JsonType }
 
 type SerializedDataType = {
-  expressionElements: JsonType[]
-  scopeElement: JsonType[]
+  elements: JsonType[]
 }
-
-// type DeSerializedDataType = {
-//   expressionElements: JsonType[]
-//   scopeElement: JsonType[]
-// }
 
 export type QuantumDocumentElementTypes<T extends readonly QuantumElementType[] = readonly QuantumElementType[]> = {
   [key in T[number]['typeName']]: T[number]
@@ -301,24 +295,27 @@ variableManager: shallowReadonly(
 
   function serializeDocument() {
     var serializedData: SerializedDataType = {
-      expressionElements: [],
-      scopeElement: [],
+      elements: [],
     }
-    const ExpressionElements = getElementsByType(ExpressionElementType.typeName)
-    ExpressionElements?.forEach((element: ExpressionElement) => {
-      serializedData.expressionElements.push(ExpressionElementType.serializeElement(element))
+    elementList.elements.forEach((element: QuantumElement) => {
+      let elementType = elementTypes[element.typeName]
+      serializedData.elements.push(elementType.serializeElement(element))
     })
-    // ScopeElement
-    // Other Elements
     return serializedData
   }
 
   function deserializeDocument(serializedData: SerializedDataType) {
     console.log('DeSerializing file', serializedData)
-    serializedData?.expressionElements?.forEach((element: JsonType) => {
-      var newElement = ExpressionElementType.deserializeElement(element)
-      createElement('expression-element', newElement?.creationOptions).inputExpression(newElement?.expression)
+    // Expression-Elements
+    serializedData?.elements?.forEach((element: JsonType) => {
+      if ((element as any).typeName === 'expression-element') {
+        var newElement = ExpressionElementType.deserializeElement(element)
+        console.log('deserial', newElement)
+        createElement('expression-element', newElement?.creationOptions).inputExpression(newElement?.expression)
+      }
     })
+    // Scope-Elements
+    // etc...
   }
 
   return {

@@ -215,12 +215,28 @@ export default defineComponent({
       // convert from string here : JSON.parse()
       // Just for testing
       const serializedDocument = {
-        expressionElements: [
+        elements: [
           {
-            id: '4ae4369a-f5ed-4ab5-a057-d72cd4a7ae04',
+            id: 'aeacb0d6-6914-4214-9633-eeef5b41fb7e',
+            typeName: 'scope-element',
+            name: '',
             position: {
-              x: 11,
-              y: 9,
+              x: 0,
+              y: 0,
+            },
+            size: {
+              x: 0,
+              y: 0,
+            },
+            resizable: false,
+            closed: false,
+          },
+          {
+            id: '842aedda-84d4-4fd4-b506-74ff63c375a7',
+            typeName: 'expression-element',
+            position: {
+              x: 9,
+              y: 6,
             },
             size: {
               x: 5,
@@ -236,7 +252,6 @@ export default defineComponent({
             ],
           },
         ],
-        scopeElement: [],
       }
       // const deserializedDocument =
       document.deserializeDocument(serializedDocument)
