@@ -1,7 +1,7 @@
 import { markRaw, ref, Ref, shallowRef } from 'vue'
 import { Vector2 } from '../vectors'
 import type { ScopeElement } from './elements/scope-element'
-import { v4 as uuidv4 } from 'uuid'
+import { v4 as uuidv4, validate as uuidValidate } from 'uuid'
 
 type JsonType = null | boolean | number | string | JsonType[] | Vector2 | { [prop: string]: JsonType }
 
@@ -41,6 +41,7 @@ export abstract class QuantumElement {
     if (options.resizable) this.resizable.value = options.resizable
     if (options.size) this.size.value = options.size
     if (options.scope) this.scope.value = options.scope
+    if (options.id && uuidValidate(options.id)) this.id = options.id
     /* When moving a block, we know its target index. Therefore we know what neighbors the block has after insertion. (And the "scope start/getters" and "scope end/setters" nicely guarantee that the neighbor stuff will always be correct. ((If we do not have getters in the tree, in case of a getter, we could increment the index until we find a setter but then the whole blocks stuff becomes relevant and honestly, that's not fun anymore)))
 ^ Therefore, we can totally keep track of which scope every block is in. It's super cheap. (Block --> scope)
 */
@@ -79,4 +80,5 @@ export interface QuantumElementCreationOptions {
   resizable?: boolean
   size?: Vector2
   scope?: ScopeElement | undefined
+  id?: string
 }

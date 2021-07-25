@@ -217,7 +217,7 @@ export default defineComponent({
       const serializedDocument = {
         elements: [
           {
-            id: 'aeacb0d6-6914-4214-9633-eeef5b41fb7e',
+            id: '9581a4b6-8f14-416c-a761-43c7459ffe33',
             typeName: 'scope-element',
             name: '',
             position: {
@@ -232,11 +232,11 @@ export default defineComponent({
             closed: false,
           },
           {
-            id: '842aedda-84d4-4fd4-b506-74ff63c375a7',
+            id: '0e6f0520-0a52-4214-a12a-2d154325f198',
             typeName: 'expression-element',
             position: {
-              x: 9,
-              y: 6,
+              x: 7,
+              y: 5,
             },
             size: {
               x: 5,

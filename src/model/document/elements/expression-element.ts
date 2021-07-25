@@ -257,7 +257,7 @@ export const ExpressionElementType: QuantumElementType<ExpressionElement, typeof
   elementType: ExpressionElement,
   serializeElement: (element: ExpressionElement) => {
     const serializedElement = {
-      id: element.id, // unnecessary?
+      id: element.id,
       typeName: ElementType,
       position: { x: element.position.value.x, y: element.position.value.y },
       size: { x: element.size.value.x, y: element.size.value.y },
@@ -270,8 +270,8 @@ export const ExpressionElementType: QuantumElementType<ExpressionElement, typeof
   deserializeElement: (element) => {
     const expressionElement = {
       // document-element properties
-      // id:
       creationOptions: {
+        id: element.id,
         position: new Vector2(element.position.x, element.position.y),
         size: new Vector2(element.size.x, element.size.y),
         resizable: element.resizable,

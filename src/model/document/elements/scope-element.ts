@@ -211,7 +211,6 @@ export const ScopeElementType: QuantumElementType<ScopeElement, typeof ScopeElem
       closed: element.closed.value,
       // scope: JSON.stringify(element.scope.value),
     }
-    console.log('Serialized Scope: ', serializedElement)
     return serializedElement
   },
   deserializeElement: (stuff) => null as any,
