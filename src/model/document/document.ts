@@ -308,6 +308,8 @@ variableManager: shallowReadonly(
     console.log('DeSerializing file', serializedData)
     // Expression-Elements
     serializedData?.elements?.forEach((element: JsonType) => {
+      // let elementType = elementTypes[(element as any).typeName]
+      // elementType.deserializeElement(element)
       if ((element as any).typeName === 'expression-element') {
         var newElement = ExpressionElementType.deserializeElement(element)
         createElement('expression-element', newElement?.creationOptions).inputExpression(newElement?.expression)

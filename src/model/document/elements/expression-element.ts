@@ -24,9 +24,6 @@ export class ExpressionElement extends QuantumElement {
 
   constructor(options: QuantumElementCreationOptions) {
     super(options)
-    // if (options.expression) this.setExpression(options.expression)
-    // if (options.getters) this.setGetters(options.getters)
-    // if (options.variables) this.setVariables(options.variables)
     watch(this.scope, (value) => {
       if (value) {
         // TODO: Re-create getters and variables when the scope changes
