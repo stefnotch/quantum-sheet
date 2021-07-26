@@ -218,6 +218,7 @@ function useElementDrag() {
       if (element)
         interact(element)
           .draggable({
+            ignoreFrom: '.quantum-element',
             modifiers: [
               interact.modifiers.snap({
                 targets: [interact.snappers.grid({ x: 30, y: 30 })],
