@@ -54,7 +54,7 @@ export default defineComponent({
     const expressionElement = props.modelGetter()
 
     // Change mathfield focus
-    watch(expressionElement.focused, (value) => (value ? mathfield.value?.focus?.() : mathfield.value?.blur?.()))
+    // watch(expressionElement.focused, (value) => (value ? mathfield.value?.focus?.() : mathfield.value?.blur?.()))
 
     // Show expression when the document-expression changes
     watch([expressionElement.expression, mathfield], ([value, _]) => {

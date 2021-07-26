@@ -33,6 +33,7 @@
       class="quantum-block"
       v-for="element in document.elements"
       :key="element.id"
+      :id="element.id"
       :style="grid.gridToStyle(element.position.value)"
       :class="{ selected: element.selected.value }"
       @pointerdown="() => {}"
@@ -190,6 +191,7 @@ export default defineComponent({
     const focusedElementCommands = useFocusedElementCommands()
     const grid = useGrid(document, documentInputElement, focusedElementCommands.commands)
     const clipboard = useClipboard(document)
+    // const drag = useDrag(document, documentInputElement)
 
     function log(ev: any) {
       console.log(ev)

@@ -2,9 +2,11 @@
 
 import { QuantumElementCreationOptions, QuantumElementType, QuantumElement } from './document-element'
 import { Vector2 } from '../vectors'
-import { readonly, shallowReactive, shallowRef, ref, watch } from 'vue'
+import { readonly, shallowReactive, shallowRef, ref, watch, nextTick } from 'vue'
 import arrayUtils from '../array-utils'
 import { ScopeElement, ScopeElementType } from './elements/scope-element'
+
+import interact from 'interactjs'
 
 export type QuantumDocumentElementTypes<T extends readonly QuantumElementType[] = readonly QuantumElementType[]> = {
   [key in T[number]['typeName']]: T[number]
@@ -206,6 +208,41 @@ function useElementFocus() {
   }
 }
 
+function useElementDrag() {
+  function watchElement(qelement: QuantumElement) {
+    nextTick(function () {
+      console.log('Dragable:', qelement, qelement.id, document.getElementById(qelement.id))
+      var element = document.getElementById(qelement.id)
+      var x = 0
+      var y = 0
+      if (element)
+        interact(element)
+          .draggable({
+            modifiers: [
+              interact.modifiers.snap({
+                targets: [interact.snappers.grid({ x: 30, y: 30 })],
+                range: Infinity,
+                relativePoints: [{ x: 0, y: 0 }],
+              }),
+              interact.modifiers.restrict({
+                // restriction: element.parentNode,
+                elementRect: { top: 0, left: 0, bottom: 1, right: 1 },
+                endOnly: true,
+              }),
+            ],
+            inertia: true,
+          })
+          .on('dragmove', function (event) {
+            x += event.dx
+            y += event.dy
+
+            event.target.style.transform = 'translate(' + x + 'px, ' + y + 'px)'
+          })
+    })
+  }
+  return { watchElement }
+}
+
 /**
  * Create a document
  * @param elementTypes Element types in the document
@@ -219,6 +256,7 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
   const elementList = useElementList()
   const elementSelection = useElementSelection()
   const elementFocus = useElementFocus()
+  const elementDrag = useElementDrag()
 
   const rootScope = createElement(ScopeElementType.typeName, {
     position: Vector2.zero,
@@ -235,6 +273,8 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
     elementRemoveCallbacks.set(element.id, () => {
       stopHandles.forEach((stopHandle) => stopHandle())
     })
+
+    elementDrag.watchElement(element)
 
     /* When moving a block, we know its target index. Therefore we know what neighbors the block has after insertion. (And the "scope start/getters" and "scope end/setters" nicely guarantee that the neighbor stuff will always be correct. ((If we do not have getters in the tree, in case of a getter, we could increment the index until we find a setter but then the whole blocks stuff becomes relevant and honestly, that's not fun anymore)))
 ^ Therefore, we can totally keep track of which scope every block is in. It's super cheap. (Block --> scope)
