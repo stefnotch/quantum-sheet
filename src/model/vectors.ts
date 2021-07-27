@@ -2,8 +2,8 @@
  * A simple readonly Vector2
  */
 export class Vector2 {
-  readonly x: number
-  readonly y: number
+  x: number
+  y: number
   constructor(x: number, y: number) {
     this.x = x
     this.y = y
@@ -23,6 +23,20 @@ export class Vector2 {
 
   add(other: Vector2): Vector2 {
     return new Vector2(this.x + other.x, this.y + other.y)
+  }
+
+  advance(other: Vector2) {
+    this.x = this.x + other.x
+    this.y = this.y + other.y
+  }
+
+  set(other: Vector2) {
+    this.x = other.x
+    this.y = other.y
+  }
+
+  delta(other: Vector2) {
+    return new Vector2(this.x - other.x, this.y - other.y)
   }
 
   /**

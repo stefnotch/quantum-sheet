@@ -213,15 +213,15 @@ function useElementDrag() {
     nextTick(function () {
       console.log('Dragable:', qelement, qelement.id, document.getElementById(qelement.id))
       var element = document.getElementById(qelement.id)
-      var x = 0
-      var y = 0
+      // var x = 0
+      // var y = 0
       if (element)
         interact(element)
           .draggable({
             ignoreFrom: '.quantum-element',
             modifiers: [
               interact.modifiers.snap({
-                targets: [interact.snappers.grid({ x: 30, y: 30 })],
+                targets: [interact.snappers.grid({ x: 20, y: 20 })],
                 range: Infinity,
                 relativePoints: [{ x: 0, y: 0 }],
               }),
@@ -231,13 +231,18 @@ function useElementDrag() {
                 endOnly: true,
               }),
             ],
-            inertia: true,
+            inertia: false,
           })
           .on('dragmove', function (event) {
-            x += event.dx
-            y += event.dy
+            // x += event.dx
+            // y += event.dy
 
-            event.target.style.transform = 'translate(' + x + 'px, ' + y + 'px)'
+            // event.target.style.transform = 'translate(' + x + 'px, ' + y + 'px)'
+            console.log(qelement.position.value, event.dx, event.dy)
+            // qelement.position.value.add2(new Vector2(event.dx / 20, event.dy / 20))
+            var newPos = qelement.position.value.add(new Vector2(event.dx / 20, event.dy / 20))
+            qelement.setPosition(newPos)
+            // qelement.position.value.add(new Vector2(event.dx / 20, event.dy / 20))
           })
     })
   }
@@ -264,6 +269,7 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
   }) // TODO: Scope size:
 
   function createElement<T extends keyof TElements>(typeName: T, options: QuantumElementCreationOptions): QReturnType<TElements[T]['elementType']> {
+    console.log('new')
     let elementType = elementTypes[typeName]
     if (!elementType) throw new Error(`Unknown element type ${typeName}`)
 

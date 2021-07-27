@@ -53,7 +53,8 @@ variableManager: shallowReadonly(
   }
 
   setPosition(value: Vector2) {
-    this.position.value = value
+    // this.position.value = value
+    this.position.value.set(value)
   }
 
   setSize(value: Vector2) {
