@@ -5,12 +5,19 @@ import { Vector2 } from '../vectors'
 import { readonly, shallowReactive, shallowRef, ref, watch } from 'vue'
 import arrayUtils from '../array-utils'
 import { ScopeElement, ScopeElementType } from './elements/scope-element'
+import { ExpressionElement, ExpressionElementType } from './elements/expression-element'
+
+type JsonType = undefined | null | boolean | number | string | JsonType[] | Vector2 | { [prop: string]: JsonType }
+
+type SerializedDataType = {
+  elements: JsonType[]
+}
 
 export type QuantumDocumentElementTypes<T extends readonly QuantumElementType[] = readonly QuantumElementType[]> = {
   [key in T[number]['typeName']]: T[number]
-} & { ['scope-element']: typeof ScopeElementType }
+} & { ['scope-element']: typeof ScopeElementType } & { ['expression-element']: typeof ExpressionElementType }
 
-type QReturnType<T extends new (...args: any) => any> = T extends new (...args: any) => infer R ? R : any
+type QReturnType<T extends new (...args: any[]) => any> = T extends new (...args: any[]) => infer R ? R : any
 
 /**
  * A top level document, containing a list of elements.
@@ -58,6 +65,12 @@ export interface UseQuantumDocument<TElements extends QuantumDocumentElementType
   getElementById<T extends keyof TElements>(id: string, typeName: T): QReturnType<TElements[T]['elementType']> | undefined
 
   /**
+   * Gets the element with the given id
+   * @param type Element type name
+   */
+  // getElementsByType<T extends keyof TElements>(id: string, typeName: T): QReturnType<TElements[T]['elementType']>[] | undefined
+
+  /**
    * Set the element selection
    * @param elements Elements to select
    */
@@ -67,6 +80,12 @@ export interface UseQuantumDocument<TElements extends QuantumDocumentElementType
    * Sets the element focus
    */
   setFocus(element?: QuantumElement): void
+
+  /**
+   * Serialize & Deserialize a document
+   */
+  serializeDocument(): JsonType
+  deserializeDocument(serializedData: JsonType): void
 }
 
 function useElementList() {
@@ -222,7 +241,8 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
 
   const rootScope = createElement(ScopeElementType.typeName, {
     position: Vector2.zero,
-  }) // TODO: Scope size:
+    size: Vector2.zero,
+  })
 
   function createElement<T extends keyof TElements>(typeName: T, options: QuantumElementCreationOptions): QReturnType<TElements[T]['elementType']> {
     let elementType = elementTypes[typeName]
@@ -266,6 +286,39 @@ variableManager: shallowReadonly(
     return element as any
   }
 
+  function getElementsByType<T extends keyof TElements>(typeName: T): QReturnType<TElements[T]['elementType']>[] | undefined {
+    let elements = elementList.elements.filter((e) => e.typeName == typeName)
+
+    // Yeah, Typescript really does dislike this XD
+    return elements as any[]
+  }
+
+  function serializeDocument() {
+    let serializedData: SerializedDataType = {
+      elements: [],
+    }
+    elementList.elements.forEach((element: QuantumElement) => {
+      let elementType = elementTypes[element.typeName]
+      serializedData.elements.push(elementType.serializeElement(element))
+    })
+    return serializedData
+  }
+
+  function deserializeDocument(serializedData: SerializedDataType) {
+    console.log('DeSerializing file', serializedData)
+    // Expression-Elements
+    serializedData?.elements?.forEach((element: JsonType) => {
+      // let elementType = elementTypes[(element as any).typeName]
+      // elementType.deserializeElement(element)
+      if ((element as any).typeName === 'expression-element') {
+        let newElement = ExpressionElementType.deserializeElement(element)
+        createElement('expression-element', newElement?.creationOptions).inputExpression(newElement?.expression)
+      }
+    })
+    // Scope-Elements
+    // etc...
+  }
+
   return {
     gridCellSize,
     elementTypes: elementTypes,
@@ -276,5 +329,8 @@ variableManager: shallowReadonly(
     getElementById,
     setSelection: elementSelection.setSelection,
     setFocus: elementFocus.setFocus,
+
+    serializeDocument,
+    deserializeDocument,
   }
 }

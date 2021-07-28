@@ -1,9 +1,9 @@
 import { markRaw, ref, Ref, shallowRef } from 'vue'
 import { Vector2 } from '../vectors'
 import type { ScopeElement } from './elements/scope-element'
-import { v4 as uuidv4 } from 'uuid'
+import { v4 as uuidv4, validate as uuidValidate } from 'uuid'
 
-type JsonType = null | boolean | number | string | JsonType[] | { [prop: string]: JsonType }
+type JsonType = null | boolean | number | string | JsonType[] | Vector2 | { [prop: string]: JsonType }
 
 export type QuantumElementType<
   T extends QuantumElement = QuantumElement,
@@ -13,7 +13,7 @@ export type QuantumElementType<
   readonly typeName: U
   elementType: TCtor
   serializeElement(element: T): JsonType
-  deserializeElement(data: JsonType): T
+  deserializeElement(data: any): any
 }
 
 export interface QuantumElementConstructor<T> {
@@ -30,19 +30,18 @@ export abstract class QuantumElement {
   readonly position: Ref<Vector2> = ref(Vector2.zero)
   // can include a fractional part
   readonly size: Ref<Vector2> = ref(new Vector2(5, 2)) // TODO: Size stuff
-  readonly resizeable: Ref<boolean> = ref(false)
+  readonly resizable: Ref<boolean> = ref(false)
   readonly selected: Ref<boolean> = ref(false)
   readonly focused: Ref<boolean> = ref(false)
   readonly scope: Ref<ScopeElement | undefined> = shallowRef<ScopeElement>()
 
   constructor(options: QuantumElementCreationOptions) {
     markRaw(this) // Prevents this from accidentally becoming reactive and stops the variables from being unwrapped
-    if (options.position) {
-      this.position.value = options.position
-    }
-    if (options.resizeable) {
-      this.resizeable.value = options.resizeable
-    }
+    if (options.position) this.position.value = options.position
+    if (options.resizable) this.resizable.value = options.resizable
+    if (options.size) this.size.value = options.size
+    if (options.scope) this.scope.value = options.scope
+    if (options.id && uuidValidate(options.id)) this.id = options.id
     /* When moving a block, we know its target index. Therefore we know what neighbors the block has after insertion. (And the "scope start/getters" and "scope end/setters" nicely guarantee that the neighbor stuff will always be correct. ((If we do not have getters in the tree, in case of a getter, we could increment the index until we find a setter but then the whole blocks stuff becomes relevant and honestly, that's not fun anymore)))
 ^ Therefore, we can totally keep track of which scope every block is in. It's super cheap. (Block --> scope)
 */
@@ -78,5 +77,8 @@ variableManager: shallowReadonly(
  */
 export interface QuantumElementCreationOptions {
   position?: Vector2
-  resizeable?: boolean
+  resizable?: boolean
+  size?: Vector2
+  scope?: ScopeElement | undefined
+  id?: string
 }
