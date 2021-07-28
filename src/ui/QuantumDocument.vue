@@ -242,6 +242,10 @@ export default defineComponent({
   border: 1px solid var(--selected-color);
   margin: 0px;
 }
+.quantum-block.dragging {
+  border: 1px solid var(--selected-color);
+  margin: 0px;
+}
 .quantum-block:focus-within {
   border: 1px dashed var(--selected-color);
   margin: 0px;
@@ -250,9 +254,6 @@ export default defineComponent({
   border: 1px solid var(--selected-color);
   margin: 0px;
   background: var(--selected-background-color);
-}
-.quantum-block.selected:hover {
-  cursor: move;
 }
 
 .quantum-document .input-element {

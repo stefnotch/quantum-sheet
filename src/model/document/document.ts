@@ -212,7 +212,6 @@ function useElementDrag() {
   function makeDraggable(element: QuantumElement) {
     // wait until the element gets created in the DOM
     nextTick(function () {
-      console.log('Dragable:', element, element.id, document.getElementById(element.id))
       var DOMElement = document.getElementById(element.id)
       if (DOMElement)
         interact(DOMElement)
@@ -233,10 +232,13 @@ function useElementDrag() {
             inertia: false,
           })
           .on('dragmove', function (event) {
-            // TODO: disable hover & selection detection while dragging
+            DOMElement?.classList.add('dragging')
             let delta = new Vector2(event.dx / 20, event.dy / 20)
             let newPos = element.position.value.add(delta)
             element.setPosition(newPos)
+          })
+          .on('dragend', function (event) {
+            DOMElement?.classList.remove('dragging')
           })
     })
   }
