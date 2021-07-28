@@ -1,25 +1,24 @@
 <template>
-  <div>
-    <a-layout>
-      <Header />
-      <a-layout class="content">
-        <a-layout-content class="dwgtable center">
-          <quantum-document></quantum-document>
-          <!-- <LandingPage /> -->
-        </a-layout-content>
-      </a-layout>
-      <Footer />
+  <a-layout>
+    <Header />
+    <a-layout class="content">
+      <a-layout-content class="dwgtable center">
+        <quantum-document></quantum-document>
+        <!-- <LandingPage /> -->
+      </a-layout-content>
     </a-layout>
-  </div>
+    <Footer />
+  </a-layout>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue'
+import { defineComponent, ref, provide } from 'vue'
 import pkg from './../package.json'
 import QuantumDocument from './ui/QuantumDocument.vue'
 import Header from './ui/Header.vue'
 import Footer from './ui/Footer.vue'
 import LandingPage from './ui/LandingPage.vue'
+// import mitt from 'mitt'
 
 export default defineComponent({
   name: 'App',
@@ -33,6 +32,9 @@ export default defineComponent({
     if (import.meta.env.PROD) {
       console.log(`${pkg.name} - ${pkg.version}`)
     }
+
+    // const emitter = mitt<Events>()
+    // provide('$emitter', emitter)
     return {}
   },
 })

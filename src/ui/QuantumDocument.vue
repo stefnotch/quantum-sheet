@@ -58,13 +58,14 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, readonly, ref, Ref, nextTick, unref, onMounted, inject } from 'vue'
+import { defineComponent, readonly, ref, Ref, nextTick, unref, onMounted, inject, provide } from 'vue'
 import { useDocument, UseQuantumDocument, QuantumDocumentElementTypes } from '../model/document/document'
 import ExpressionElement, { ExpressionElementType } from './elements/ExpressionElement.vue'
 import ScopeElement, { ScopeElementType } from './elements/ScopeStartElement.vue'
 import { useFocusedElementCommands, ElementCommands } from './elements/element-commands'
 import { Vector2 } from '../model/vectors'
 import { QuantumElement } from '../model/document/document-element'
+import emitter from '../services/eventbus'
 
 function useClipboard<T extends QuantumDocumentElementTypes>(document: UseQuantumDocument<T>) {
   function cut(ev: ClipboardEvent) {}
@@ -207,9 +208,15 @@ export default defineComponent({
       return (typeComponents as any)[typeName]
     }
 
+    emitter.on('serialize-document', () => {
+      console.log('serializing')
+      emitter.emit('update-document-data', serialize())
+    })
+
     function serialize() {
       const serializedData = document.serializeDocument()
       console.log('serializedData', serializedData)
+      return JSON.stringify(serializedData)
     }
 
     function deserialize() {
@@ -256,11 +263,6 @@ export default defineComponent({
       }
       document.deserializeDocument(serializedDocument)
     }
-
-    // For serialization?
-    console.log('document elements serialized:', document.elements, JSON.stringify(document.elements))
-    const $emitter: any = inject('$emitter')
-    $emitter.on('promptsavefile', () => console.log('saving', document.elements, JSON.stringify(document.elements)))
 
     return {
       document,
