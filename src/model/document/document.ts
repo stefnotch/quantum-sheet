@@ -231,8 +231,10 @@ function useElementDrag() {
             ],
             inertia: false,
           })
-          .on('dragmove', function (event) {
+          .on('down', function (event) {
             DOMElement?.classList.add('dragging')
+          })
+          .on('dragmove', function (event) {
             let delta = new Vector2(event.dx / 20, event.dy / 20)
             let newPos = element.position.value.add(delta)
             element.setPosition(newPos)
