@@ -178,6 +178,9 @@ export default defineComponent({
         }
       },
       {
+        // This is here because we're accessing `mathfieldContainer`
+        // Not sure if this is necessary
+        // https://v3.vuejs.org/guide/reactivity-computed-watchers.html#effect-flush-timing
         flush: 'post',
       }
     )
