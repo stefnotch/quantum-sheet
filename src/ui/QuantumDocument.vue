@@ -34,6 +34,9 @@
       "
       @blur="grid.showCrosshair.value = false"
     ></textarea>
+
+    <button @click="serialize()">Serialize</button>
+    <button @click="deserialize()">DeSerialize</button>
     <div class="grid-crosshair" :style="grid.gridToStyle(grid.crosshairPosition.value)" v-show="grid.showCrosshair.value">+</div>
     <div
       class="quantum-block"
@@ -61,7 +64,7 @@ import ExpressionElement, { ExpressionElementType } from './elements/ExpressionE
 import ScopeElement, { ScopeElementType } from './elements/ScopeStartElement.vue'
 import { useFocusedElementCommands, ElementCommands } from './elements/element-commands'
 import { Vector2 } from '../model/vectors'
-import { UseQuantumElement } from '../model/document/document-element'
+import { QuantumElement } from '../model/document/document-element'
 
 function useClipboard<T extends QuantumDocumentElementTypes>(document: UseQuantumDocument<T>) {
   function cut(ev: ClipboardEvent) {}
@@ -106,7 +109,7 @@ function useGrid<T extends QuantumDocumentElementTypes>(
     if (ev.data) {
       let element = document.createElement(ExpressionElementType.typeName, {
         position: crosshairPosition.value,
-        resizeable: false,
+        resizable: false,
       })
       document.setFocus(element)
       nextTick(() => {
@@ -139,7 +142,7 @@ function useGrid<T extends QuantumDocumentElementTypes>(
     if (ev.isComposing) return
   }
 
-  function moveCrosshairOut(element: UseQuantumElement, direction: Vector2) {
+  function moveCrosshairOut(element: QuantumElement, direction: Vector2) {
     let pos = element.position.value.add(new Vector2(direction.x > 0 ? element.size.value.x : 0, direction.y > 0 ? element.size.value.y : 0))
 
     crosshairPosition.value = pos.add(direction)
@@ -180,10 +183,9 @@ export default defineComponent({
     ScopeElement,
   },
   setup() {
-    const document = useDocument({
-      ...ExpressionElementType.documentType,
-      ...ScopeElementType.documentType,
-    })
+    const document = useDocument({ [ExpressionElementType.typeName]: ExpressionElementType, [ScopeElementType.typeName]: ScopeElementType })
+
+    // let z = new document.elementTypes['scope-element'].elementType({})
 
     const typeComponents: TypeComponents<typeof document> = {
       [ExpressionElementType.typeName]: ExpressionElement,
@@ -205,28 +207,55 @@ export default defineComponent({
       return (typeComponents as any)[typeName]
     }
 
-    onMounted(() => {
-      document
-        .createElement('expression-element', {
-          position: new Vector2(2, 2),
-        })
-        .inputExpression(['Assign', 'a', 5])
-      document
-        .createElement('expression-element', {
-          position: new Vector2(2, 5),
-        })
-        .inputExpression(['Equal', ['Add', ['Divide', 34, 4], ['Power', 'a', 3]], null])
-      document
-        .createElement('expression-element', {
-          position: new Vector2(2, 8),
-        })
-        .inputExpression(['To', ['Add', ['Subtract', 'b', ['Divide', ['Multiply', 4, 'd'], 'd']], ['Multiply', 2, 'b']], ['Missing', ''], null])
-      document
-        .createElement('expression-element', {
-          position: new Vector2(2, 11),
-        })
-        .inputExpression(['To', ['EqualEqual', ['Add', ['Divide', ['Power', 'x', 2], 0.25], 3], 19], 'solve', null])
-    })
+    function serialize() {
+      const serializedData = document.serializeDocument()
+      console.log('serializedData', serializedData)
+    }
+
+    function deserialize() {
+      // convert from string here : JSON.parse()
+      // Just for testing
+      const serializedDocument = {
+        elements: [
+          {
+            id: '9581a4b6-8f14-416c-a761-43c7459ffe33',
+            typeName: 'scope-element',
+            name: '',
+            position: {
+              x: 0,
+              y: 0,
+            },
+            size: {
+              x: 0,
+              y: 0,
+            },
+            resizable: false,
+            closed: false,
+          },
+          {
+            id: '0e6f0520-0a52-4214-a12a-2d154325f198',
+            typeName: 'expression-element',
+            position: {
+              x: 7,
+              y: 5,
+            },
+            size: {
+              x: 5,
+              y: 2,
+            },
+            resizable: false,
+            expression: [
+              'Assign',
+              'a',
+              {
+                num: '3',
+              },
+            ],
+          },
+        ],
+      }
+      document.deserializeDocument(serializedDocument)
+    }
 
     // For serialization?
     console.log('document elements serialized:', document.elements, JSON.stringify(document.elements))
@@ -243,12 +272,16 @@ export default defineComponent({
       clipboard,
       getTypeComponent,
       log,
+
+      serialize,
+      deserialize,
     }
   },
 })
 </script>
 
 <style scoped>
+/*TODO: Use this https://github.com/vuejs/rfcs/blob/master/active-rfcs/0043-sfc-style-variables.md for the grid size and stuff */
 .theme-paper-standard {
   /* Standard Grid Papaer Style */
   --color: white;

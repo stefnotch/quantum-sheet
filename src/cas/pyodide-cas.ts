@@ -1,7 +1,7 @@
 import type {} from 'vite'
 import type { CasCommand } from './cas'
 import { getGetterNames } from './cas-math'
-import { format } from '@cortex-js/compute-engine'
+import { Expression, format } from '@cortex-js/compute-engine'
 
 export type WorkerMessage =
   | {
@@ -80,33 +80,48 @@ function usePythonConverter() {
     }
   }
 
+  const MathJsonToSympy = new Map<string, (expression: Expression[]) => string>([
+    ['Add', () => 'sympy.Add'],
+    [
+      'Subtract',
+      (v) => {
+        // a - b == a + (-b)
+        v[2] = ['Multiply', v[2], -1]
+        return 'sympy.Add'
+      },
+    ],
+    [
+      'Negate',
+      (v) => {
+        // -a == a * -1
+        v.push(-1)
+        return 'sympy.Mul'
+      },
+    ],
+    ['Multiply', () => 'sympy.Mul'],
+    [
+      'Divide',
+      (v) => {
+        // a / b == a * b^(-1)
+        v[2] = ['Power', v[2], -1]
+        return 'sympy.Mul'
+      },
+    ],
+    ['Power', () => 'sympy.Pow'],
+    ['Sqrt', () => 'Sqrt'], // TODO: Replace with power
+    ['Root', () => 'Root'], // TODO: Replace with power
+    ['EqualEqual', () => 'sympy.Eq'],
+  ])
+
   // TODO: Options (rational numbers)
   function expressionToPython(expression: any): string {
     if (Array.isArray(expression)) {
+      expression = expression.slice() // Make a copy so that we can safely modify the expression
       const functionName = expression[0]
-      let pythonFunctionName = ''
-      const parameters = []
+      const toPython = MathJsonToSympy.get(functionName)
+      let pythonFunctionName = toPython ? toPython(expression) : functionName
 
-      if (functionName == 'Add') {
-        pythonFunctionName = 'sympy.Add'
-      } else if (functionName == 'Subtract') {
-        pythonFunctionName = 'Subtract' // TODO: Negate the second parameter
-      } else if (functionName == 'Negate') {
-        pythonFunctionName = 'sympy.Mul'
-        parameters.push(-1)
-      } else if (functionName == 'Multiply') {
-        pythonFunctionName = 'sympy.Mul'
-      } else if (functionName == 'Divide') {
-        pythonFunctionName = 'Divide' // TODO: Raise the second parameter to the power of -1
-      } else if (functionName == 'Power') {
-        pythonFunctionName = 'sympy.Pow'
-      } else if (functionName == 'Sqrt') {
-        pythonFunctionName = 'Sqrt' // TODO: Replace with power
-      } else if (functionName == 'EqualEqual') {
-        pythonFunctionName = 'sympy.Eq'
-      } else {
-        pythonFunctionName = functionName
-      }
+      const parameters = []
       for (let i = 1; i < expression.length; i++) {
         parameters.push(expressionToPython(expression[i]))
       }
@@ -133,11 +148,8 @@ function usePythonConverter() {
     expressionToPython: (expression: any) =>
       expressionToPython(
         format(expression, [
-          // TODO: This has changed: https://cortexjs.io/compute-engine/guides/forms/
           // Sympy doesn't accept all operations https://docs.sympy.org/latest/tutorial/manipulation.html
-          'canonical-root',
           'canonical-subtract',
-          'canonical-divide', // This one probably needs to be changed. The others seem fine
         ])
       ),
   }

@@ -12,13 +12,11 @@ I would really love to develop this project much further and am looking for coll
 
 ## Roadmap
 
-I'm currently also investigating https://en.wikipedia.org/wiki/Lean_(proof_assistant) 
-
 [Roadmap](https://github.com/stefnotch/quantum-sheet/projects)
 
 ## Used Technology
 
-- [Sympy](https://github.com/sympy/sympy) using [Pyodide](https://github.com/iodide-project/pyodide)
+- [Sympy](https://github.com/sympy/sympy) using [Pyodide](https://github.com/pyodide/pyodide)
 <!-- - [Giac](https://www-fourier.ujf-grenoble.fr/~parisse/giac.html) using an [emgiac fork](https://github.com/brentan/emgiac) -->
 <!-- - [Tiptap](https://github.com/scrumpy/tiptap) for text input -->
 - [MathLive](https://github.com/arnog/mathlive) for mathematics input

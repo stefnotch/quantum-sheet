@@ -3,7 +3,7 @@
 </template>
 <script lang="ts">
 import { defineComponent, PropType, ref, watch, shallowRef } from 'vue'
-import { UseScopeElement, ScopeElementType } from '../../model/document/elements/scope-element'
+import { ScopeElement, ScopeElementType } from '../../model/document/elements/scope-element'
 import { ElementCommands } from './element-commands'
 import { Vector2 } from '../../model/vectors'
 
@@ -12,7 +12,7 @@ export { ScopeElementType }
 export default defineComponent({
   props: {
     modelGetter: {
-      type: Function as PropType<() => UseScopeElement>,
+      type: Function as PropType<() => ScopeElement>,
       required: true,
     },
   },
