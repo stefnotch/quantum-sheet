@@ -225,7 +225,7 @@ function useElementDrag() {
                 relativePoints: [{ x: 0, y: 0 }],
               }),
               interact.modifiers.restrict({
-                // restriction: element.parentNode,
+                restriction: DOMElement.parentNode as HTMLElement,
                 elementRect: { top: 0, left: 0, bottom: 1, right: 1 },
                 endOnly: true,
               }),
