@@ -264,19 +264,20 @@ export const ExpressionElementType: QuantumElementType<ExpressionElement, typeof
     }
     return serializedElement
   },
-  deserializeElement: (element) => {
-    const expressionElement = {
-      // document-element properties
-      creationOptions: {
-        id: element.id,
-        position: new Vector2(element.position.x, element.position.y),
-        size: new Vector2(element.size.x, element.size.y),
-        resizable: element.resizable,
-      },
-      // expression element properties
-      expression: element.expression,
+  deserializeElement: (elementData) => {
+    const creationOptions = {
+      id: elementData.id,
+      position: new Vector2(elementData.position.x, elementData.position.y),
+      size: new Vector2(elementData.size.x, elementData.size.y),
+      resizable: elementData.resizable,
     }
-    return expressionElement
+    const element = new ExpressionElement(creationOptions)
+    return {
+      element: element,
+      onAddedCallback: () => {
+        element.inputExpression(elementData.expression)
+      },
+    }
   },
 }
 

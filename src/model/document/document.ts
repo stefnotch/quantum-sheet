@@ -7,7 +7,7 @@ import arrayUtils from '../array-utils'
 import { ScopeElement, ScopeElementType } from './elements/scope-element'
 import { ExpressionElement, ExpressionElementType } from './elements/expression-element'
 
-type JsonType = undefined | null | boolean | number | string | JsonType[] | Vector2 | { [prop: string]: JsonType }
+type JsonType = undefined | null | boolean | number | string | JsonType[] | { [prop: string]: JsonType }
 
 type SerializedDataType = {
   elements: JsonType[]
@@ -17,7 +17,7 @@ export type QuantumDocumentElementTypes<T extends readonly QuantumElementType[] 
   [key in T[number]['typeName']]: T[number]
 } & { ['scope-element']: typeof ScopeElementType } & { ['expression-element']: typeof ExpressionElementType }
 
-type QReturnType<T extends new (...args: any[]) => any> = T extends new (...args: any[]) => infer R ? R : any
+type GetQuantumElement<Type> = Type extends QuantumElementType<infer X> ? X : never
 
 /**
  * A top level document, containing a list of elements.
@@ -43,7 +43,7 @@ export interface UseQuantumDocument<TElements extends QuantumDocumentElementType
    * @param typeName Element type name
    * @param options Element options
    */
-  createElement<T extends keyof TElements>(typeName: T, options: QuantumElementCreationOptions): QReturnType<TElements[T]['elementType']>
+  createElement<T extends keyof TElements>(typeName: T, options: QuantumElementCreationOptions): GetQuantumElement<TElements[T]>
 
   /**
    * Deletes an element
@@ -62,13 +62,13 @@ export interface UseQuantumDocument<TElements extends QuantumDocumentElementType
    * @param id Element id
    * @param type Element type name
    */
-  getElementById<T extends keyof TElements>(id: string, typeName: T): QReturnType<TElements[T]['elementType']> | undefined
+  getElementById<T extends keyof TElements>(id: string, typeName: T): GetQuantumElement<TElements[T]> | undefined
 
   /**
    * Gets the element with the given id
    * @param type Element type name
    */
-  // getElementsByType<T extends keyof TElements>(id: string, typeName: T): QReturnType<TElements[T]['elementType']>[] | undefined
+  // getElementsByType<T extends keyof TElements>(id: string, typeName: T): GetQuantumElement<TElements[T]>[] | undefined
 
   /**
    * Set the element selection
@@ -244,13 +244,7 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
     size: Vector2.zero,
   })
 
-  function createElement<T extends keyof TElements>(typeName: T, options: QuantumElementCreationOptions): QReturnType<TElements[T]['elementType']> {
-    let elementType = elementTypes[typeName]
-    if (!elementType) throw new Error(`Unknown element type ${typeName}`)
-
-    const element = new elementType.elementType(options)
-    //elementType.useElement(useQuantumElement('' + typeName, options)) as ReturnType<TElements[T]['useElement']>
-
+  function addElement<T extends QuantumElement>(element: T): T {
     // TODO: I think we can use the effectScope API here https://github.com/vuejs/rfcs/blob/master/active-rfcs/0041-reactivity-effect-scope.md
     // (Replacing the stopHandles)
 
@@ -266,8 +260,17 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
 variableManager: shallowReadonly(
         scopeVariables.getVariableManager(computed(() => block.position))
       ),*/
+    return element
+  }
 
-    // Weird, Typescript doesn't like whatever I cooked up
+  function createElement<T extends keyof TElements>(typeName: T, options: QuantumElementCreationOptions): GetQuantumElement<TElements[T]> {
+    let elementType = elementTypes[typeName]
+    if (!elementType) throw new Error(`Unknown element type ${typeName}`)
+
+    const element = new elementType.elementType(options)
+    //elementType.useElement(useQuantumElement('' + typeName, options)) as ReturnType<TElements[T]['useElement']>
+    addElement(element)
+
     return element as any
   }
 
@@ -279,7 +282,7 @@ variableManager: shallowReadonly(
     }
   }
 
-  function getElementById<T extends keyof TElements>(id: string, typeName?: T): QReturnType<TElements[T]['elementType']> | undefined {
+  function getElementById<T extends keyof TElements>(id: string, typeName?: T): GetQuantumElement<TElements[T]> | undefined {
     let element = elementList.elements.find((e) => e.id == id)
     if (element && typeName && element.typeName != typeName) {
       throw new Error(`Wrong type, passed ${typeName} but element has ${element.typeName}`)
@@ -289,7 +292,7 @@ variableManager: shallowReadonly(
     return element as any
   }
 
-  function getElementsByType<T extends keyof TElements>(typeName: T): QReturnType<TElements[T]['elementType']>[] | undefined {
+  function getElementsByType<T extends keyof TElements>(typeName: T): GetQuantumElement<TElements[T]>[] | undefined {
     let elements = elementList.elements.filter((e) => e.typeName == typeName)
 
     // Yeah, Typescript really does dislike this XD
@@ -310,16 +313,15 @@ variableManager: shallowReadonly(
   function deserializeDocument(serializedData: SerializedDataType) {
     console.log('DeSerializing file', serializedData)
     // Expression-Elements
-    serializedData?.elements?.forEach((element: JsonType) => {
-      // let elementType = elementTypes[(element as any).typeName]
-      // elementType.deserializeElement(element)
-      if ((element as any).typeName === 'expression-element') {
-        let newElement = ExpressionElementType.deserializeElement(element)
-        createElement('expression-element', newElement?.creationOptions).inputExpression(newElement?.expression)
+    serializedData?.elements?.forEach((elementData: JsonType) => {
+      let elementType = elementTypes[(elementData as any).typeName]
+      if (!elementType) {
+        console.warn('Element is missing its type', elementData)
       }
+      const { element, onAddedCallback } = elementType.deserializeElement(elementData)
+      addElement(element)
+      onAddedCallback()
     })
-    // Scope-Elements
-    // etc...
   }
 
   return {

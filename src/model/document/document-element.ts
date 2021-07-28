@@ -3,7 +3,7 @@ import { Vector2 } from '../vectors'
 import type { ScopeElement } from './elements/scope-element'
 import { v4 as uuidv4, validate as uuidValidate } from 'uuid'
 
-type JsonType = null | boolean | number | string | JsonType[] | Vector2 | { [prop: string]: JsonType }
+type JsonType = null | boolean | number | string | JsonType[] | { [prop: string]: JsonType }
 
 export type QuantumElementType<
   T extends QuantumElement = QuantumElement,
@@ -13,7 +13,7 @@ export type QuantumElementType<
   readonly typeName: U
   elementType: TCtor
   serializeElement(element: T): JsonType
-  deserializeElement(data: any): any
+  deserializeElement(data: any): { element: T; onAddedCallback: () => void }
 }
 
 export interface QuantumElementConstructor<T> {

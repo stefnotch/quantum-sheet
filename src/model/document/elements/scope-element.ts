@@ -213,7 +213,19 @@ export const ScopeElementType: QuantumElementType<ScopeElement, typeof ScopeElem
     }
     return serializedElement
   },
-  deserializeElement: (stuff) => null as any,
+  deserializeElement: (elementData) => {
+    const creationOptions = {
+      id: elementData.id,
+      position: new Vector2(elementData.position.x, elementData.position.y),
+      size: new Vector2(elementData.size.x, elementData.size.y),
+      resizable: elementData.resizable,
+    }
+    const element = new ScopeElement(creationOptions)
+    return {
+      element: element,
+      onAddedCallback: () => {},
+    }
+  },
 }
 
 // TODO: Scope end element
