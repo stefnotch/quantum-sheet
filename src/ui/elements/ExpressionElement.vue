@@ -168,6 +168,13 @@ export default defineComponent({
           box-shadow: 0px 0px 0px 1px var(--caret,hsl(var(--hue,212),40%,49%));
          }`
           mathfield.value.shadowRoot?.appendChild?.(caretCustomStyle)
+
+          // make single-line block not so tall
+          const MLfieldcontainerCustomStyle = document.createElement('style')
+          MLfieldcontainerCustomStyle.innerHTML = `.ML__fieldcontainer {
+          display: unset !important;
+         }`
+          mathfield.value.shadowRoot?.appendChild?.(MLfieldcontainerCustomStyle)
         }
 
         value.innerHTML = ''
