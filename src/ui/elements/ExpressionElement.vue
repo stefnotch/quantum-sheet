@@ -172,7 +172,10 @@ export default defineComponent({
           // make single-line block not so tall
           const MLfieldcontainerCustomStyle = document.createElement('style')
           MLfieldcontainerCustomStyle.innerHTML = `.ML__fieldcontainer {
-          display: unset !important;
+          min-height: 12px
+         }
+         .ML__fieldcontainer__field {
+          min-height: 12px
          }`
           mathfield.value.shadowRoot?.appendChild?.(MLfieldcontainerCustomStyle)
         }
