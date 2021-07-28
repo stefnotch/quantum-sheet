@@ -7,6 +7,16 @@
     "type": "git",
     "url": "git://github.com/stefnotch/quantum-sheet.git"
   },
+  "contributors": [
+    {
+      "name": "phcreery",
+      "url": "https://github.com/phcreery"
+    },
+    {
+      "name": "Stefnotch",
+      "url": "https://github.com/stefnotch"
+    }
+  ],
   "scripts": {
     "start": "vite",
     "dev": "vite",
