@@ -294,7 +294,7 @@ variableManager: shallowReadonly(
   }
 
   function serializeDocument() {
-    var serializedData: SerializedDataType = {
+    let serializedData: SerializedDataType = {
       elements: [],
     }
     elementList.elements.forEach((element: QuantumElement) => {
@@ -311,7 +311,7 @@ variableManager: shallowReadonly(
       // let elementType = elementTypes[(element as any).typeName]
       // elementType.deserializeElement(element)
       if ((element as any).typeName === 'expression-element') {
-        var newElement = ExpressionElementType.deserializeElement(element)
+        let newElement = ExpressionElementType.deserializeElement(element)
         createElement('expression-element', newElement?.creationOptions).inputExpression(newElement?.expression)
       }
     })
