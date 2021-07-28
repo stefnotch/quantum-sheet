@@ -233,7 +233,9 @@ function useElementDrag() {
             inertia: false,
           })
           .on('dragmove', function (event) {
-            var newPos = element.position.value.add(new Vector2(event.dx / 20, event.dy / 20))
+            // TODO: disable hover & selection detection while dragging
+            let delta = new Vector2(event.dx / 20, event.dy / 20)
+            let newPos = element.position.value.add(delta)
             element.setPosition(newPos)
           })
     })
