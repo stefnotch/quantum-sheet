@@ -28,6 +28,9 @@
       "
       @blur="grid.showCrosshair.value = false"
     ></textarea>
+
+    <button @click="serialize()">Serialize</button>
+    <button @click="deserialize()">DeSerialize</button>
     <div class="grid-crosshair" :style="grid.gridToStyle(grid.crosshairPosition.value)" v-show="grid.showCrosshair.value">+</div>
     <div
       class="quantum-block"
@@ -96,7 +99,7 @@ function useGrid<T extends QuantumDocumentElementTypes>(
     if (ev.data) {
       let element = document.createElement(ExpressionElementType.typeName, {
         position: crosshairPosition.value,
-        resizeable: false,
+        resizable: false,
       })
       document.setFocus(element)
       nextTick(() => {
@@ -199,6 +202,56 @@ export default defineComponent({
       return (typeComponents as any)[typeName]
     }
 
+    function serialize() {
+      const serializedData = document.serializeDocument()
+      console.log('serializedData', serializedData)
+    }
+
+    function deserialize() {
+      // convert from string here : JSON.parse()
+      // Just for testing
+      const serializedDocument = {
+        elements: [
+          {
+            id: '9581a4b6-8f14-416c-a761-43c7459ffe33',
+            typeName: 'scope-element',
+            name: '',
+            position: {
+              x: 0,
+              y: 0,
+            },
+            size: {
+              x: 0,
+              y: 0,
+            },
+            resizable: false,
+            closed: false,
+          },
+          {
+            id: '0e6f0520-0a52-4214-a12a-2d154325f198',
+            typeName: 'expression-element',
+            position: {
+              x: 7,
+              y: 5,
+            },
+            size: {
+              x: 5,
+              y: 2,
+            },
+            resizable: false,
+            expression: [
+              'Assign',
+              'a',
+              {
+                num: '3',
+              },
+            ],
+          },
+        ],
+      }
+      document.deserializeDocument(serializedDocument)
+    }
+
     return {
       document,
       documentElement,
@@ -209,6 +262,9 @@ export default defineComponent({
       clipboard,
       getTypeComponent,
       log,
+
+      serialize,
+      deserialize,
     }
   },
 })

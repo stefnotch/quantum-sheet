@@ -1,11 +1,13 @@
 import { QuantumElementType, QuantumElement, QuantumElementCreationOptions } from '../document-element'
 import { ref, Ref, watch, reactive, shallowRef, computed, watchEffect, shallowReactive } from 'vue'
-import { UseScopedVariable, UseScopedGetter } from './scope-element'
+import { UseScopedVariable, UseScopedGetter, ScopeElementType } from './scope-element'
 import { cas } from '../../cas'
 import { assert } from '../../assert'
 import { CasCommand } from '../../../cas/cas'
 import { getGetterNames, getVariableNames } from '../../../cas/cas-math'
 import { Expression, match, substitute } from '@cortex-js/compute-engine'
+
+import { Vector2 } from '../../vectors'
 
 export const ElementType = 'expression-element'
 
@@ -250,8 +252,32 @@ export class ExpressionElement extends QuantumElement {
 export const ExpressionElementType: QuantumElementType<ExpressionElement, typeof ExpressionElement, typeof ElementType> = {
   typeName: ElementType,
   elementType: ExpressionElement,
-  serializeElement: (element) => null,
-  deserializeElement: (stuff) => null as any,
+  serializeElement: (element: ExpressionElement) => {
+    const serializedElement = {
+      id: element.id,
+      typeName: ElementType,
+      position: { x: element.position.value.x, y: element.position.value.y },
+      size: { x: element.size.value.x, y: element.size.value.y },
+      resizable: element.resizable.value,
+      // expression element properties
+      expression: element.expression.value,
+    }
+    return serializedElement
+  },
+  deserializeElement: (element) => {
+    const expressionElement = {
+      // document-element properties
+      creationOptions: {
+        id: element.id,
+        position: new Vector2(element.position.x, element.position.y),
+        size: new Vector2(element.size.x, element.size.y),
+        resizable: element.resizable,
+      },
+      // expression element properties
+      expression: element.expression,
+    }
+    return expressionElement
+  },
 }
 
 function addPlaceholders(expression: Expression) {
