@@ -7,6 +7,19 @@
  * @typedef { import("../src/cas/pyodide-cas").WorkerResponse } WorkerResponse
  */
 
+/**
+ * QuantumSheet Loading Time
+Improvements
+- Upgrade to Pyodide 0.18.x (fpcast & smoler)
+- Preload
+- CDN (compressed) with fallback to github pages pyodide
+
+Current Loading Time (without any of the improvements ^)
+Everything in cache, just reload: 2.84s, 2.95s, 2.72s, 2.90s
+Disable cache: 17.66s, 17.19s, 13.79s, 18.70s
+36.20 MB / 23.33 MB transferred
+ */
+
 // TODO: Use new Pyodide APIs https://pyodide.org/en/stable/project/changelog.html#version-0-17-0
 globalThis.importScripts('./pyodide/pyodide.js')
 
