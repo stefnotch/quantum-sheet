@@ -1,5 +1,4 @@
 import { readonly, shallowReactive, shallowRef, ref, Ref, watch } from 'vue'
-import { v4 as uuidv4, validate as uuidValidate } from 'uuid'
 
 const quantumDocument = ref()
 

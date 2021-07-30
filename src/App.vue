@@ -12,7 +12,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, provide, nextTick, onMounted } from 'vue'
+import { defineComponent, ref, provide, nextTick, onMounted, Ref } from 'vue'
 import pkg from './../package.json'
 import QuantumDocument from './ui/QuantumDocument.vue'
 import Header from './ui/Header.vue'
@@ -38,7 +38,7 @@ export default defineComponent({
 
     onMounted(() => {
       // the DOM element will be assigned to the ref after initial render
-      docManager.registerQuantumDocument(quantumDocument)
+      docManager.registerQuantumDocument(quantumDocument as Ref<HTMLElement>)
     })
 
     return { quantumDocument }

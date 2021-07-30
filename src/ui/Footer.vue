@@ -21,7 +21,7 @@
       <a-col>
         <a-space :style="{ height: '36px' }">
           <!-- Number Format -->
-          <a-select
+          <!-- <a-select
             default-value="Decimal"
             style="width: 100px"
             size="small"
@@ -40,7 +40,8 @@
             :min="1"
             :max="10"
             :default-value="docOptions.mathOptions.decimals"
-          />
+          /> -->
+          <!-- Output Format -->
           <!-- <a-select
             default-value="LaTeX"
             style="width: 100px"
@@ -57,24 +58,24 @@
           </a-select> -->
 
           <div :style="{ width: '20px' }" />
-
-          <a-tooltip>
+          <!-- Virtual Keyboard -->
+          <!-- <a-tooltip>
             <template #title> Popout Keyboard </template>
             <a-button size="small" @click="appActions.togglevirtualkb">
               <AppstoreOutlined />
             </a-button>
-          </a-tooltip>
+          </a-tooltip> -->
 
           <div :style="{ width: '20px' }" />
 
           <!-- ScratchPad -->
-          <a-tooltip>
+          <!-- <a-tooltip>
             <template #title> Extended Work Area </template>
             <a-space>
               <ExportOutlined />
               <a-switch size="small" @change="appActions.handleChangeScratchPad" />
             </a-space>
-          </a-tooltip>
+          </a-tooltip> -->
 
           <!-- <div :style="{ width: '20px' }" /> -->
 
@@ -109,8 +110,8 @@ function useDocOptions() {
     mathOptions: {
       numberformat: 'decimals',
       decimals: 5,
-      outputFormat: 'LaTeX'
-    }
+      outputFormat: 'LaTeX',
+    },
   })
   return state
 }
@@ -136,7 +137,7 @@ function useDocActions($emitter: any, docOptions: any, appActions: any) {
   return {
     handleChangeNformat,
     handleChangeOUTformat,
-    handleChangeDecimalPlaces
+    handleChangeDecimalPlaces,
   }
 }
 function useAppActions($emitter: any) {
@@ -153,7 +154,7 @@ function useAppActions($emitter: any) {
   return {
     handleChangeScratchPad,
     togglevirtualkb,
-    compute
+    compute,
   }
 }
 
@@ -161,7 +162,7 @@ export default defineComponent({
   components: {
     ExportOutlined,
     CalculatorOutlined,
-    AppstoreOutlined
+    AppstoreOutlined,
   },
   props: {},
   setup(props, context) {
@@ -173,9 +174,9 @@ export default defineComponent({
     return {
       docActions,
       docOptions,
-      appActions
+      appActions,
     }
-  }
+  },
 })
 </script>
 

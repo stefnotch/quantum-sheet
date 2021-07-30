@@ -35,8 +35,6 @@
       @blur="grid.showCrosshair.value = false"
     ></textarea>
 
-    <button @click="serialize()">Serialize</button>
-    <button @click="deserialize()">DeSerialize</button>
     <div class="grid-crosshair" :style="grid.gridToStyle(grid.crosshairPosition.value)" v-show="grid.showCrosshair.value">+</div>
     <div
       class="quantum-block"
@@ -221,47 +219,7 @@ export default defineComponent({
 
     function deserialize(serializedDocument: string) {
       // convert from string here : JSON.parse()
-      // Just for testing
-      const documentObject = {
-        elements: [
-          {
-            id: '9581a4b6-8f14-416c-a761-43c7459ffe33',
-            typeName: 'scope-element',
-            name: '',
-            position: {
-              x: 0,
-              y: 0,
-            },
-            size: {
-              x: 0,
-              y: 0,
-            },
-            resizable: false,
-            closed: false,
-          },
-          {
-            id: '0e6f0520-0a52-4214-a12a-2d154325f198',
-            typeName: 'expression-element',
-            position: {
-              x: 7,
-              y: 5,
-            },
-            size: {
-              x: 5,
-              y: 2,
-            },
-            resizable: false,
-            expression: [
-              'Assign',
-              'a',
-              {
-                num: '3',
-              },
-            ],
-          },
-        ],
-      }
-      // let documentObject = JSON.parse(serializedDocument)
+      let documentObject = JSON.parse(serializedDocument)
       document.deserializeDocument(documentObject)
     }
 

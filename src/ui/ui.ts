@@ -46,6 +46,7 @@ export function useUI() {
     fileOpenModal.value = true
   }
   function confirmFileOpenModal() {
+    // TODO: Loading
     docManager.loadDocument(serializedDocument.value)
     fileOpenModal.value = false
   }

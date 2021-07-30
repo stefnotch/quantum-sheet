@@ -19,9 +19,9 @@
                 <a-menu-item @click="UI.openFileSaveModal()">
                   <a :style="{ color: 'black' }">Save as...</a>
                 </a-menu-item>
-                <a-menu-item @click="UI.promptCloseFile()">
+                <!-- <a-menu-item @click="UI.promptCloseFile()">
                   <a :style="{ color: 'black' }">Close</a>
-                </a-menu-item>
+                </a-menu-item> -->
               </a-menu>
             </template>
           </a-dropdown>
@@ -38,7 +38,6 @@
   <!-- OPEN modal -->
   <a-modal v-model:visible="UI.fileOpenModal.value" title="Open File" ok-text="Open" @ok="UI.confirmFileOpenModal()">
     <a-textarea v-model:value="UI.serializedDocument.value" :auto-size="{ minRows: 8, maxRows: 20 }" :style="{ marginBottom: '20px' }" />
-    <!-- @change="handleUploadChange" :before-upload="beforeUpload" -->
     <a-upload-dragger name="file" :multiple="false" :before-upload="beforeUpload">
       <p class="ant-upload-drag-icon">
         <InboxOutlined />
@@ -93,19 +92,14 @@ export default defineComponent({
       // let size = file.size
       const reader = new FileReader()
       reader.addEventListener('load', (event) => {
-        // console.log(event)
-        // console.log(event.target.result)
         let blob = event?.target?.result
-        let data = blob?.split(',')
+        let data = (blob as string)?.split(',')
         let base64 = data[1]
         let string = atob(base64)
         console.log('File:', string)
-        // this.fileToUse = JSON.parse(string)
         UI.serializedDocument.value = string
-        // docManager.loadDocument(string)
       })
       reader.readAsDataURL(file)
-      // UI.closeFileOpenModal()
       return false // to prevent antd fron trying to upload somewhere
     }
 
