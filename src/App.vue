@@ -3,7 +3,7 @@
     <Header />
     <a-layout class="content">
       <a-layout-content class="dwgtable center">
-        <quantum-document></quantum-document>
+        <quantum-document ref="quantumDocument"></quantum-document>
         <!-- <LandingPage /> -->
       </a-layout-content>
     </a-layout>
@@ -12,13 +12,13 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, provide } from 'vue'
+import { defineComponent, ref, provide, nextTick, onMounted } from 'vue'
 import pkg from './../package.json'
 import QuantumDocument from './ui/QuantumDocument.vue'
 import Header from './ui/Header.vue'
 import Footer from './ui/Footer.vue'
 import LandingPage from './ui/LandingPage.vue'
-// import mitt from 'mitt'
+import { useDocumentManager } from './model/document-manager'
 
 export default defineComponent({
   name: 'App',
@@ -33,9 +33,15 @@ export default defineComponent({
       console.log(`${pkg.name} - ${pkg.version}`)
     }
 
-    // const emitter = mitt<Events>()
-    // provide('$emitter', emitter)
-    return {}
+    const quantumDocument = ref<HTMLElement>()
+    const docManager = useDocumentManager()
+
+    onMounted(() => {
+      // the DOM element will be assigned to the ref after initial render
+      docManager.registerQuantumDocument(quantumDocument)
+    })
+
+    return { quantumDocument }
   },
 })
 </script>

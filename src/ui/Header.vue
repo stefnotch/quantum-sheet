@@ -36,11 +36,10 @@
     </a-row>
   </div>
   <!-- OPEN modal -->
-  <a-modal v-model:visible="UI.fileOpenModal.value" title="Open File" @ok="UI.closeFileOpenModal()">
-    <!-- v-model="fileToUseString" -->
-    <a-textarea :auto-size="{ minRows: 8, maxRows: 20 }" :style="{ marginBottom: '20px' }" />
+  <a-modal v-model:visible="UI.fileOpenModal.value" title="Open File" ok-text="Open" @ok="UI.confirmFileOpenModal()">
+    <a-textarea v-model:value="UI.serializedDocument.value" :auto-size="{ minRows: 8, maxRows: 20 }" :style="{ marginBottom: '20px' }" />
     <!-- @change="handleUploadChange" :before-upload="beforeUpload" -->
-    <a-upload-dragger name="file" :multiple="false">
+    <a-upload-dragger name="file" :multiple="false" :before-upload="beforeUpload">
       <p class="ant-upload-drag-icon">
         <InboxOutlined />
       </p>
@@ -48,7 +47,7 @@
     </a-upload-dragger>
   </a-modal>
   <!-- SAVE modal -->
-  <a-modal v-model:visible="UI.fileSaveModal.value" title="Save File" @ok="UI.closeFileSaveModal()">
+  <a-modal v-model:visible="UI.fileSaveModal.value" title="Save File" ok-text="Done" @ok="UI.closeFileSaveModal()">
     <a-textarea v-model:value="UI.serializedDocument.value" :auto-size="{ minRows: 8, maxRows: 20 }" :style="{ marginBottom: '20px' }" />
     <a-button type="primary" size="large" block @click="download()">
       <template #icon>
@@ -64,6 +63,7 @@ import { defineComponent, ref, inject, reactive } from 'vue'
 import { InboxOutlined, DownloadOutlined } from '@ant-design/icons-vue'
 
 import { useUI } from './ui'
+import { useDocumentManager } from '../model/document-manager'
 
 export default defineComponent({
   components: {
@@ -72,8 +72,47 @@ export default defineComponent({
   },
   setup(props, context) {
     const UI = useUI()
+    const docManager = useDocumentManager()
+
+    function download(filename: string, text: string) {
+      // defaults
+      filename ? filename : (filename = 'quantum_document.qd')
+      text ? text : (text = UI.serializedDocument.value)
+      var element = document.createElement('a')
+      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text))
+      element.setAttribute('download', filename)
+      element.style.display = 'none'
+      document.body.appendChild(element)
+      element.click()
+      document.body.removeChild(element)
+    }
+
+    function beforeUpload(file) {
+      // let name = file.name
+      // let path = file.path
+      // let size = file.size
+      const reader = new FileReader()
+      reader.addEventListener('load', (event) => {
+        // console.log(event)
+        // console.log(event.target.result)
+        let blob = event?.target?.result
+        let data = blob?.split(',')
+        let base64 = data[1]
+        let string = atob(base64)
+        console.log('File:', string)
+        // this.fileToUse = JSON.parse(string)
+        UI.serializedDocument.value = string
+        // docManager.loadDocument(string)
+      })
+      reader.readAsDataURL(file)
+      // UI.closeFileOpenModal()
+      return false // to prevent antd fron trying to upload somewhere
+    }
+
     return {
       UI,
+      download,
+      beforeUpload,
     }
   },
 })

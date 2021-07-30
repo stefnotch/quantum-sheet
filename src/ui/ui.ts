@@ -1,6 +1,8 @@
 import { readonly, shallowReactive, shallowRef, ref, watch, Ref, inject } from 'vue'
-import emitter from '../services/eventbus'
-// import { document } from '../model/document/'
+import { useDocumentManager } from '../model/document-manager'
+
+const docManager = useDocumentManager()
+
 function useUIPreferences() {
   // TODO: Theme - Light, Dark, Custom?
   // TODO: Zoom
@@ -13,10 +15,6 @@ function useDocumentPreferences() {
   // TODO: Default Units
 }
 
-// function useDocument() {
-//   return { document }
-// }
-
 export function useUI() {
   // const $emitter = inject('$emitter')
   const fileNewModal: Ref<boolean> = ref(false)
@@ -27,11 +25,6 @@ export function useUI() {
   // TODO: UI Preferences
   // TODO: Document Preferences
 
-  emitter.on('update-document-data', (data) => {
-    console.log('data', data)
-    serializedDocument.value = data
-  })
-
   function promptNewFile() {
     fileNewModal.value = true
   }
@@ -40,18 +33,20 @@ export function useUI() {
   }
   // TODO: Close Confirm
   function openFileSaveModal() {
+    console.log('saving', docManager.currentDocument)
+    serializedDocument.value = docManager.saveDocument()
     fileSaveModal.value = true
-    console.log(serializedDocument)
-    emitter.emit('serialize-document')
     console.log(serializedDocument)
   }
   function closeFileSaveModal() {
     fileSaveModal.value = true
   }
   function openFileOpenModal() {
+    serializedDocument.value = ''
     fileOpenModal.value = true
   }
-  function closeFileOpenModal() {
+  function confirmFileOpenModal() {
+    docManager.loadDocument(serializedDocument.value)
     fileOpenModal.value = false
   }
   return {
@@ -61,7 +56,7 @@ export function useUI() {
     closeFileSaveModal,
     fileSaveModal,
     openFileOpenModal,
-    closeFileOpenModal,
+    confirmFileOpenModal,
     fileOpenModal,
 
     serializedDocument,

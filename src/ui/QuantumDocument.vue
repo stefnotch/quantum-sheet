@@ -219,10 +219,10 @@ export default defineComponent({
       return JSON.stringify(serializedData)
     }
 
-    function deserialize() {
+    function deserialize(serializedDocument: string) {
       // convert from string here : JSON.parse()
       // Just for testing
-      const serializedDocument = {
+      const documentObject = {
         elements: [
           {
             id: '9581a4b6-8f14-416c-a761-43c7459ffe33',
@@ -261,7 +261,8 @@ export default defineComponent({
           },
         ],
       }
-      document.deserializeDocument(serializedDocument)
+      // let documentObject = JSON.parse(serializedDocument)
+      document.deserializeDocument(documentObject)
     }
 
     return {
