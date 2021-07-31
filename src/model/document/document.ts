@@ -231,15 +231,15 @@ function useElementDrag() {
             ],
             inertia: false,
           })
-          .on('down', function (event) {
+          .on('down', (event) => {
             domElement?.classList.add('dragging')
           })
-          .on('dragmove', function (event) {
+          .on('dragmove', (event) => {
             let delta = new Vector2(event.dx / gridCellSize.x, event.dy / gridCellSize.y)
             let newPos = element.position.value.add(delta)
             element.setPosition(newPos)
           })
-          .on('dragend', function (event) {
+          .on('dragend', (event) => {
             domElement?.classList.remove('dragging')
           })
     })
