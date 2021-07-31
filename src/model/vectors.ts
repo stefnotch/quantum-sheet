@@ -25,7 +25,7 @@ export class Vector2 {
     return new Vector2(this.x + other.x, this.y + other.y)
   }
 
-  delta(other: Vector2) {
+  subtract(other: Vector2) {
     return new Vector2(this.x - other.x, this.y - other.y)
   }
 

@@ -212,9 +212,9 @@ function useElementDrag() {
   function makeDraggable(element: QuantumElement, gridCellSize: Vector2) {
     // wait until the element gets created in the DOM
     nextTick(function () {
-      var DOMElement = document.getElementById(element.id)
-      if (DOMElement)
-        interact(DOMElement)
+      var domElement = document.getElementById(element.id)
+      if (domElement)
+        interact(domElement)
           .draggable({
             ignoreFrom: '.quantum-element',
             modifiers: [
@@ -224,7 +224,7 @@ function useElementDrag() {
                 relativePoints: [{ x: 0, y: 0 }],
               }),
               interact.modifiers.restrict({
-                restriction: DOMElement.parentNode as HTMLElement,
+                restriction: domElement.parentNode as HTMLElement,
                 elementRect: { top: 0, left: 0, bottom: 1, right: 1 },
                 endOnly: true,
               }),
@@ -232,7 +232,7 @@ function useElementDrag() {
             inertia: false,
           })
           .on('down', function (event) {
-            DOMElement?.classList.add('dragging')
+            domElement?.classList.add('dragging')
           })
           .on('dragmove', function (event) {
             let delta = new Vector2(event.dx / gridCellSize.x, event.dy / gridCellSize.y)
@@ -240,7 +240,7 @@ function useElementDrag() {
             element.setPosition(newPos)
           })
           .on('dragend', function (event) {
-            DOMElement?.classList.remove('dragging')
+            domElement?.classList.remove('dragging')
           })
     })
   }
@@ -267,7 +267,6 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
   }) // TODO: Scope size:
 
   function createElement<T extends keyof TElements>(typeName: T, options: QuantumElementCreationOptions): QReturnType<TElements[T]['elementType']> {
-    console.log('new')
     let elementType = elementTypes[typeName]
     if (!elementType) throw new Error(`Unknown element type ${typeName}`)
 
