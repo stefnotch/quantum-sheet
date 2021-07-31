@@ -2,7 +2,7 @@
   <a-layout>
     <Header />
     <a-layout class="content">
-      <a-layout-content class="dwgtable center">
+      <a-layout-content class="drawingtable center">
         <quantum-document ref="quantumDocument"></quantum-document>
         <!-- <LandingPage /> -->
       </a-layout-content>
@@ -38,7 +38,7 @@ export default defineComponent({
 
     onMounted(() => {
       // the DOM element will be assigned to the ref after initial render
-      docManager.registerQuantumDocument(quantumDocument as Ref<HTMLElement>)
+      docManager.registerQuantumDocumentEl(quantumDocument as Ref<HTMLElement>)
     })
 
     return { quantumDocument }
@@ -60,8 +60,8 @@ export default defineComponent({
   width: 100%;
   overflow: auto;
 }
-.dwgtable {
-  /* transition: margin 700ms; */
+.drawingtable {
+  /* A4 Letter */
   min-width: 21cm;
   min-height: 29.7cm;
   background: white;

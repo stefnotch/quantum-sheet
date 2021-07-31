@@ -6,13 +6,7 @@ const docManager = useDocumentManager()
 function useUIPreferences() {
   // TODO: Theme - Light, Dark, Custom?
   // TODO: Zoom
-}
-
-function useDocumentPreferences() {
-  // TODO: Paper Style
-  // TODO: Result Notation Style - Decimal (# Digits), Scientific, Fraction, other?
-  // TODO: Result Text Style? - Text, LaTeX
-  // TODO: Default Units
+  // TODO: Page Numbers?
 }
 
 export function useUI() {
@@ -20,10 +14,11 @@ export function useUI() {
   const fileNewModal: Ref<boolean> = ref(false)
   const fileSaveModal: Ref<boolean> = ref(false)
   const fileOpenModal: Ref<boolean> = ref(false)
+  const documentPrefsModal: Ref<boolean> = ref(false)
+
   const fileConfirmClose: Ref<boolean> = ref(false)
   const serializedDocument: Ref<string> = ref('')
   // TODO: UI Preferences
-  // TODO: Document Preferences
 
   function promptNewFile() {
     fileNewModal.value = true
@@ -33,10 +28,9 @@ export function useUI() {
   }
   // TODO: Close Confirm
   function openFileSaveModal() {
-    console.log('saving', docManager.currentDocument)
+    console.log('Saving: ', docManager.quantumDocument.value)
     serializedDocument.value = docManager.saveDocument()
     fileSaveModal.value = true
-    console.log(serializedDocument)
   }
   function closeFileSaveModal() {
     fileSaveModal.value = true
@@ -50,6 +44,11 @@ export function useUI() {
     docManager.loadDocument(serializedDocument.value)
     fileOpenModal.value = false
   }
+
+  function closeDocPrefsModal() {
+    documentPrefsModal.value = false
+  }
+
   return {
     promptNewFile,
     promptCloseFile,
@@ -59,6 +58,9 @@ export function useUI() {
     openFileOpenModal,
     confirmFileOpenModal,
     fileOpenModal,
+
+    closeDocPrefsModal,
+    documentPrefsModal,
 
     serializedDocument,
   }

@@ -1,13 +1,23 @@
-import { readonly, shallowReactive, shallowRef, ref, Ref, watch } from 'vue'
+import { readonly, shallowReactive, shallowRef, ref, Ref, watch, unref, toRefs } from 'vue'
 
 const quantumDocument = ref()
 
+// function useDocumentPreferences() {
+//   type PaperStyleType = Ref<'standard' | 'engineering'>
+//   const paperStyle: PaperStyleType = ref('standard')
+//   // TODO: Default Result Notation Style - Decimal (# Digits), Scientific, Fraction, other?
+//   // TODO: Result Text Style? - Text, LaTeX
+//   // TODO: Default Units
+//   return {
+//     paperStyle,
+//   }
+// }
+
 export function useDocumentManager() {
-  function registerQuantumDocument(newQuantumDocument: Ref<HTMLElement>) {
+  // const prefs = useDocumentPreferences()
+  function registerQuantumDocumentEl(newQuantumDocument: Ref<HTMLElement>) {
     // TODO: Verify document integrity
-    console.log('registering', newQuantumDocument)
     quantumDocument.value = newQuantumDocument.value
-    console.log('registering', quantumDocument)
   }
   function loadDocument(serializedData: string) {
     quantumDocument.value.deserialize(serializedData)
@@ -17,9 +27,11 @@ export function useDocumentManager() {
   }
 
   return {
-    registerQuantumDocument,
+    // prefs,
+    registerQuantumDocumentEl,
     loadDocument,
     saveDocument,
-    currentDocument: quantumDocument.value,
+    // currentDocument: toRefs(quantumDocument.value),
+    quantumDocument,
   }
 }

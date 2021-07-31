@@ -311,7 +311,6 @@ variableManager: shallowReadonly(
   }
 
   function deserializeDocument(serializedData: SerializedDataType) {
-    console.log('DeSerializing file', serializedData)
     // Expression-Elements
     serializedData?.elements?.forEach((elementData: JsonType) => {
       let elementType = elementTypes[(elementData as any).typeName]

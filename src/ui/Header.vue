@@ -14,7 +14,7 @@
                   <a :style="{ color: 'black' }">New</a>
                 </a-menu-item>
                 <a-menu-item @click="UI.openFileOpenModal()">
-                  <a :style="{ color: 'black' }">Open</a>
+                  <a :style="{ color: 'black' }">Open...</a>
                 </a-menu-item>
                 <a-menu-item @click="UI.openFileSaveModal()">
                   <a :style="{ color: 'black' }">Save as...</a>
@@ -22,6 +22,16 @@
                 <!-- <a-menu-item @click="UI.promptCloseFile()">
                   <a :style="{ color: 'black' }">Close</a>
                 </a-menu-item> -->
+              </a-menu>
+            </template>
+          </a-dropdown>
+          <a-dropdown placement="bottomLeft" :trigger="['click']">
+            <a-button ghost style="height: 36px; color: black">Edit</a-button>
+            <template #overlay>
+              <a-menu>
+                <a-menu-item @click="() => (UI.documentPrefsModal.value = true)">
+                  <a :style="{ color: 'black' }">Document Preferences</a>
+                </a-menu-item>
               </a-menu>
             </template>
           </a-dropdown>
@@ -54,6 +64,23 @@
       </template>
       Download
     </a-button>
+  </a-modal>
+  <a-modal
+    v-if="docManager.quantumDocument.value"
+    v-model:visible="UI.documentPrefsModal.value"
+    title="Document Prefereences"
+    ok-text="Done"
+    @ok="UI.closeDocPrefsModal()"
+  >
+    Paper Style: {{ docManager.quantumDocument.value.docPrefs.paperStyle.value }}
+    <a-select
+      v-model:value="docManager.quantumDocument.value.docPrefs.paperStyle.value"
+      style="width: 120px"
+      @change="(value) => (docManager.quantumDocument.value.docPrefs.paperStyle.value = value)"
+    >
+      <a-select-option value="standard">Standard</a-select-option>
+      <a-select-option value="engineer">Engineering</a-select-option>
+    </a-select>
   </a-modal>
 </template>
 
@@ -96,15 +123,17 @@ export default defineComponent({
         let data = (blob as string)?.split(',')
         let base64 = data[1]
         let string = atob(base64)
-        console.log('File:', string)
         UI.serializedDocument.value = string
       })
       reader.readAsDataURL(file)
       return false // to prevent antd fron trying to upload somewhere
     }
 
+    console.log(docManager.quantumDocument.value)
+
     return {
       UI,
+      docManager,
       download,
       beforeUpload,
     }

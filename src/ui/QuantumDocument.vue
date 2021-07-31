@@ -1,6 +1,7 @@
 <template>
   <div
-    class="quantum-document theme-paper-standard"
+    class="quantum-document"
+    :class="'theme-paper-' + docPrefs.paperStyle.value"
     ref="documentElement"
     tabindex="-1"
     :style="{
@@ -63,7 +64,7 @@ import ScopeElement, { ScopeElementType } from './elements/ScopeStartElement.vue
 import { useFocusedElementCommands, ElementCommands } from './elements/element-commands'
 import { Vector2 } from '../model/vectors'
 import { QuantumElement } from '../model/document/document-element'
-import emitter from '../services/eventbus'
+import { useUI } from './ui'
 
 function useClipboard<T extends QuantumDocumentElementTypes>(document: UseQuantumDocument<T>) {
   function cut(ev: ClipboardEvent) {}
@@ -171,6 +172,17 @@ function useGrid<T extends QuantumDocumentElementTypes>(
   }
 }
 
+function useDocumentPreferences() {
+  type PaperStyleType = Ref<'standard' | 'engineering'>
+  const paperStyle: PaperStyleType = ref('standard')
+  // TODO: Default Result Notation Style - Decimal (# Digits), Scientific, Fraction, other?
+  // TODO: Result Text Style? - Text, LaTeX
+  // TODO: Default Units
+  return {
+    paperStyle,
+  }
+}
+
 /**
  * To say with document-element type corresponds to which Vue.js component
  */
@@ -182,6 +194,8 @@ export default defineComponent({
     ScopeElement,
   },
   setup() {
+    const docPrefs = useDocumentPreferences()
+
     const document = useDocument({ [ExpressionElementType.typeName]: ExpressionElementType, [ScopeElementType.typeName]: ScopeElementType })
 
     // let z = new document.elementTypes['scope-element'].elementType({})
@@ -206,14 +220,8 @@ export default defineComponent({
       return (typeComponents as any)[typeName]
     }
 
-    emitter.on('serialize-document', () => {
-      console.log('serializing')
-      emitter.emit('update-document-data', serialize())
-    })
-
     function serialize() {
       const serializedData = document.serializeDocument()
-      console.log('serializedData', serializedData)
       return JSON.stringify(serializedData)
     }
 
@@ -236,13 +244,15 @@ export default defineComponent({
 
       serialize,
       deserialize,
+
+      docPrefs,
     }
   },
 })
 </script>
 
 <style scoped>
-/*TODO: Use this https://github.com/vuejs/rfcs/blob/master/active-rfcs/0043-sfc-style-variables.md for the grid size and stuff */
+/*TODO: Use this https://github.com/vuejs/rfcs/blob/master/active-rfcs/0043-sfc-style-variables.md for the grid size and stuff? */
 .theme-paper-standard {
   /* Standard Grid Papaer Style */
   --color: white;
@@ -254,20 +264,15 @@ export default defineComponent({
   --grid-color: #c5dec467;
 }
 .quantum-document {
-  /* --color: white; */
-  /* --grid-color: rgba(71, 162, 223, 0.26); */
   background-color: var(--color);
   --selected-background-color: rgba(68, 148, 202, 0.24);
   --selected-color: rgba(57, 131, 180, 0.459);
   background-size: var(--grid-cell-size-x) var(--grid-cell-size-y);
   background-image: linear-gradient(to right, var(--grid-color) 1px, transparent 1px),
     linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
-  /* border: 0.5px solid rgb(212, 212, 212); */
   position: relative;
-  touch-action: none;
+  /* touch-action: none; */
 
-  /* height: 500px; */
-  /* A4 Letter */
   width: 100%;
   min-height: 100%;
 }
