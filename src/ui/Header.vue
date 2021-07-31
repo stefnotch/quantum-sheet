@@ -65,18 +65,19 @@
       Download
     </a-button>
   </a-modal>
+  <!-- Document Preferences Modal -->
   <a-modal
-    v-if="docManager.quantumDocument.value"
+    v-if="docManager.currentDocument.value"
     v-model:visible="UI.documentPrefsModal.value"
     title="Document Prefereences"
     ok-text="Done"
     @ok="UI.closeDocPrefsModal()"
   >
-    Paper Style: {{ docManager.quantumDocument.value.docPrefs.paperStyle.value }}
+    Paper Style: {{ docManager.currentDocument.value.docPrefs.paperStyle.value }}
     <a-select
-      v-model:value="docManager.quantumDocument.value.docPrefs.paperStyle.value"
+      v-model:value="docManager.currentDocument.value.docPrefs.paperStyle.value"
       style="width: 120px"
-      @change="(value) => (docManager.quantumDocument.value.docPrefs.paperStyle.value = value)"
+      @change="(value) => (docManager.currentDocument.value.docPrefs.paperStyle.value = value)"
     >
       <a-select-option value="standard">Standard</a-select-option>
       <a-select-option value="engineer">Engineering</a-select-option>
@@ -128,8 +129,6 @@ export default defineComponent({
       reader.readAsDataURL(file)
       return false // to prevent antd fron trying to upload somewhere
     }
-
-    console.log(docManager.quantumDocument.value)
 
     return {
       UI,
