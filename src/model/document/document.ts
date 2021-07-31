@@ -219,7 +219,7 @@ function useElementDrag() {
             ignoreFrom: '.quantum-element',
             modifiers: [
               interact.modifiers.snap({
-                targets: [interact.snappers.grid({ x: 20, y: 20 })],
+                targets: [interact.snappers.grid({ x: gridCellSize.x, y: gridCellSize.y })],
                 range: Infinity,
                 relativePoints: [{ x: 0, y: 0 }],
               }),
