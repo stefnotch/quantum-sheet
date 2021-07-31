@@ -73,7 +73,7 @@
     ok-text="Done"
     @ok="UI.closeDocPrefsModal()"
   >
-    Paper Style: {{ docManager.currentDocument.value.docPrefs.paperStyle.value }}
+    Paper Style:
     <a-select
       v-model:value="docManager.currentDocument.value.docPrefs.paperStyle.value"
       style="width: 120px"
