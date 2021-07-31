@@ -209,7 +209,7 @@ function useElementFocus() {
 }
 
 function useElementDrag() {
-  function makeDraggable(element: QuantumElement) {
+  function makeDraggable(element: QuantumElement, gridCellSize: Vector2) {
     // wait until the element gets created in the DOM
     nextTick(function () {
       var DOMElement = document.getElementById(element.id)
@@ -235,7 +235,7 @@ function useElementDrag() {
             DOMElement?.classList.add('dragging')
           })
           .on('dragmove', function (event) {
-            let delta = new Vector2(event.dx / 20, event.dy / 20)
+            let delta = new Vector2(event.dx / gridCellSize.x, event.dy / gridCellSize.y)
             let newPos = element.position.value.add(delta)
             element.setPosition(newPos)
           })
@@ -279,7 +279,7 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
       stopHandles.forEach((stopHandle) => stopHandle())
     })
 
-    elementDrag.makeDraggable(element)
+    elementDrag.makeDraggable(element, gridCellSize)
 
     /* When moving a block, we know its target index. Therefore we know what neighbors the block has after insertion. (And the "scope start/getters" and "scope end/setters" nicely guarantee that the neighbor stuff will always be correct. ((If we do not have getters in the tree, in case of a getter, we could increment the index until we find a setter but then the whole blocks stuff becomes relevant and honestly, that's not fun anymore)))
 ^ Therefore, we can totally keep track of which scope every block is in. It's super cheap. (Block --> scope)
