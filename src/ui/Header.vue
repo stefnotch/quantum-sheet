@@ -45,44 +45,50 @@
       </a-col>
     </a-row>
   </div>
-  <!-- OPEN modal -->
-  <a-modal v-model:visible="UI.fileOpenModal.value" title="Open File" ok-text="Open" @ok="UI.confirmFileOpenModal()">
-    <a-textarea v-model:value="UI.serializedDocument.value" :auto-size="{ minRows: 8, maxRows: 20 }" :style="{ marginBottom: '20px' }" />
-    <a-upload-dragger name="file" :multiple="false" :before-upload="beforeUpload">
-      <p class="ant-upload-drag-icon">
-        <InboxOutlined />
-      </p>
-      <p class="ant-upload-text">Click or drag file to this area to upload</p>
-    </a-upload-dragger>
-  </a-modal>
-  <!-- SAVE modal -->
-  <a-modal v-model:visible="UI.fileSaveModal.value" title="Save File" ok-text="Done" @ok="UI.closeFileSaveModal()">
-    <a-textarea v-model:value="UI.serializedDocument.value" :auto-size="{ minRows: 8, maxRows: 20 }" :style="{ marginBottom: '20px' }" />
-    <a-button type="primary" size="large" block @click="download()">
-      <template #icon>
-        <DownloadOutlined />
-      </template>
-      Download
-    </a-button>
-  </a-modal>
-  <!-- Document Preferences Modal -->
-  <a-modal
-    v-if="docManager.currentDocument.value"
-    v-model:visible="UI.documentPrefsModal.value"
-    title="Document Prefereences"
-    ok-text="Done"
-    @ok="UI.closeDocPrefsModal()"
-  >
-    Paper Style:
-    <a-select
-      v-model:value="docManager.currentDocument.value.docPrefs.paperStyle.value"
-      style="width: 120px"
-      @change="(value) => (docManager.currentDocument.value.docPrefs.paperStyle.value = value)"
+  <teleport to="#modal">
+    <!-- OPEN modal -->
+    <a-modal v-model:visible="UI.fileOpenModal.value" title="Open File" ok-text="Open" @ok="UI.confirmFileOpenModal()">
+      <a-textarea v-model:value="UI.serializedDocument.value" :auto-size="{ minRows: 8, maxRows: 20 }" :style="{ marginBottom: '20px' }" />
+      <a-upload-dragger name="file" :multiple="false" :before-upload="beforeUpload">
+        <p class="ant-upload-drag-icon">
+          <InboxOutlined />
+        </p>
+        <p class="ant-upload-text">Click or drag file to this area to upload</p>
+      </a-upload-dragger>
+    </a-modal>
+  </teleport>
+  <teleport to="#modal">
+    <!-- SAVE modal -->
+    <a-modal v-model:visible="UI.fileSaveModal.value" title="Save File" ok-text="Done" @ok="UI.closeFileSaveModal()">
+      <a-textarea v-model:value="UI.serializedDocument.value" :auto-size="{ minRows: 8, maxRows: 20 }" :style="{ marginBottom: '20px' }" />
+      <a-button type="primary" size="large" block @click="download()">
+        <template #icon>
+          <DownloadOutlined />
+        </template>
+        Download
+      </a-button>
+    </a-modal>
+  </teleport>
+  <teleport to="#modal">
+    <!-- Document Preferences Modal -->
+    <a-modal
+      v-if="docManager.currentDocument.value"
+      v-model:visible="UI.documentPrefsModal.value"
+      title="Document Prefereences"
+      ok-text="Done"
+      @ok="UI.closeDocPrefsModal()"
     >
-      <a-select-option value="standard">Standard</a-select-option>
-      <a-select-option value="engineer">Engineering</a-select-option>
-    </a-select>
-  </a-modal>
+      Paper Style:
+      <a-select
+        v-model:value="docManager.currentDocument.value.docPrefs.paperStyle.value"
+        style="width: 120px"
+        @change="(value) => (docManager.currentDocument.value.docPrefs.paperStyle.value = value)"
+      >
+        <a-select-option value="standard">Standard</a-select-option>
+        <a-select-option value="engineer">Engineering</a-select-option>
+      </a-select>
+    </a-modal>
+  </teleport>
 </template>
 
 <script lang="ts">
