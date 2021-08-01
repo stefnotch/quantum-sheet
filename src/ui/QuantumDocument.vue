@@ -178,10 +178,23 @@ function useDocumentPreferences() {
   // TODO: Default Result Notation Style - Decimal (# Digits), Scientific, Fraction, other?
   // TODO: Result Text Style? - Text, LaTeX
   // TODO: Default Units
+
+  function loadFromFile(documentFile: any) {
+    paperStyle.value = documentFile?.preferences.paperStyle
+  }
+  function saveToFile(documentFile: any) {
+    // documentFile.preferences.paperStyle = paperStyle.value
+    Object.assign(documentFile, { preferences: { paperStyle: paperStyle.value } })
+    return documentFile
+  }
   return {
     paperStyle,
+    loadFromFile,
+    saveToFile,
   }
 }
+
+type JsonType = undefined | null | boolean | number | string | JsonType[] | { [prop: string]: JsonType }
 
 /**
  * To say with document-element type corresponds to which Vue.js component
@@ -221,13 +234,16 @@ export default defineComponent({
     }
 
     function serialize() {
-      const serializedData = document.serializeDocument()
-      return JSON.stringify(serializedData)
+      let serializedData = document.serializeDocument()
+      serializedData = docPrefs.saveToFile(serializedData)
+      // return JSON.stringify(serializedData)
+      return serializedData
     }
 
-    function deserialize(serializedDocument: string) {
+    function deserialize(documentObject: JsonType) {
       // convert from string here : JSON.parse()
-      let documentObject = JSON.parse(serializedDocument)
+      // let documentObject = JSON.parse(serializedDocument)
+      docPrefs.loadFromFile(documentObject)
       document.deserializeDocument(documentObject)
     }
 

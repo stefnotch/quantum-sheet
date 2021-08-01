@@ -8,10 +8,12 @@ export function useDocumentManager() {
     quantumDocument.value = newQuantumDocument.value
   }
   function loadDocument(serializedData: string) {
-    quantumDocument.value.deserialize(serializedData)
+    let documentObject = JSON.parse(serializedData)
+    quantumDocument.value.deserialize(documentObject)
   }
   function saveDocument() {
-    return quantumDocument.value.serialize()
+    let serializedData = JSON.stringify(quantumDocument.value.serialize())
+    return serializedData
   }
 
   return {

@@ -33,7 +33,7 @@ export function useUI() {
     fileSaveModal.value = true
   }
   function closeFileSaveModal() {
-    fileSaveModal.value = true
+    fileSaveModal.value = false
   }
   function openFileOpenModal() {
     serializedDocument.value = ''
