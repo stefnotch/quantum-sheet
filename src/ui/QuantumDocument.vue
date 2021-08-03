@@ -190,11 +190,9 @@ function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: 
           inertia: false,
         })
         .on('down', (event) => {
-          console.log('dragging', event)
           event.target?.classList.add('dragging')
         })
         .on('dragmove', (event) => {
-          console.log('dragging', event)
           var quantumElement = quantumDocument.getElementById(event.target.id)
           let delta = new Vector2(event.dx / quantumDocument.gridCellSize.x, event.dy / quantumDocument.gridCellSize.y)
           let newPos = quantumElement?.position.value.add(delta)
