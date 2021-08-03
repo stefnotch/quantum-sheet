@@ -111,6 +111,7 @@ function usePythonConverter() {
     ['Sqrt', () => 'Sqrt'], // TODO: Replace with power
     ['Root', () => 'Root'], // TODO: Replace with power
     ['EqualEqual', () => 'sympy.Eq'],
+    ['Parentheses', () => ''],
   ])
 
   // TODO: Options (rational numbers)
@@ -129,7 +130,11 @@ function usePythonConverter() {
     } else if (typeof expression === 'string') {
       return encodeName(expression)
     } else if (typeof expression === 'number') {
-      return `sympy.Float(${expression})`
+      if (Number.isInteger(expression)) {
+        return `sympy.Integer(${expression})`
+      } else {
+        return `sympy.Float(${expression})`
+      }
     } else if (expression === null) {
       return `None`
     } else if (expression.num !== undefined) {
@@ -308,6 +313,7 @@ export function usePyodide() {
       // TODO: If the expression is only a single getter or something simple, don't call the CAS
       pythonExpression = `${expressionToPython(command.expression[1])}\n\t.subs({${substitutions}})\n\t.evalf()`
     } else if (command.expression[0] == 'Evaluate') {
+      console.log('Evaluate:', command.expression[2])
       if ((command.expression[2] + '').toLowerCase() == 'solve') {
         let variablesToSolveFor: string[] = []
         getterNames.forEach((getterName) => {
@@ -327,6 +333,8 @@ export function usePyodide() {
         } else {
           console.error('Expected inner expression to be EqualEqual (==)')
         }
+      } else if ((command.expression[2] + '').toLowerCase() == '\\expand') {
+        pythonExpression = `sympy.expand(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
       } else {
         pythonExpression = `${expressionToPython(command.expression[1])}\n\t.subs({${substitutions}})\n\t.evalf()`
       }
