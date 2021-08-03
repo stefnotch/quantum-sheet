@@ -31,6 +31,7 @@
     <div class="grid-crosshair" :style="grid.gridToStyle(grid.crosshairPosition.value)" v-show="grid.showCrosshair.value">+</div>
     <div
       class="quantum-block"
+      ref="quantumBlock"
       v-for="element in document.elements"
       :key="element.id"
       :id="element.id"
@@ -57,6 +58,7 @@ import ScopeElement, { ScopeElementType } from './elements/ScopeStartElement.vue
 import { useFocusedElementCommands, ElementCommands } from './elements/element-commands'
 import { Vector2 } from '../model/vectors'
 import { QuantumElement } from '../model/document/document-element'
+import interact from 'interactjs'
 
 function useClipboard<T extends QuantumDocumentElementTypes>(document: UseQuantumDocument<T>) {
   function cut(ev: ClipboardEvent) {}
@@ -165,6 +167,45 @@ function useGrid<T extends QuantumDocumentElementTypes>(
   }
 }
 
+function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: UseQuantumDocument<T>) {
+  // wait until the element gets created in the DOM
+  nextTick(function () {
+    let domElement = '.quantum-block'
+    if (domElement)
+      interact(domElement)
+        .draggable({
+          ignoreFrom: '.quantum-element',
+          modifiers: [
+            interact.modifiers.snap({
+              targets: [interact.snappers.grid({ x: quantumDocument.gridCellSize.x, y: quantumDocument.gridCellSize.y })],
+              range: Infinity,
+              relativePoints: [{ x: 0, y: 0 }],
+            }),
+            interact.modifiers.restrict({
+              restriction: '.quantum-document',
+              elementRect: { top: 0, left: 0, bottom: 1, right: 1 },
+              endOnly: true,
+            }),
+          ],
+          inertia: false,
+        })
+        .on('down', (event) => {
+          console.log('dragging', event)
+          event.target?.classList.add('dragging')
+        })
+        .on('dragmove', (event) => {
+          console.log('dragging', event)
+          var quantumElement = quantumDocument.getElementById(event.target.id)
+          let delta = new Vector2(event.dx / quantumDocument.gridCellSize.x, event.dy / quantumDocument.gridCellSize.y)
+          let newPos = quantumElement?.position.value.add(delta)
+          if (newPos) quantumElement?.setPosition(newPos)
+        })
+        .on('dragend', (event) => {
+          event.target?.classList.remove('dragging')
+        })
+  })
+}
+
 /**
  * To say with document-element type corresponds to which Vue.js component
  */
@@ -191,7 +232,9 @@ export default defineComponent({
     const focusedElementCommands = useFocusedElementCommands()
     const grid = useGrid(document, documentInputElement, focusedElementCommands.commands)
     const clipboard = useClipboard(document)
-    // const drag = useDrag(document, documentInputElement)
+    const elementDrag = useElementDrag(document)
+
+    // elementDrag.makeDraggable(element, gridCellSize)
 
     function log(ev: any) {
       console.log(ev)

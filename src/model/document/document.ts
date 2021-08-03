@@ -6,8 +6,6 @@ import { readonly, shallowReactive, shallowRef, ref, watch, nextTick } from 'vue
 import arrayUtils from '../array-utils'
 import { ScopeElement, ScopeElementType } from './elements/scope-element'
 
-import interact from 'interactjs'
-
 export type QuantumDocumentElementTypes<T extends readonly QuantumElementType[] = readonly QuantumElementType[]> = {
   [key in T[number]['typeName']]: T[number]
 } & { ['scope-element']: typeof ScopeElementType }
@@ -57,7 +55,7 @@ export interface UseQuantumDocument<TElements extends QuantumDocumentElementType
    * @param id Element id
    * @param type Element type name
    */
-  getElementById<T extends keyof TElements>(id: string, typeName: T): QReturnType<TElements[T]['elementType']> | undefined
+  getElementById<T extends keyof TElements>(id: string, typeName?: T): QReturnType<TElements[T]['elementType']> | undefined
 
   /**
    * Set the element selection
@@ -208,45 +206,6 @@ function useElementFocus() {
   }
 }
 
-function useElementDrag() {
-  function makeDraggable(element: QuantumElement, gridCellSize: Vector2) {
-    // wait until the element gets created in the DOM
-    nextTick(function () {
-      var domElement = document.getElementById(element.id)
-      if (domElement)
-        interact(domElement)
-          .draggable({
-            ignoreFrom: '.quantum-element',
-            modifiers: [
-              interact.modifiers.snap({
-                targets: [interact.snappers.grid({ x: gridCellSize.x, y: gridCellSize.y })],
-                range: Infinity,
-                relativePoints: [{ x: 0, y: 0 }],
-              }),
-              interact.modifiers.restrict({
-                restriction: domElement.parentNode as HTMLElement,
-                elementRect: { top: 0, left: 0, bottom: 1, right: 1 },
-                endOnly: true,
-              }),
-            ],
-            inertia: false,
-          })
-          .on('down', (event) => {
-            domElement?.classList.add('dragging')
-          })
-          .on('dragmove', (event) => {
-            let delta = new Vector2(event.dx / gridCellSize.x, event.dy / gridCellSize.y)
-            let newPos = element.position.value.add(delta)
-            element.setPosition(newPos)
-          })
-          .on('dragend', (event) => {
-            domElement?.classList.remove('dragging')
-          })
-    })
-  }
-  return { makeDraggable }
-}
-
 /**
  * Create a document
  * @param elementTypes Element types in the document
@@ -260,7 +219,6 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
   const elementList = useElementList()
   const elementSelection = useElementSelection()
   const elementFocus = useElementFocus()
-  const elementDrag = useElementDrag()
 
   const rootScope = createElement(ScopeElementType.typeName, {
     position: Vector2.zero,
@@ -277,8 +235,6 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
     elementRemoveCallbacks.set(element.id, () => {
       stopHandles.forEach((stopHandle) => stopHandle())
     })
-
-    elementDrag.makeDraggable(element, gridCellSize)
 
     /* When moving a block, we know its target index. Therefore we know what neighbors the block has after insertion. (And the "scope start/getters" and "scope end/setters" nicely guarantee that the neighbor stuff will always be correct. ((If we do not have getters in the tree, in case of a getter, we could increment the index until we find a setter but then the whole blocks stuff becomes relevant and honestly, that's not fun anymore)))
 ^ Therefore, we can totally keep track of which scope every block is in. It's super cheap. (Block --> scope)
