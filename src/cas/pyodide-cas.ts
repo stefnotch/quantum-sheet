@@ -113,6 +113,8 @@ function usePythonConverter() {
     ['EqualEqual', () => 'sympy.Eq'],
     ['Parentheses', () => ''],
 
+    ['Abs', () => 'sympy.Abs'],
+
     ['Sin', () => 'sympy.sin'],
     ['Cos', () => 'sympy.cos'],
     ['Tan', () => 'sympy.tan'],
