@@ -112,6 +112,40 @@ function usePythonConverter() {
     ['Root', () => 'Root'], // TODO: Replace with power
     ['EqualEqual', () => 'sympy.Eq'],
     ['Parentheses', () => ''],
+
+    ['Sin', () => 'sympy.sin'],
+    ['Cos', () => 'sympy.cos'],
+    ['Tan', () => 'sympy.tan'],
+
+    ['Sec', () => 'sympy.sec'],
+    ['Csc', () => 'sympy.csc'],
+    ['Cot', () => 'sympy.cot'],
+
+    ['Arcsin', () => 'sympy.asin'],
+    ['Arccos', () => 'sympy.acos'],
+    ['Arctan', () => 'sympy.atan'],
+
+    ['Asec', () => 'sympy.asec'],
+    ['Acsc', () => 'sympy.acsc'],
+    ['Atan', () => 'sympy.atan'],
+
+    ['Sinh', () => 'sympy.sinh'],
+    ['Cosh', () => 'sympy.cosh'],
+    ['Tanh', () => 'sympy.tanh'],
+
+    ['Sech', () => 'sympy.sech'],
+    ['Csch', () => 'sympy.csch'],
+    ['Coth', () => 'sympy.coth'],
+
+    ['Arsinh', () => 'sympy.asinh'],
+    ['Arcosh', () => 'sympy.acosh'],
+    ['Artanh', () => 'sympy.atanh'],
+
+    ['Asech', () => 'sympy.asech'],
+    ['Acsch', () => 'sympy.acsch'],
+    ['Acoth', () => 'sympy.acoth'],
+
+    // ['log', () => 'sympy.log'],
   ])
 
   // TODO: Options (rational numbers)
@@ -313,7 +347,7 @@ export function usePyodide() {
       // TODO: If the expression is only a single getter or something simple, don't call the CAS
       pythonExpression = `${expressionToPython(command.expression[1])}\n\t.subs({${substitutions}})\n\t.evalf()`
     } else if (command.expression[0] == 'Evaluate') {
-      console.log('Evaluate:', command.expression[2])
+      console.log('Evaluate:', command.expression)
       if ((command.expression[2] + '').toLowerCase() == 'solve') {
         let variablesToSolveFor: string[] = []
         getterNames.forEach((getterName) => {
@@ -333,8 +367,23 @@ export function usePyodide() {
         } else {
           console.error('Expected inner expression to be EqualEqual (==)')
         }
+      } else if ((command.expression[2] + '').toLowerCase() == 'simplify') {
+        pythonExpression = `sympy.simplify(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
       } else if ((command.expression[2] + '').toLowerCase() == '\\expand') {
         pythonExpression = `sympy.expand(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
+      } else if ((command.expression[2] + '').toLowerCase() == 'factor') {
+        pythonExpression = `sympy.factor(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
+      } else if ((command.expression[2] + '').toLowerCase() == 'cancel') {
+        pythonExpression = `sympy.cancel(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
+      } else if ((command.expression[2] + '').toLowerCase() == 'apart') {
+        pythonExpression = `sympy.apart(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
+      } else if ((command.expression[2] + '').toLowerCase() == 'trig_simp') {
+        pythonExpression = `sympy.trigsimp(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
+      } else if ((command.expression[2] + '').toLowerCase() == '\\expandtrig') {
+        pythonExpression = `sympy.expand_trig(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
+      } else if ((command.expression[2] + '').toLowerCase().includes('rewrite')) {
+        let using = (command.expression[2] + '').split(',')[1]
+        pythonExpression = `sympy.simplify(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n).rewrite(${using})`
       } else {
         pythonExpression = `${expressionToPython(command.expression[1])}\n\t.subs({${substitutions}})\n\t.evalf()`
       }
