@@ -349,14 +349,22 @@ export function usePyodide() {
       // TODO: If the expression is only a single getter or something simple, don't call the CAS
       pythonExpression = `${expressionToPython(command.expression[1])}\n\t.subs({${substitutions}})\n\t.evalf()`
     } else if (command.expression[0] == 'Evaluate') {
-      console.log('Evaluate:', command.expression)
-      if ((command.expression[2] + '').toLowerCase() == 'solve') {
+      let evaluation = (command.expression[2] + '').toLowerCase()
+      if (evaluation.includes('solve')) {
         let variablesToSolveFor: string[] = []
-        getterNames.forEach((getterName) => {
-          if (!command.gettersData.has(getterName)) {
-            variablesToSolveFor.push(getterName)
-          }
-        })
+        if (evaluation == 'solve') {
+          // Automatically Find Variables
+          getterNames.forEach((getterName) => {
+            if (!command.gettersData.has(getterName)) {
+              variablesToSolveFor.push(getterName)
+            }
+          })
+        } else {
+          // TODO: only 1 variable?
+          variablesToSolveFor.push((command.expression[2] + '').split(',')[1])
+        }
+
+        console.log('variablesToSolveFor', variablesToSolveFor)
         if (variablesToSolveFor.length !== 1) {
           console.error('Expected one variable to solve for', variablesToSolveFor)
         }
@@ -369,21 +377,21 @@ export function usePyodide() {
         } else {
           console.error('Expected inner expression to be EqualEqual (==)')
         }
-      } else if ((command.expression[2] + '').toLowerCase() == 'simplify') {
+      } else if (evaluation == 'simplify') {
         pythonExpression = `sympy.simplify(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
-      } else if ((command.expression[2] + '').toLowerCase() == '\\expand') {
+      } else if (evaluation == '\\expand') {
         pythonExpression = `sympy.expand(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
-      } else if ((command.expression[2] + '').toLowerCase() == 'factor') {
+      } else if (evaluation == 'factor') {
         pythonExpression = `sympy.factor(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
-      } else if ((command.expression[2] + '').toLowerCase() == 'cancel') {
+      } else if (evaluation == 'cancel') {
         pythonExpression = `sympy.cancel(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
-      } else if ((command.expression[2] + '').toLowerCase() == 'apart') {
+      } else if (evaluation == 'apart') {
         pythonExpression = `sympy.apart(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
-      } else if ((command.expression[2] + '').toLowerCase() == 'trig_simp') {
+      } else if (evaluation == 'trig_simp') {
         pythonExpression = `sympy.trigsimp(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
-      } else if ((command.expression[2] + '').toLowerCase() == '\\expandtrig') {
+      } else if (evaluation == '\\expandtrig') {
         pythonExpression = `sympy.expand_trig(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
-      } else if ((command.expression[2] + '').toLowerCase().includes('rewrite')) {
+      } else if (evaluation.includes('rewrite')) {
         let using = (command.expression[2] + '').split(',')[1]
         pythonExpression = `sympy.simplify(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n).rewrite(${using})`
       } else {
