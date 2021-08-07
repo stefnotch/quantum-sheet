@@ -147,16 +147,26 @@ function usePythonConverter() {
     ['Acsch', () => 'sympy.acsch'],
     ['Acoth', () => 'sympy.acoth'],
 
+    ['Pi', () => 'sympy.pi'],
+    ['ImaginaryUnit', () => 'sympy.I'], // TODO: test
+    ['ExponentialE', () => 'sympy.E'], // TODO: test
+    ['GoldenRatio', () => 'sympy.GoldenRatio'], // TODO: test
+    ['EulerGamma', () => 'sympy.EulerGamma'], // TODO: test
+
     // ['log', () => 'sympy.log'],
   ])
+
+  const KnownLatexFunctions = {
+    '\\sin': 'sympy.sin',
+  }
 
   // TODO: Options (rational numbers)
   function expressionToPython(expression: any): string {
     if (Array.isArray(expression)) {
       expression = expression.slice() // Make a copy so that we can safely modify the expression
       const functionName = expression[0]
-      const toPython = MathJsonToSympy.get(functionName)
-      let pythonFunctionName = toPython ? toPython(expression) : functionName
+      const functionInPython = MathJsonToSympy.get(functionName)
+      let pythonFunctionName = functionInPython ? functionInPython(expression) : functionName
 
       const parameters = []
       for (let i = 1; i < expression.length; i++) {
@@ -164,7 +174,13 @@ function usePythonConverter() {
       }
       return `${pythonFunctionName}(${parameters.join(',')})`
     } else if (typeof expression === 'string') {
-      return encodeName(expression)
+      // Handle Constants
+      const constantInPython = MathJsonToSympy.get(expression)
+      if (constantInPython) {
+        return constantInPython([])
+      } else {
+        return encodeName(expression)
+      }
     } else if (typeof expression === 'number') {
       if (Number.isInteger(expression)) {
         return `sympy.Integer(${expression})`
@@ -193,6 +209,7 @@ function usePythonConverter() {
           'canonical-subtract',
         ])
       ),
+    KnownLatexFunctions,
   }
 }
 
@@ -294,7 +311,7 @@ function getOrCreateWorker(): Promise<PyodideWorker> {
 export function usePyodide() {
   let worker: PyodideWorker | undefined
   const commandBuffer: WorkerMessage[] = []
-  const { encodeName, decodeNames, expressionToPython } = usePythonConverter()
+  const { encodeName, decodeNames, expressionToPython, KnownLatexFunctions } = usePythonConverter()
   const commands = new Map<string, CasCommand>()
 
   getOrCreateWorker().then(
@@ -395,10 +412,15 @@ export function usePyodide() {
         // } else if (evaluation == '\\expandtrig') {
         //   pythonExpression = `sympy.expand_trig(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
       } else if (evaluation.includes('rewrite')) {
-        // TODO: Proper latex to sympy replacement
-        let using = (command.expression[2] + '').split(',')[1].replace('\\', '')
+        // TODO: Proper latex-to-sympy replacement
+        let using = ''
+        if (evaluation.split(',')[1] in KnownLatexFunctions) {
+          using = KnownLatexFunctions[evaluation.split(',')[1]]
+        } else {
+          using = 'sympy.' + evaluation.split(',')[1].replace('\\', '')
+        }
 
-        pythonExpression = `${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n\t\t.rewrite(sympy.${using})`
+        pythonExpression = `${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n\t\t.rewrite(${using})`
       } else {
         pythonExpression = `${expressionToPython(command.expression[1])}\n\t.subs({${substitutions}})\n\t.evalf()`
       }

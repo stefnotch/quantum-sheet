@@ -556,7 +556,7 @@ class MathJsonPrinter(Printer):
     # TODO: Important Update
     def _print_Pi(self, expr):
         print("Warning: _print_Pi was called")
-        return 'pi'
+        return self._print('"Pi"')
 
     # TODO: Update
     def _print_PolyRing(self, ring):
