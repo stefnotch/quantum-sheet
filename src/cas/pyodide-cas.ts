@@ -153,6 +153,7 @@ function usePythonConverter() {
     ['GoldenRatio', () => 'sympy.GoldenRatio'], // TODO: test
     ['EulerGamma', () => 'sympy.EulerGamma'], // TODO: test
 
+    // TODO: MathLive latex serial/parse destroys ln,log, etc? in ExpressionElement.vue line 78
     // ['log', () => 'sympy.log'],
   ])
 
