@@ -97,6 +97,8 @@ function messageHandler(event) {
       throw new Error('Unknown command type', message)
     }
 
+    console.log('pyodide result', pyodideResult)
+
     if (pyodideResult?.destroy) {
       console.warn('Pyodide returned a proxy', pyodideResult.toString()) // Internally calls repr()
       console.warn(Reflect.ownKeys(pyodideResult)) // Lists all properties and methods

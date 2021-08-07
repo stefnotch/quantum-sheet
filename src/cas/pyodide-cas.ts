@@ -373,7 +373,9 @@ export function usePyodide() {
         if (Array.isArray(innerExpression) && innerExpression[0] == 'EqualEqual') {
           // TODO: Use recommended solver instead of the generic one
 
-          pythonExpression = `sympy.solvers.solve(\n\t${expressionToPython(innerExpression)}\n\t\t.subs({${substitutions}})\n)`
+          pythonExpression = `sympy.solvers.solve(\n\t${expressionToPython(innerExpression)}\n\t\t.subs({${substitutions}})\n,${encodeName(
+            variablesToSolveFor[0]
+          )})`
         } else {
           console.error('Expected inner expression to be EqualEqual (==)')
         }
@@ -392,8 +394,10 @@ export function usePyodide() {
       } else if (evaluation == '\\expandtrig') {
         pythonExpression = `sympy.expand_trig(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
       } else if (evaluation.includes('rewrite')) {
-        let using = (command.expression[2] + '').split(',')[1]
-        pythonExpression = `sympy.simplify(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n).rewrite(${using})`
+        let variableToSolveFor = (command.expression[2] + '').split(',')[1]
+        pythonExpression = `sympy.simplify(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n).rewrite(${encodeName(
+          variableToSolveFor
+        )})`
       } else {
         pythonExpression = `${expressionToPython(command.expression[1])}\n\t.subs({${substitutions}})\n\t.evalf()`
       }
