@@ -13,6 +13,52 @@ from sympy.utilities import default_sort_key
 
 # TODO: Update the ones maked with "# TODO: Important Update"
 
+_known_functions_mathjson = {
+    'acos': 'Arccos',
+    'acosh': 'Arcosh',
+    'asin': 'Arcsin',
+    'asinh': 'Arsinh',
+    'atan': 'Arctan',
+    'atan2': 'Arctan2',
+    'atanh': 'Artanh',
+    'ceiling': 'Ceil',
+    'cos': 'Cos',
+    'cosh': 'Cosh',
+    'erf': 'Erf',
+    'erfc': 'Erfc',
+    'exp': 'Exp',
+    # 'expm1': 'expm1',
+    'factorial': 'Factorial',
+    'floor': 'Floor',
+    'gamma': 'Gamma',
+    # 'hypot': 'hypot',
+    'loggamma': 'LogGamma',
+    # '': 'SignGamma',
+    'log': 'Log',
+    'ln': 'Log',
+    'log10': 'Log10',
+    'log1p': 'LogOnePlus',
+    'log2': 'Log2',
+    'sin': 'Sin',
+    'sinh': 'Sinh',
+    'Sqrt': 'Sqrt',
+    'tan': 'Tan',
+    'tanh': 'Tanh'
+    # '': 'Cot',
+    # '': 'Sec',
+    # '': 'Csc',
+    # '': 'Acot',
+    # '': 'Asec',
+    # '': 'Acsc',
+    # '': 'Coth',
+    # '': 'Sech',
+    # '': 'Csch',
+    # '': 'Arcoth',
+    # '': 'Asech',
+    # '': 'Acsch',
+    # '': 'Abs',
+}
+
 class MathJsonPrinter(Printer):
     printmethod = "_mathjson"
     _default_settings = {
@@ -181,8 +227,14 @@ class MathJsonPrinter(Printer):
 
     # TODO: Update
     def _print_Function(self, expr):
-        print("Warning: _print_Function was called")
-        return expr.func.__name__ + "(%s)" % self.stringify(expr.args, ", ")
+        print("Warning: _print_Function was called", expr.args)
+        if expr.func.__name__ in _known_functions_mathjson:
+            name = r"%s" % _known_functions_mathjson[expr.func.__name__]
+            args = [self._print(o) for o in expr.args]
+            return self._function(name, args)
+        # else:
+        name = expr.func.__name__ 
+        return name + "(%s)" % self.stringify(expr.args, ", ")
 
     # TODO: Update
     def _print_GoldenRatio(self, expr):

@@ -349,6 +349,7 @@ export function usePyodide() {
       // TODO: If the expression is only a single getter or something simple, don't call the CAS
       pythonExpression = `${expressionToPython(command.expression[1])}\n\t.subs({${substitutions}})\n\t.evalf()`
     } else if (command.expression[0] == 'Evaluate') {
+      // https://docs.sympy.org/latest/tutorial/simplification.html
       let evaluation = (command.expression[2] + '').toLowerCase()
       if (evaluation.includes('solve')) {
         let variablesToSolveFor: string[] = []
@@ -385,19 +386,19 @@ export function usePyodide() {
         pythonExpression = `sympy.expand(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
       } else if (evaluation == 'factor') {
         pythonExpression = `sympy.factor(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
-      } else if (evaluation == 'cancel') {
-        pythonExpression = `sympy.cancel(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
-      } else if (evaluation == 'apart') {
-        pythonExpression = `sympy.apart(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
-      } else if (evaluation == 'trig_simp') {
-        pythonExpression = `sympy.trigsimp(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
-      } else if (evaluation == '\\expandtrig') {
-        pythonExpression = `sympy.expand_trig(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
+        // } else if (evaluation == 'cancel') {
+        //   pythonExpression = `sympy.cancel(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
+        // } else if (evaluation == 'apart') {
+        //   pythonExpression = `sympy.apart(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
+        // } else if (evaluation == 'trig_simp') {
+        //   pythonExpression = `sympy.trigsimp(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
+        // } else if (evaluation == '\\expandtrig') {
+        //   pythonExpression = `sympy.expand_trig(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
       } else if (evaluation.includes('rewrite')) {
-        let variableToSolveFor = (command.expression[2] + '').split(',')[1]
-        pythonExpression = `sympy.simplify(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n).rewrite(${encodeName(
-          variableToSolveFor
-        )})`
+        // TODO: Proper latex to sympy replacement
+        let using = (command.expression[2] + '').split(',')[1].replace('\\', '')
+
+        pythonExpression = `${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n\t\t.rewrite(sympy.${using})`
       } else {
         pythonExpression = `${expressionToPython(command.expression[1])}\n\t.subs({${substitutions}})\n\t.evalf()`
       }
