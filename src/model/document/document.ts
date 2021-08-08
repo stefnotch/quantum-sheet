@@ -2,7 +2,7 @@
 
 import { QuantumElementCreationOptions, QuantumElementType, QuantumElement } from './document-element'
 import { Vector2 } from '../vectors'
-import { readonly, shallowReactive, shallowRef, ref, watch, nextTick, toRaw } from 'vue'
+import { readonly, shallowReactive, shallowRef, ref, watch } from 'vue'
 import arrayUtils from '../array-utils'
 import { ScopeElement, ScopeElementType } from './elements/scope-element'
 

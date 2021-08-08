@@ -168,40 +168,36 @@ function useGrid<T extends QuantumDocumentElementTypes>(
 }
 
 function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: UseQuantumDocument<T>) {
-  // wait until the element gets created in the DOM
-  nextTick(function () {
-    let domElement = '.quantum-block'
-    if (domElement)
-      interact(domElement)
-        .draggable({
-          ignoreFrom: '.quantum-element',
-          modifiers: [
-            interact.modifiers.snap({
-              targets: [interact.snappers.grid({ x: quantumDocument.gridCellSize.x, y: quantumDocument.gridCellSize.y })],
-              range: Infinity,
-              relativePoints: [{ x: 0, y: 0 }],
-            }),
-            interact.modifiers.restrict({
-              restriction: '.quantum-document',
-              elementRect: { top: 0, left: 0, bottom: 1, right: 1 },
-              endOnly: true,
-            }),
-          ],
-          inertia: false,
-        })
-        .on('down', (event) => {
-          event.target?.classList.add('dragging')
-        })
-        .on('dragmove', (event) => {
-          var quantumElement = quantumDocument.getElementById(event.target.id)
-          let delta = new Vector2(event.dx / quantumDocument.gridCellSize.x, event.dy / quantumDocument.gridCellSize.y)
-          let newPos = quantumElement?.position.value.add(delta)
-          if (newPos) quantumElement?.setPosition(newPos)
-        })
-        .on('dragend', (event) => {
-          event.target?.classList.remove('dragging')
-        })
-  })
+  // Tell interactjs to make every .quantum-block interactive. This includes the ones that will get added in the future
+  interact('.quantum-block')
+    .draggable({
+      ignoreFrom: '.quantum-element',
+      modifiers: [
+        interact.modifiers.snap({
+          targets: [interact.snappers.grid({ x: quantumDocument.gridCellSize.x, y: quantumDocument.gridCellSize.y })],
+          range: Infinity,
+          relativePoints: [{ x: 0, y: 0 }],
+        }),
+        interact.modifiers.restrict({
+          restriction: '.quantum-document',
+          elementRect: { top: 0, left: 0, bottom: 1, right: 1 },
+          endOnly: true,
+        }),
+      ],
+      inertia: false,
+    })
+    .on('down', (event) => {
+      event.target?.classList.add('dragging')
+    })
+    .on('dragmove', (event) => {
+      const quantumElement = quantumDocument.getElementById(event.target.id)
+      let delta = new Vector2(event.dx / quantumDocument.gridCellSize.x, event.dy / quantumDocument.gridCellSize.y)
+      let newPos = quantumElement?.position.value.add(delta)
+      if (newPos) quantumElement?.setPosition(newPos)
+    })
+    .on('dragend', (event) => {
+      event.target?.classList.remove('dragging')
+    })
 }
 
 /**
