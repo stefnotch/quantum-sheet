@@ -34,7 +34,6 @@
     <div class="grid-crosshair" :style="grid.gridToStyle(grid.crosshairPosition.value)" v-show="grid.showCrosshair.value">+</div>
     <div
       class="quantum-block"
-      ref="quantumBlock"
       v-for="element in document.elements"
       :key="element.id"
       :id="element.id"
@@ -230,8 +229,6 @@ export default defineComponent({
     const grid = useGrid(document, documentInputElement, focusedElementCommands.commands)
     const clipboard = useClipboard(document)
     const elementDrag = useElementDrag(document)
-
-    // elementDrag.makeDraggable(element, gridCellSize)
 
     function log(ev: any) {
       console.log(ev)

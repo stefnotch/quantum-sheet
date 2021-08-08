@@ -62,7 +62,7 @@ export interface UseQuantumDocument<TElements extends QuantumDocumentElementType
    * @param id Element id
    * @param type Element type name
    */
-  getElementById<T extends keyof TElements>(id: string, typeName: T): GetQuantumElement<TElements[T]> | undefined
+  getElementById<T extends keyof TElements>(id: string, typeName?: T): GetQuantumElement<TElements[T]> | undefined
 
   /**
    * Gets the element with the given id
