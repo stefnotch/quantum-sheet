@@ -28,15 +28,15 @@
     "@cortex-js/compute-engine": "^0.4.2",
     "@vueuse/core": "^5.2.0",
     "interactjs": "^1.10.11",
-    "mathlive": "0.69.4",
+    "mathlive": "0.69.5",
     "uuid": "^8.3.2",
     "vue": "^3.1.5"
   },
   "devDependencies": {
-    "@shockpkg/archive-files": "^1.11.1",
     "@interactjs/types": "^1.10.11",
+    "@shockpkg/archive-files": "^1.11.1",
     "@types/uuid": "^8.3.1",
-    "@vitejs/plugin-vue": "^1.3.0",
+    "@vitejs/plugin-vue": "^1.4.0",
     "@vue/compiler-sfc": "^3.1.5",
     "fs-extra": "^10.0.0",
     "gh-pages": "^3.2.3",
