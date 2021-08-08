@@ -164,6 +164,7 @@ function usePythonConverter() {
   // TODO: Options (rational numbers)
   function expressionToPython(expression: any): string {
     if (Array.isArray(expression)) {
+      // Handle Functions (Add, Power, Sin, etc.)
       expression = expression.slice() // Make a copy so that we can safely modify the expression
       const functionName = expression[0]
       const functionInPython = MathJsonToSympy.get(functionName)
@@ -175,14 +176,16 @@ function usePythonConverter() {
       }
       return `${pythonFunctionName}(${parameters.join(',')})`
     } else if (typeof expression === 'string') {
-      // Handle Constants
       const constantInPython = MathJsonToSympy.get(expression)
       if (constantInPython) {
+        // Handle Constants (pi, e, etc.)
         return constantInPython([])
       } else {
+        // Handle Variables
         return encodeName(expression)
       }
     } else if (typeof expression === 'number') {
+      // Handle Numbers
       if (Number.isInteger(expression)) {
         return `sympy.Integer(${expression})`
       } else {
@@ -413,11 +416,12 @@ export function usePyodide() {
         // } else if (evaluation == '\\expandtrig') {
         //   pythonExpression = `sympy.expand_trig(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
       } else if (evaluation.includes('rewrite')) {
-        // TODO: Proper latex-to-sympy replacement
+        // ex: rewrite,\\sin
         let using = ''
         if (evaluation.split(',')[1] in KnownLatexFunctions) {
           using = KnownLatexFunctions[evaluation.split(',')[1]]
         } else {
+          // else: slap a 'sympy.' in front of it and attempt!?
           using = 'sympy.' + evaluation.split(',')[1].replace('\\', '')
         }
 
