@@ -102,14 +102,33 @@ function usePythonConverter() {
     [
       'Divide',
       (v) => {
-        // a / b == a * b^(-1)
-        v[2] = ['Power', v[2], -1]
-        return 'sympy.Mul'
+        // Special case for simple fractions
+        // TODO: Replace with a proper "is mathjson number" check
+        if (typeof v[1] === 'number' && typeof v[2] === 'number') {
+          // TODO: Only do this if rational numbers are enabled
+          return 'sympy.Rational'
+        } else {
+          // a / b == a * b^(-1)
+          v[2] = ['Power', v[2], -1]
+          return 'sympy.Mul'
+        }
       },
     ],
     ['Power', () => 'sympy.Pow'],
-    ['Sqrt', () => 'Sqrt'], // TODO: Replace with power
-    ['Root', () => 'Root'], // TODO: Replace with power
+    [
+      'Sqrt',
+      (v) => {
+        v.push(['Divide', 1, 2])
+        return 'sympy.Pow'
+      },
+    ],
+    [
+      'Root',
+      (v) => {
+        v[2] = ['Divide', 1, v[2]]
+        return 'sympy.Pow'
+      },
+    ],
     ['EqualEqual', () => 'sympy.Eq'],
     ['Parentheses', () => ''],
 
