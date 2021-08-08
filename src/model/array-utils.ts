@@ -26,7 +26,7 @@ export default {
   /**
    * Gets an element or undefined if the element does not exist
    */
-  tryGetElement: function <T>(array: T[], index: number) {
+  get: function <T>(array: T[], index: number) {
     return index >= 0 && index < array.length ? array[index] : undefined
   },
 

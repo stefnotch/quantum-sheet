@@ -88,24 +88,36 @@ export interface UseQuantumDocument<TElements extends QuantumDocumentElementType
   deserializeDocument(serializedData: JsonType): void
 }
 
+/**
+ * Keeps track of the element positions in an ordered list. Also takes care of setting the element-scopes.
+ *
+ * There is no "element-inserted" callback, instead elements can wait until their scope stops being `undefined`
+ */
 function useElementList() {
   const elements = shallowReactive<QuantumElement[]>([])
 
+  /** Watches an element's position. Returns a function to stop the watcher. */
   function watchElement(element: QuantumElement) {
-    const stopHandle = watch(
+    const stopWatcher = watch(
       element.position,
       (value, oldValue) => {
+        // New index
         let { index } = arrayUtils.getBinaryInsertIndex(elements, (a) => a.position.value.compareTo(value))
 
-        // TODO: A block added callback
-        // TODO: Refactor the scope setting
-        const prev = arrayUtils.tryGetElement(elements, index - 1)
+        // Element is still in the same position
+        if (arrayUtils.get(elements, index) === element) {
+          return
+        }
+
+        const prev = arrayUtils.get(elements, index - 1)
         if (prev?.typeName == ScopeElementType.typeName) {
           element.setScope(prev as ScopeElement)
         } else {
           element.setScope(prev?.scope.value)
         }
 
+        // Move by remove-adding the element
+        arrayUtils.remove(elements, element)
         elements.splice(index, 0, element)
       },
       {
@@ -114,15 +126,13 @@ function useElementList() {
     )
 
     return () => {
-      stopHandle()
-      element.setScope(undefined) // TODO: Refactor the scope setting
-      const index = elements.indexOf(element)
-      if (index >= 0) {
-        elements.splice(index, 1)
-      }
+      stopWatcher()
+      element.setScope(undefined)
+      arrayUtils.remove(elements, element)
     }
   }
 
+  /** Gets an element at a given position, useful for when the user clicks somewhere in the document. */
   function getElementAt(position: Vector2) {
     const posX = position.x
     const posY = position.y
@@ -253,13 +263,6 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
       stopHandles.forEach((stopHandle) => stopHandle())
     })
 
-    /* When moving a block, we know its target index. Therefore we know what neighbors the block has after insertion. (And the "scope start/getters" and "scope end/setters" nicely guarantee that the neighbor stuff will always be correct. ((If we do not have getters in the tree, in case of a getter, we could increment the index until we find a setter but then the whole blocks stuff becomes relevant and honestly, that's not fun anymore)))
-^ Therefore, we can totally keep track of which scope every block is in. It's super cheap. (Block --> scope)
-*/
-    /*
-variableManager: shallowReadonly(
-        scopeVariables.getVariableManager(computed(() => block.position))
-      ),*/
     return element
   }
 
