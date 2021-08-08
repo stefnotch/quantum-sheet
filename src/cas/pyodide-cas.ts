@@ -373,7 +373,8 @@ export function usePyodide() {
     } else if (command.expression[0] == 'Evaluate') {
       // https://docs.sympy.org/latest/tutorial/simplification.html
       let evaluation = (command.expression[2] + '').toLowerCase()
-      const evaluationArgument = evaluation.match(/\\left\((.*?)\\right/)[1]
+      const evaluationParameters = evaluation.match(/\\left\((.*?)\\right/)
+      const evaluationArgument = evaluationParameters ? evaluationParameters[1] : ''
       console.log('evaluationArgument', evaluationArgument)
 
       if (evaluation.includes('solve')) {
