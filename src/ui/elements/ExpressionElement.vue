@@ -24,6 +24,7 @@ function setMathfieldOptions(mathfield: MathfieldElement) {
     },
   ])
 
+  // https://cortexjs.io/mathlive/guides/shortcuts/
   const shortcuts = mathfield.getOption('inlineShortcuts')
   shortcuts['->'] = '\\xrightarrow{\\placeholder{}}'
   shortcuts[':'] = {
@@ -58,7 +59,14 @@ export default defineComponent({
     const expressionElement = props.modelGetter()
 
     // Change mathfield focus
-    watch(expressionElement.focused, (value) => (value ? mathfield.value?.focus?.() : mathfield.value?.blur?.()))
+    watch(expressionElement.focused, (value) => {
+      if (value) {
+        // Don't focus the mathfield if it already has focus
+        if (mathfield.value?.hasFocus() !== true) mathfield.value?.focus?.()
+      } else {
+        mathfield.value?.blur?.()
+      }
+    })
 
     // Show expression when the document-expression changes
     watch([expressionElement.expression, mathfield], ([value, _]) => {
@@ -195,4 +203,9 @@ export default defineComponent({
   },
 })
 </script>
-<style scoped></style>
+<style>
+/** To prevent flashing https://cortexjs.io/mathlive/guides/lifecycle/ */
+math-field:not(:defined) {
+  display: none;
+}
+</style>
