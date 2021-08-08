@@ -375,7 +375,6 @@ export function usePyodide() {
       let evaluation = (command.expression[2] + '').toLowerCase()
       const evaluationParameters = evaluation.match(/\\left\((.*?)\\right/)
       const evaluationArgument = evaluationParameters ? evaluationParameters[1] : ''
-      console.log('evaluationArgument', evaluationArgument)
 
       if (evaluation.includes('solve')) {
         let variablesToSolveFor: string[] = []
@@ -392,7 +391,6 @@ export function usePyodide() {
           variablesToSolveFor.push(evaluationArgument)
         }
 
-        console.log('variablesToSolveFor', variablesToSolveFor)
         if (variablesToSolveFor.length !== 1) {
           console.error('Expected one variable to solve for', variablesToSolveFor)
         }

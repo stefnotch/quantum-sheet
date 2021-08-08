@@ -67,7 +67,6 @@ function wrapSympyCommand(symbols, command) {
   const argumentNames = symbols.join(',')
   const argumentValues = symbols.map((v) => `sympy.Symbol('${v}')`).join(',')
   const pyCommand = `MathJsonPrinter().doprint((lambda ${argumentNames}: ${command})(${argumentValues}))`
-  console.log('python command:', pyCommand)
   return pyCommand
 }
 
@@ -98,8 +97,6 @@ function messageHandler(event) {
     } else {
       throw new Error('Unknown command type', message)
     }
-
-    console.log('pyodide result', pyodideResult)
 
     if (pyodideResult?.destroy) {
       console.warn('Pyodide returned a proxy', pyodideResult.toString()) // Internally calls repr()
