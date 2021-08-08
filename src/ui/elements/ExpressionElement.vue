@@ -24,8 +24,12 @@ function setMathfieldOptions(mathfield: MathfieldElement) {
     },
   ])
 
+  // https://cortexjs.io/mathlive/guides/shortcuts/
   const shortcuts = mathfield.getOption('inlineShortcuts')
-  shortcuts['->'] = '\\xrightarrow{\\placeholder{}}'
+  shortcuts['->'] = {
+    mode: 'math',
+    value: '\\xrightarrow{\\placeholder{}}',
+  }
 
   mathfield.setOptions({
     inlineShortcuts: shortcuts,
@@ -195,4 +199,9 @@ export default defineComponent({
   },
 })
 </script>
-<style scoped></style>
+<style>
+/** To prevent flashing https://cortexjs.io/mathlive/guides/lifecycle/ */
+math-field:not(:defined) {
+  display: none;
+}
+</style>
