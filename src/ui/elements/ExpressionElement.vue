@@ -26,6 +26,10 @@ function setMathfieldOptions(mathfield: MathfieldElement) {
 
   const shortcuts = mathfield.getOption('inlineShortcuts')
   shortcuts['->'] = '\\xrightarrow{\\placeholder{}}'
+  shortcuts[':'] = {
+    mode: 'math',
+    value: '\\coloneq',
+  }
 
   mathfield.setOptions({
     inlineShortcuts: shortcuts,
