@@ -43,18 +43,10 @@ export abstract class QuantumElement {
     if (options.resizeable) {
       this.resizeable.value = options.resizeable
     }
-    /* When moving a block, we know its target index. Therefore we know what neighbors the block has after insertion. (And the "scope start/getters" and "scope end/setters" nicely guarantee that the neighbor stuff will always be correct. ((If we do not have getters in the tree, in case of a getter, we could increment the index until we find a setter but then the whole blocks stuff becomes relevant and honestly, that's not fun anymore)))
-^ Therefore, we can totally keep track of which scope every block is in. It's super cheap. (Block --> scope)
-*/
-    /*
-variableManager: shallowReadonly(
-        scopeVariables.getVariableManager(computed(() => block.position))
-      ),*/
   }
 
   setPosition(value: Vector2) {
-    // https://stackoverflow.com/questions/65732144/vue-js-3-replace-update-reactive-object-without-losing-reactivity
-    Object.assign(this.position.value, value)
+    this.position.value = value
   }
 
   setSize(value: Vector2) {

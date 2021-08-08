@@ -90,8 +90,8 @@ export class ScopeElement extends QuantumElement {
         if (variable.index >= 0) {
           assert(variableArray[variable.index] == variable, `Expected variable ${variable} to be in ${variableArray} at index ${variable.index}`)
 
-          const prev = arrayUtils.tryGetElement(variableArray, variable.index - 1)
-          const next = arrayUtils.tryGetElement(variableArray, variable.index + 1)
+          const prev = arrayUtils.get(variableArray, variable.index - 1)
+          const next = arrayUtils.get(variableArray, variable.index + 1)
 
           if (isInRange(value, { start: prev?.position, end: next?.position })) {
             return
@@ -103,7 +103,7 @@ export class ScopeElement extends QuantumElement {
         // Add
         const { index } = arrayUtils.getBinaryInsertIndex(variableArray, (v) => v.position.compareTo(value))
 
-        const prev = arrayUtils.tryGetElement(variableArray, index - 1)
+        const prev = arrayUtils.get(variableArray, index - 1)
         // Take some getters from prev
         if (prev?.getters) {
           variable.getters = prev.getters.filter((v) => value.compareTo(v.position) <= 0)
@@ -157,7 +157,7 @@ export class ScopeElement extends QuantumElement {
       (value) => {
         if (getter.variable) {
           // If the getter is still in the correct position, bail out
-          const nextVariable = arrayUtils.tryGetElement(variableArray, getter.variable.index + 1)
+          const nextVariable = arrayUtils.get(variableArray, getter.variable.index + 1)
           if (
             isInRange(value, {
               start: getter.variable.position,
@@ -174,7 +174,7 @@ export class ScopeElement extends QuantumElement {
 
         const { index } = arrayUtils.getBinaryInsertIndex(variableArray, (v) => v.position.compareTo(value))
 
-        const variable = arrayUtils.tryGetElement(variableArray, index - 1)
+        const variable = arrayUtils.get(variableArray, index - 1)
         assert(variable, `Getter position ${getter.position} outside of block ${this.position}`)
 
         // Add getter to variable
@@ -267,7 +267,7 @@ function removeVariable(variableArray: ScopedVariable[], variable: ScopedVariabl
   if (variable.index < 0) return
 
   if (variable.getters.length > 0) {
-    const prev = arrayUtils.tryGetElement(variableArray, variable.index - 1)
+    const prev = arrayUtils.get(variableArray, variable.index - 1)
     assert(prev, 'Expected prev variable to exist')
 
     prev.getters = prev.getters.concat(variable.getters)
