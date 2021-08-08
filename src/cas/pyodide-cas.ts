@@ -177,6 +177,7 @@ function usePythonConverter() {
       return `${pythonFunctionName}(${parameters.join(',')})`
     } else if (typeof expression === 'string') {
       const constantInPython = MathJsonToSympy.get(expression)
+      // TODO: Handle Units here?
       if (constantInPython) {
         // Handle Constants (pi, e, etc.)
         return constantInPython([])
