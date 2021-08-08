@@ -373,6 +373,9 @@ export function usePyodide() {
     } else if (command.expression[0] == 'Evaluate') {
       // https://docs.sympy.org/latest/tutorial/simplification.html
       let evaluation = (command.expression[2] + '').toLowerCase()
+      const evaluationArgument = evaluation.match(/\\left\((.*?)\\right/)[1]
+      console.log('evaluationArgument', evaluationArgument)
+
       if (evaluation.includes('solve')) {
         let variablesToSolveFor: string[] = []
         if (evaluation == 'solve') {
@@ -384,7 +387,8 @@ export function usePyodide() {
           })
         } else {
           // TODO: only 1 variable?
-          variablesToSolveFor.push((command.expression[2] + '').split(',')[1])
+          // variablesToSolveFor.push((command.expression[2] + '').split(',')[1])
+          variablesToSolveFor.push(evaluationArgument)
         }
 
         console.log('variablesToSolveFor', variablesToSolveFor)
@@ -419,11 +423,15 @@ export function usePyodide() {
       } else if (evaluation.includes('rewrite')) {
         // ex: rewrite,\\sin
         let using = ''
-        if (evaluation.split(',')[1] in KnownLatexFunctions) {
-          using = KnownLatexFunctions[evaluation.split(',')[1]]
+        if (evaluationArgument && evaluationArgument in KnownLatexFunctions) {
+          // using = KnownLatexFunctions[evaluation.split(',')[1]]
+          using = KnownLatexFunctions[evaluationArgument]
         } else {
           // else: slap a 'sympy.' in front of it and attempt!?
-          using = 'sympy.' + evaluation.split(',')[1].replace('\\', '')
+          // using = 'sympy.' + evaluation.split(',')[1].replace('\\', '')
+          if (evaluationArgument) {
+            using = evaluationArgument.replace('\\', '')
+          }
         }
 
         pythonExpression = `${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n\t\t.rewrite(${using})`
