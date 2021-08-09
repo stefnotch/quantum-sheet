@@ -80,6 +80,8 @@ function usePythonConverter() {
     }
   }
 
+  // Putting functions and constants into the same map has some pretty neat advantages.
+  // Mainly, it means that functions and constant are just different types of variables
   const MathJsonToSympy = new Map<string, (expression: Expression[]) => string>([
     ['Add', () => 'sympy.Add'],
     [
@@ -115,20 +117,8 @@ function usePythonConverter() {
       },
     ],
     ['Power', () => 'sympy.Pow'],
-    [
-      'Sqrt',
-      (v) => {
-        v.push(['Divide', 1, 2])
-        return 'sympy.Pow'
-      },
-    ],
-    [
-      'Root',
-      (v) => {
-        v[2] = ['Divide', 1, v[2]]
-        return 'sympy.Pow'
-      },
-    ],
+    ['Sqrt', () => 'sympy.sqrt'],
+    ['Root', () => 'sympy.root'],
     ['EqualEqual', () => 'sympy.Eq'],
     ['Parentheses', () => ''],
 
