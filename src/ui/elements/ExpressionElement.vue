@@ -75,7 +75,7 @@ export default defineComponent({
         invisibleMultiply: '\\cdot',
         invisiblePlus: '+',
         dictionary: dictionary,
-        // groupSeparator
+        groupSeparator: '',
       })
 
       mathfield.value?.setValue(latex, {
