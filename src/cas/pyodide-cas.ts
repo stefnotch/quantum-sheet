@@ -108,7 +108,7 @@ function usePythonConverter() {
       },
     ],
     ['Power', () => 'sympy.Pow'],
-    ['Sqrt', () => 'Sqrt'], // TODO: Replace with power
+    ['Sqrt', () => 'sympy.sqrt'], // TODO: Replace with power
     ['Root', () => 'Root'], // TODO: Replace with power
     ['EqualEqual', () => 'sympy.Eq'],
     ['Parentheses', () => ''],
@@ -126,10 +126,11 @@ function usePythonConverter() {
     ['Arcsin', () => 'sympy.asin'],
     ['Arccos', () => 'sympy.acos'],
     ['Arctan', () => 'sympy.atan'],
+    ['Arctan2', () => 'sympy.atan2'],
 
     ['Asec', () => 'sympy.asec'],
     ['Acsc', () => 'sympy.acsc'],
-    ['Atan', () => 'sympy.atan'],
+    ['Acot', () => 'sympy.acot'],
 
     ['Sinh', () => 'sympy.sinh'],
     ['Cosh', () => 'sympy.cosh'],
@@ -159,6 +160,8 @@ function usePythonConverter() {
 
   const KnownLatexFunctions = {
     '\\sin': 'sympy.sin',
+    '\\cot': 'sympy.cot',
+    '\\arcctg': 'sympy.acot',
   }
 
   // TODO: Options (rational numbers)

@@ -16,7 +16,7 @@ from sympy.utilities import default_sort_key
 _known_functions_mathjson = {
     'acos': 'Arccos',
     'acosh': 'Arcosh',
-    'asin': 'Arcsin',
+    'asin': 'Arsin',
     'asinh': 'Arsinh',
     'atan': 'Arctan',
     'atan2': 'Arctan2',
@@ -57,7 +57,7 @@ _known_functions_mathjson = {
     'acoth': 'Arcoth',
     'asech': 'Asech',
     'acsch': 'Acsch',
-    
+
     # '': 'Abs',
 }
 
@@ -158,7 +158,7 @@ class MathJsonPrinter(Printer):
     # TODO: Update
     def _print_Catalan(self, expr):
         print("Warning: _print_Catalan was called")
-        return 'Catalan'
+        return self._print('"CatalanConstant"')
 
     # TODO: Update
     def _print_ComplexInfinity(self, expr):
@@ -238,10 +238,9 @@ class MathJsonPrinter(Printer):
         name = expr.func.__name__ 
         return name + "(%s)" % self.stringify(expr.args, ", ")
 
-    # TODO: Update
     def _print_GoldenRatio(self, expr):
         print("Warning: _print_GoldenRatio was called")
-        return 'GoldenRatio'
+        return self._print('"GoldenRatio"')
 
     # TODO: Update
     def _print_TribonacciConstant(self, expr):
@@ -251,7 +250,7 @@ class MathJsonPrinter(Printer):
     # TODO: Important Update
     def _print_ImaginaryUnit(self, expr):
         print("Warning: _print_ImaginaryUnit was called")
-        return '"I"'
+        return self._print('"ImaginaryUnit"')
 
     # TODO: Important Update
     def _print_Infinity(self, expr):
