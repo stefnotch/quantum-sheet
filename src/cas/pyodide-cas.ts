@@ -1,6 +1,6 @@
 import type {} from 'vite'
 import type { CasCommand } from './cas'
-import { getGetterNames } from './cas-math'
+import { getGetterNames, useEncoder } from './cas-math'
 import { Expression, format } from '@cortex-js/compute-engine'
 
 export type WorkerMessage =
@@ -36,33 +36,24 @@ export type WorkerResponse =
 
 // TODO: Split out the python converter and contribute it to mathlive/cortex-js?
 function usePythonConverter() {
-  const textEncoder = new TextEncoder()
-  const textDecoder = new TextDecoder()
+  const encoder = useEncoder()
 
-  // TODO: Only convert names that actually need to be converted? Or use some standard encoding format?
-  // Using 16 characters to encode utf-8. So, 2 chars per byte.
-  const charOffset = 'A'.charCodeAt(0)
+  // Encodes a name if its not a pure ASCII letter name
   function encodeName(name: string) {
-    const data = textEncoder.encode(name)
-    let output = ''
-    for (let i = 0; i < data.length; i++) {
-      const highBits = (data[i] >> 4) & 0x0f
-      const lowBits = data[i] & 0x0f
-      output += String.fromCharCode(highBits + charOffset) + String.fromCharCode(lowBits + charOffset)
+    // Add a _ to the front to distinguish this from typical variable names
+    if (/^[a-zA-Z]+$/.test(name)) {
+      return '_' + name
+    } else {
+      return '__' + encoder.encodeName(name)
     }
-
-    return '_' + output
   }
 
   function decodeName(name: string) {
-    name = name.slice(1)
-    const output = new Uint8Array(name.length / 2)
-    for (let i = 0; i < name.length; i += 2) {
-      const highBits = name.charCodeAt(i) - charOffset
-      const lowBits = name.charCodeAt(i + 1) - charOffset
-      output[i / 2] = (highBits << 4) | lowBits
+    if (name[1] !== '_') {
+      throw new Error('Cannot decode ' + name)
     }
-    return textDecoder.decode(output)
+
+    return name[2] !== '_' ? name.slice(1) : encoder.decodeName(name.slice(1))
   }
 
   function decodeNames(expression: any) {
