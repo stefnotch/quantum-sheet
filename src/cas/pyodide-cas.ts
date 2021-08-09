@@ -413,7 +413,6 @@ export function usePyodide() {
           })
         } else {
           // TODO: only 1 variable?
-          // variablesToSolveFor.push((command.expression[2] + '').split(',')[1])
           variablesToSolveFor.push(evaluationArgument)
         }
 
@@ -424,7 +423,6 @@ export function usePyodide() {
         const innerExpression = command.expression[1]
         if (Array.isArray(innerExpression) && innerExpression[0] == 'EqualEqual') {
           // TODO: Use recommended solver instead of the generic one
-
           pythonExpression = `sympy.solvers.solve(\n\t${expressionToPython(innerExpression)}\n\t\t.subs({${substitutions}})\n,${encodeName(
             variablesToSolveFor[0]
           )})`
@@ -446,14 +444,12 @@ export function usePyodide() {
         // } else if (evaluation == '\\expandtrig') {
         //   pythonExpression = `sympy.expand_trig(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
       } else if (evaluation.includes('rewrite')) {
-        // ex: rewrite,\\sin
+        // ex: rewrite(\\sin)
         let using = ''
         if (evaluationArgument && evaluationArgument in KnownLatexFunctions) {
-          // using = KnownLatexFunctions[evaluation.split(',')[1]]
           using = KnownLatexFunctions[evaluationArgument]
         } else {
           // else: slap a 'sympy.' in front of it and attempt!?
-          // using = 'sympy.' + evaluation.split(',')[1].replace('\\', '')
           if (evaluationArgument) {
             using = evaluationArgument.replace('\\', '')
           }
