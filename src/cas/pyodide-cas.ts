@@ -193,12 +193,16 @@ function usePythonConverter() {
       if (Number.isInteger(expression)) {
         return `sympy.Integer(${expression})`
       } else {
-        return `sympy.Float(${expression})`
+        return `sympy.Rational(${expression})`
       }
     } else if (expression === null) {
       return `None`
     } else if (expression.num !== undefined) {
-      return `sympy.Float(${expression.num})`
+      if (Number.isInteger(Number(expression.num))) {
+        return `sympy.Integer(${expression.num})`
+      } else {
+        return `sympy.Rational(${expression.num})`
+      }
     } else {
       // TODO: Make sure to handle all cases (string, number, bool, array, object, ...)
       console.warn('Unknown element type', { x: expression })
