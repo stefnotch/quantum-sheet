@@ -135,10 +135,11 @@ function usePythonConverter() {
     ['Arcsin', () => 'sympy.asin'],
     ['Arccos', () => 'sympy.acos'],
     ['Arctan', () => 'sympy.atan'],
+    ['Arctan2', () => 'sympy.atan2'],
 
     ['Asec', () => 'sympy.asec'],
     ['Acsc', () => 'sympy.acsc'],
-    ['Atan', () => 'sympy.atan'],
+    ['Acot', () => 'sympy.acot'],
 
     ['Sinh', () => 'sympy.sinh'],
     ['Cosh', () => 'sympy.cosh'],
@@ -168,6 +169,8 @@ function usePythonConverter() {
 
   const KnownLatexFunctions = {
     '\\sin': 'sympy.sin',
+    '\\cot': 'sympy.cot',
+    '\\arcctg': 'sympy.acot',
   }
 
   // TODO: Options (rational numbers)
@@ -199,12 +202,16 @@ function usePythonConverter() {
       if (Number.isInteger(expression)) {
         return `sympy.Integer(${expression})`
       } else {
-        return `sympy.Float(${expression})`
+        return `sympy.Rational(${expression})`
       }
     } else if (expression === null) {
       return `None`
     } else if (expression.num !== undefined) {
-      return `sympy.Float(${expression.num})`
+      if (Number.isInteger(Number(expression.num))) {
+        return `sympy.Integer(${expression.num})`
+      } else {
+        return `sympy.Rational(${expression.num})`
+      }
     } else {
       // TODO: Make sure to handle all cases (string, number, bool, array, object, ...)
       console.warn('Unknown element type', { x: expression })
@@ -396,7 +403,6 @@ export function usePyodide() {
           })
         } else {
           // TODO: only 1 variable?
-          // variablesToSolveFor.push((command.expression[2] + '').split(',')[1])
           variablesToSolveFor.push(evaluationArgument)
         }
 
@@ -407,7 +413,6 @@ export function usePyodide() {
         const innerExpression = command.expression[1]
         if (Array.isArray(innerExpression) && innerExpression[0] == 'EqualEqual') {
           // TODO: Use recommended solver instead of the generic one
-
           pythonExpression = `sympy.solvers.solve(\n\t${expressionToPython(innerExpression)}\n\t\t.subs({${substitutions}})\n,${encodeName(
             variablesToSolveFor[0]
           )})`
@@ -429,14 +434,12 @@ export function usePyodide() {
         // } else if (evaluation == '\\expandtrig') {
         //   pythonExpression = `sympy.expand_trig(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
       } else if (evaluation.includes('rewrite')) {
-        // ex: rewrite,\\sin
+        // ex: rewrite(\\sin)
         let using = ''
         if (evaluationArgument && evaluationArgument in KnownLatexFunctions) {
-          // using = KnownLatexFunctions[evaluation.split(',')[1]]
           using = KnownLatexFunctions[evaluationArgument]
         } else {
           // else: slap a 'sympy.' in front of it and attempt!?
-          // using = 'sympy.' + evaluation.split(',')[1].replace('\\', '')
           if (evaluationArgument) {
             using = evaluationArgument.replace('\\', '')
           }

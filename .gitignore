@@ -2,6 +2,7 @@ node_modules/
 .DS_Store
 dist/
 public/pyodide/
+public/__pycache__/
 *.local
 npm-debug.log
 Thumbs.db
