@@ -111,7 +111,7 @@ export default defineComponent({
 
         mathfield.value = new MathfieldElement({
           defaultMode: 'math',
-          // smartSuperscript: true,
+          smartSuperscript: false,
           removeExtraneousParentheses: true,
           smartFence: true,
           plonkSound: null,
