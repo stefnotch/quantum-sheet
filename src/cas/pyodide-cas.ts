@@ -155,6 +155,8 @@ function usePythonConverter() {
     ['EulerGamma', () => 'sympy.EulerGamma'], // TODO: test
     ['Gamma', () => 'sympy.gamma'], // TODO: test
     ['LogGamma', () => 'sympy.loggamma'], // TODO: test
+    ['Erf', () => 'sympy.erf'], // TODO: test
+    ['Erfc', () => 'sympy.erfc'], // TODO: test
 
     // TODO: MathLive latex serial/parse destroys ln,log, etc? in ExpressionElement.vue line 78
     // ['log', () => 'sympy.log'],
