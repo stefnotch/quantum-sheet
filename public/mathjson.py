@@ -13,6 +13,54 @@ from sympy.utilities import default_sort_key
 
 # TODO: Update the ones maked with "# TODO: Important Update"
 
+_known_functions_mathjson = {
+    'acos': 'Arccos',
+    'acosh': 'Arcosh',
+    'asin': 'Arcsin',
+    'asinh': 'Arsinh',
+    'atan': 'Arctan',
+    'atan2': 'Arctan2',
+    'atanh': 'Artanh',
+    'ceiling': 'Ceil',
+    'cos': 'Cos',
+    'cosh': 'Cosh',
+    'erf': 'Erf',
+    'erfc': 'Erfc',
+    'exp': 'Exp',
+    # 'expm1': 'expm1',
+    'factorial': 'Factorial',
+    'floor': 'Floor',
+    'gamma': 'Gamma',
+    # 'hypot': 'hypot',
+    'loggamma': 'LogGamma',
+    # '': 'SignGamma',
+    'log': 'Log',
+    'ln': 'Log',
+    'log10': 'Log10',
+    'log1p': 'LogOnePlus',
+    'log2': 'Log2',
+    'sin': 'Sin',
+    'sinh': 'Sinh',
+    'Sqrt': 'Sqrt',
+    'tan': 'Tan',
+    'tanh': 'Tanh',
+    # TODO: Test these following trig functions
+    'cot': 'Cot',
+    'sec': 'Sec',
+    'csc': 'Csc',
+    'acot': 'Acot',
+    'asec': 'Asec',
+    'acsc': 'Acsc',
+    'coth': 'Coth',
+    'sech': 'Sech',
+    'csch': 'Csch',
+    'acoth': 'Arcoth',
+    'asech': 'Asech',
+    'acsch': 'Acsch',
+
+    # '': 'Abs',
+}
+
 class MathJsonPrinter(Printer):
     printmethod = "_mathjson"
     _default_settings = {
@@ -110,7 +158,7 @@ class MathJsonPrinter(Printer):
     # TODO: Update
     def _print_Catalan(self, expr):
         print("Warning: _print_Catalan was called")
-        return 'Catalan'
+        return self._print('"CatalanConstant"')
 
     # TODO: Update
     def _print_ComplexInfinity(self, expr):
@@ -167,7 +215,8 @@ class MathJsonPrinter(Printer):
     # TODO: Important Update
     def _print_EulerGamma(self, expr):
         print("Warning: _print_EulerGamma was called")
-        return 'EulerGamma'
+        # return 'EulerGamma'
+        return self._print('"EulerGamma"')
 
     # TODO: Important Update
     def _print_Exp1(self, expr):
@@ -181,13 +230,18 @@ class MathJsonPrinter(Printer):
 
     # TODO: Update
     def _print_Function(self, expr):
-        print("Warning: _print_Function was called")
-        return expr.func.__name__ + "(%s)" % self.stringify(expr.args, ", ")
+        print("Warning: _print_Function was called", expr.args)
+        if expr.func.__name__ in _known_functions_mathjson:
+            name = r"%s" % _known_functions_mathjson[expr.func.__name__]
+            args = [self._print(o) for o in expr.args]
+            return self._function(name, args)
+        # else:
+        name = expr.func.__name__ 
+        return name + "(%s)" % self.stringify(expr.args, ", ")
 
-    # TODO: Update
     def _print_GoldenRatio(self, expr):
         print("Warning: _print_GoldenRatio was called")
-        return 'GoldenRatio'
+        return self._print('"GoldenRatio"')
 
     # TODO: Update
     def _print_TribonacciConstant(self, expr):
@@ -197,7 +251,7 @@ class MathJsonPrinter(Printer):
     # TODO: Important Update
     def _print_ImaginaryUnit(self, expr):
         print("Warning: _print_ImaginaryUnit was called")
-        return '"I"'
+        return self._print('"ImaginaryUnit"')
 
     # TODO: Important Update
     def _print_Infinity(self, expr):
@@ -504,7 +558,7 @@ class MathJsonPrinter(Printer):
     # TODO: Important Update
     def _print_Pi(self, expr):
         print("Warning: _print_Pi was called")
-        return 'pi'
+        return self._print('"Pi"')
 
     # TODO: Update
     def _print_PolyRing(self, ring):

@@ -66,7 +66,8 @@ if (globalThis.SharedWorkerGlobalScope) {
 function wrapSympyCommand(symbols, command) {
   const argumentNames = symbols.join(',')
   const argumentValues = symbols.map((v) => `sympy.Symbol('${v}')`).join(',')
-  return `MathJsonPrinter().doprint((lambda ${argumentNames}: ${command})(${argumentValues}))`
+  const pyCommand = `MathJsonPrinter().doprint((lambda ${argumentNames}: ${command})(${argumentValues}))`
+  return pyCommand
 }
 
 /**

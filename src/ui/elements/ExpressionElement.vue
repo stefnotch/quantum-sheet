@@ -30,6 +30,10 @@ function setMathfieldOptions(mathfield: MathfieldElement) {
     mode: 'math',
     value: '\\xrightarrow{\\placeholder{}}',
   }
+  shortcuts[':'] = {
+    mode: 'math',
+    value: '\\coloneq',
+  }
 
   mathfield.setOptions({
     inlineShortcuts: shortcuts,
@@ -74,7 +78,7 @@ export default defineComponent({
         invisibleMultiply: '\\cdot',
         invisiblePlus: '+',
         dictionary: dictionary,
-        // groupSeparator
+        groupSeparator: '',
       })
 
       mathfield.value?.setValue(latex, {
