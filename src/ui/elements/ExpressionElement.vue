@@ -26,7 +26,10 @@ function setMathfieldOptions(mathfield: MathfieldElement) {
 
   // https://cortexjs.io/mathlive/guides/shortcuts/
   const shortcuts = mathfield.getOption('inlineShortcuts')
-  shortcuts['->'] = '\\xrightarrow{\\placeholder{}}'
+  shortcuts['->'] = {
+    mode: 'math',
+    value: '\\xrightarrow{\\placeholder{}}',
+  }
   shortcuts[':'] = {
     mode: 'math',
     value: '\\coloneq',
