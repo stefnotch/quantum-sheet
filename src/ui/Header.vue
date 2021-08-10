@@ -4,7 +4,7 @@
       <a-col :span="4">
         <a-space :style="{ height: '36px', alignItems: 'revert' }">
           <div :style="{ width: '10px' }" />
-          <h3 style="margin 0; width: 110px" @click="() => {}" :style="{ cursor: 'pointer' }">QuantumSheet</h3>
+          <h3 @click="() => {}" :style="{ cursor: 'pointer', margin: 0, width: '110px' }">QuantumSheet</h3>
           <div :style="{ width: '16px' }" />
           <a-dropdown placement="bottomLeft" :trigger="['click']">
             <a-button ghost style="height: 36px; color: black">File</a-button>
