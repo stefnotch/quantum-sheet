@@ -1,4 +1,4 @@
-import { markRaw, ref, Ref, shallowRef } from 'vue'
+import { EffectScope, effectScope, markRaw, ref, Ref, shallowRef } from 'vue'
 import { Vector2 } from '../vectors'
 import type { ScopeElement } from './elements/scope-element'
 import { v4 as uuidv4, validate as uuidValidate } from 'uuid'
@@ -28,7 +28,7 @@ export abstract class QuantumElement {
   abstract typeName: string
 
   readonly position: Ref<Vector2> = ref(Vector2.zero)
-  // can include a fractional part
+  /** The size can include a fractional part */
   readonly size: Ref<Vector2> = ref(new Vector2(5, 2)) // TODO: Size stuff
   readonly resizable: Ref<boolean> = ref(false)
   readonly selected: Ref<boolean> = ref(false)

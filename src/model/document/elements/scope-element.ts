@@ -1,8 +1,9 @@
 import { QuantumElement, QuantumElementCreationOptions, QuantumElementType } from '../document-element'
-import { ref, Ref, reactive, shallowRef, watch, watchEffect, computed, ComputedRef } from 'vue'
+import { ref, Ref, reactive, shallowRef, watch, watchEffect, computed, ComputedRef, toRaw } from 'vue'
 import { Vector2 } from '../../vectors'
 import arrayUtils from '../../array-utils'
 import { assert } from '../../assert'
+import { watchImmediate } from '../../reactivity-utils'
 
 export const ElementType = 'scope-element'
 
@@ -47,16 +48,17 @@ export class ScopeElement extends QuantumElement {
     });
   })*/
 
-  private createVariableArray(name: string, position: ComputedRef<Vector2>): ScopedVariable[] {
+  private createVariableArray(name: string): ScopedVariable[] {
     // First variable, used to import values from the scope above
     const importerVariable: ScopedVariable = reactive({
-      position: position,
+      position: computed(() => this.position.value),
       index: 0,
       data: shallowRef(),
       getters: [],
     })
 
     const newVariableArray = reactive([importerVariable])
+    // Cleanup if unused
     watch([() => newVariableArray.length, () => importerVariable.getters.length], ([variableArrayLength, gettersLength]) => {
       if (variableArrayLength <= 1 && gettersLength == 0) {
         this._variableMap.delete(name)
@@ -76,25 +78,22 @@ export class ScopeElement extends QuantumElement {
       getters: [],
     })
 
-    const variableArray =
-      this.variableMap.get(name) ??
-      this.createVariableArray(
-        name,
-        computed(() => this.position.value)
-      )
+    const variableArray = this.variableMap.get(name) ?? this.createVariableArray(name)
 
-    watch(
+    watchImmediate(
       () => variable.position,
       (value) => {
         // Remove (or bail out)
         if (variable.index >= 0) {
           assert(variableArray[variable.index] == variable, `Expected variable ${variable} to be in ${variableArray} at index ${variable.index}`)
 
-          const prev = arrayUtils.get(variableArray, variable.index - 1)
-          const next = arrayUtils.get(variableArray, variable.index + 1)
+          const prev = arrayUtils.at(variableArray, variable.index - 1)
+          const next = arrayUtils.at(variableArray, variable.index + 1)
 
           if (isInRange(value, { start: prev?.position, end: next?.position })) {
-            return
+            // TODO: Optimize?
+            // Currently this doesn't account for moving a variable past its getters
+            // return
           }
 
           removeVariable(variableArray, variable)
@@ -103,7 +102,7 @@ export class ScopeElement extends QuantumElement {
         // Add
         const { index } = arrayUtils.getBinaryInsertIndex(variableArray, (v) => v.position.compareTo(value))
 
-        const prev = arrayUtils.get(variableArray, index - 1)
+        const prev = arrayUtils.at(variableArray, index - 1)
         // Take some getters from prev
         if (prev?.getters) {
           variable.getters = prev.getters.filter((v) => value.compareTo(v.position) <= 0)
@@ -118,9 +117,6 @@ export class ScopeElement extends QuantumElement {
         }
         variableArray.splice(index, 0, variable)
         variable.index = index
-      },
-      {
-        immediate: true,
       }
     )
 
@@ -145,19 +141,14 @@ export class ScopeElement extends QuantumElement {
     })
     const data = computed(() => getter.variable?.data)
 
-    const variableArray =
-      this.variableMap.get(name) ??
-      this.createVariableArray(
-        name,
-        computed(() => this.position.value)
-      )
+    const variableArray = this.variableMap.get(name) ?? this.createVariableArray(name)
 
-    watch(
+    watchImmediate(
       () => getter.position,
       (value) => {
         if (getter.variable) {
           // If the getter is still in the correct position, bail out
-          const nextVariable = arrayUtils.get(variableArray, getter.variable.index + 1)
+          const nextVariable = arrayUtils.at(variableArray, getter.variable.index + 1)
           if (
             isInRange(value, {
               start: getter.variable.position,
@@ -174,14 +165,13 @@ export class ScopeElement extends QuantumElement {
 
         const { index } = arrayUtils.getBinaryInsertIndex(variableArray, (v) => v.position.compareTo(value))
 
-        const variable = arrayUtils.get(variableArray, index - 1)
+        const variable = arrayUtils.at(variableArray, index - 1)
         assert(variable, `Getter position ${getter.position} outside of block ${this.position}`)
 
         // Add getter to variable
         variable.getters.push(getter)
         getter.variable = variable
-      },
-      { immediate: true }
+      }
     )
 
     function remove() {
@@ -291,7 +281,7 @@ function removeVariable(variableArray: ScopedVariable[], variable: ScopedVariabl
   if (variable.index < 0) return
 
   if (variable.getters.length > 0) {
-    const prev = arrayUtils.get(variableArray, variable.index - 1)
+    const prev = arrayUtils.at(variableArray, variable.index - 1)
     assert(prev, 'Expected prev variable to exist')
 
     prev.getters = prev.getters.concat(variable.getters)
