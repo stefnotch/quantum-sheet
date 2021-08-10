@@ -310,6 +310,7 @@ export default defineComponent({
 /*TODO: Use this https://github.com/vuejs/rfcs/blob/master/active-rfcs/0043-sfc-style-variables.md for the grid size and stuff */
 .quantum-document {
   background-color: var(--color);
+  --color: white;
   --grid-color: rgba(71, 162, 223, 0.26);
   --selected-background-color: rgba(68, 148, 202, 0.24);
   --selected-color: rgba(57, 131, 180, 0.459);
