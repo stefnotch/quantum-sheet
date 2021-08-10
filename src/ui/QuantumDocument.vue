@@ -199,6 +199,8 @@ function useDocumentPreferences() {
 type JsonType = undefined | null | boolean | number | string | JsonType[] | { [prop: string]: JsonType }
 
 function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: UseQuantumDocument<T>) {
+  // TODO: Investigate
+  // I got stuff to break by adding a few blocks, moving them around and stuff
   // Tell interactjs to make every .quantum-block interactive. This includes the ones that will get added in the future
   interact('.quantum-block')
     .draggable({

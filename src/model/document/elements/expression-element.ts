@@ -104,14 +104,14 @@ export class ExpressionElement extends QuantumElement {
         namesToAdd.delete(variableName)
       }
     })
-    if (namesToAdd.size > 0) {
-      const scope = this.scope.value
-      assert(scope, 'Expected the block to have a scope')
-      namesToAdd.forEach((variableName) => {
-        const newVariable = scope.addVariable(variableName, this.blockPosition)
-        this.variables.set(variableName, newVariable)
-      })
-    }
+
+    if (namesToAdd.size <= 0) return
+    const scope = this.scope.value
+    assert(scope, 'Expected the block to have a scope')
+    namesToAdd.forEach((variableName) => {
+      const newVariable = scope.addVariable(variableName, this.blockPosition)
+      this.variables.set(variableName, newVariable)
+    })
   }
 
   evaluateLater() {
