@@ -49,11 +49,11 @@ function usePythonConverter() {
   }
 
   function decodeName(name: string) {
-    if (name[1] !== '_') {
+    if (name[0] !== '_') {
       throw new Error('Cannot decode ' + name)
     }
 
-    return name[2] !== '_' ? name.slice(1) : encoder.decodeName(name.slice(1))
+    return name[1] !== '_' ? name.slice(1) : encoder.decodeName(name.slice(1))
   }
 
   function decodeNames(expression: any) {
