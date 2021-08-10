@@ -215,7 +215,8 @@ class MathJsonPrinter(Printer):
     # TODO: Important Update
     def _print_EulerGamma(self, expr):
         print("Warning: _print_EulerGamma was called")
-        return 'EulerGamma'
+        # return 'EulerGamma'
+        return self._print('"EulerGamma"')
 
     # TODO: Important Update
     def _print_Exp1(self, expr):

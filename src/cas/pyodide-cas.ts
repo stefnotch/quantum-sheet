@@ -153,6 +153,8 @@ function usePythonConverter() {
     ['ExponentialE', () => 'sympy.E'], // TODO: test
     ['GoldenRatio', () => 'sympy.GoldenRatio'], // TODO: test
     ['EulerGamma', () => 'sympy.EulerGamma'], // TODO: test
+    ['Gamma', () => 'sympy.gamma'], // TODO: test
+    ['LogGamma', () => 'sympy.loggamma'], // TODO: test
 
     // TODO: MathLive latex serial/parse destroys ln,log, etc? in ExpressionElement.vue line 78
     // ['log', () => 'sympy.log'],
