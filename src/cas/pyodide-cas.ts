@@ -371,14 +371,15 @@ export function usePyodide() {
       .map(([key, value]) => `${encodeName(key)}:${expressionToPython(value)}`)
       .join(',')
 
+    const innerExpression = command.expression[1]
+
     let pythonExpression = ''
     // For now, only parse the expression if there is an "Equal" or "Solve" or "Apply" at the root
     // TODO: Handle nested "Equal", "Solve", "Apply"s. For example, 3x=5 -> computed solution goes here = numerical solution goes here
     if (command.expression[0] == 'Equal') {
       // TODO: If the expression is only a single getter or something simple, don't call the CAS
-      pythonExpression = `${expressionToPython(command.expression[1])}\n\t.subs({${substitutions}})\n\t.evalf()`
+      pythonExpression = `${expressionToPython(innerExpression)}\n\t.subs({${substitutions}})\n\t.evalf()`
     } else if (command.expression[0] == 'Evaluate') {
-      // https://docs.sympy.org/latest/tutorial/simplification.html
       let evaluation = (command.expression[2] + '').toLowerCase()
       const evaluationParameters = evaluation.match(/\\left\((.*?)\\right/)
       const evaluationArgument = evaluationParameters ? evaluationParameters[1] : ''
@@ -393,7 +394,6 @@ export function usePyodide() {
             }
           })
         } else {
-          // TODO: only 1 variable?
           variablesToSolveFor.push(evaluationArgument)
         }
 
@@ -401,29 +401,28 @@ export function usePyodide() {
           console.error('Expected one variable to solve for', variablesToSolveFor)
         }
 
-        const innerExpression = command.expression[1]
         if (Array.isArray(innerExpression) && innerExpression[0] == 'EqualEqual') {
           // TODO: Use recommended solver instead of the generic one
-          pythonExpression = `sympy.solvers.solve(\n\t${expressionToPython(innerExpression)}\n\t\t.subs({${substitutions}})\n,${encodeName(
+          pythonExpression = `sympy.solvers.solve(\n\t${expressionToPython(innerExpression)}\n\t\t.subs({${substitutions}})\n\t,${encodeName(
             variablesToSolveFor[0]
           )})`
         } else {
           console.error('Expected inner expression to be EqualEqual (==)')
         }
       } else if (evaluation == 'simplify') {
-        pythonExpression = `sympy.simplify(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
+        pythonExpression = `sympy.simplify(\n\t${expressionToPython(innerExpression)}\n\t\t.subs({${substitutions}})\n)`
       } else if (evaluation == '\\expand') {
-        pythonExpression = `sympy.expand(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
+        pythonExpression = `sympy.expand(\n\t${expressionToPython(innerExpression)}\n\t\t.subs({${substitutions}})\n)`
       } else if (evaluation == 'factor') {
-        pythonExpression = `sympy.factor(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
+        pythonExpression = `sympy.factor(\n\t${expressionToPython(innerExpression)}\n\t\t.subs({${substitutions}})\n)`
         // } else if (evaluation == 'cancel') {
-        //   pythonExpression = `sympy.cancel(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
+        //   pythonExpression = `sympy.cancel(\n\t${expressionToPython(innerExpression)}\n\t\t.subs({${substitutions}})\n)`
         // } else if (evaluation == 'apart') {
-        //   pythonExpression = `sympy.apart(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
+        //   pythonExpression = `sympy.apart(\n\t${expressionToPython(innerExpression)}\n\t\t.subs({${substitutions}})\n)`
         // } else if (evaluation == 'trig_simp') {
-        //   pythonExpression = `sympy.trigsimp(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
+        //   pythonExpression = `sympy.trigsimp(\n\t${expressionToPython(innerExpression)}\n\t\t.subs({${substitutions}})\n)`
         // } else if (evaluation == '\\expandtrig') {
-        //   pythonExpression = `sympy.expand_trig(\n\t${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n)`
+        //   pythonExpression = `sympy.expand_trig(\n\t${expressionToPython(innerExpression)}\n\t\t.subs({${substitutions}})\n)`
       } else if (evaluation.includes('rewrite')) {
         // ex: rewrite(\\sin)
         let using = ''
@@ -432,13 +431,13 @@ export function usePyodide() {
         } else {
           // else: slap a 'sympy.' in front of it and attempt!?
           if (evaluationArgument) {
-            using = evaluationArgument.replace('\\', '')
+            using = 'sympy.' + evaluationArgument.replace('\\', '')
           }
         }
 
-        pythonExpression = `${expressionToPython(command.expression[1])}\n\t\t.subs({${substitutions}})\n\t\t.rewrite(${using})`
+        pythonExpression = `${expressionToPython(innerExpression)}\n\t\t.subs({${substitutions}})\n\t\t.rewrite(${using})`
       } else {
-        pythonExpression = `${expressionToPython(command.expression[1])}\n\t.subs({${substitutions}})\n\t.evalf()`
+        pythonExpression = `${expressionToPython(innerExpression)}\n\t.subs({${substitutions}})\n\t.evalf()`
       }
     } else {
       commands.delete(command.id)

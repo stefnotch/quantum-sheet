@@ -16,7 +16,7 @@ from sympy.utilities import default_sort_key
 _known_functions_mathjson = {
     'acos': 'Arccos',
     'acosh': 'Arcosh',
-    'asin': 'Arsin',
+    'asin': 'Arcsin',
     'asinh': 'Arsinh',
     'atan': 'Arctan',
     'atan2': 'Arctan2',
