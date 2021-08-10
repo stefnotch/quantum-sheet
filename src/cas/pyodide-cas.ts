@@ -185,6 +185,7 @@ function usePythonConverter() {
     } else if (typeof expression === 'string') {
       const constantInPython = MathJsonToSympy.get(expression)
       // TODO: Handle Units here?
+      // TODO: Differentiate from variables and constants, ex: var i and imaginary i.
       if (constantInPython) {
         // Handle Constants (pi, e, etc.)
         return constantInPython([])
