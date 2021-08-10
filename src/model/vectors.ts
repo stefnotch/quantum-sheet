@@ -25,6 +25,10 @@ export class Vector2 {
     return new Vector2(this.x + other.x, this.y + other.y)
   }
 
+  subtract(other: Vector2) {
+    return new Vector2(this.x - other.x, this.y - other.y)
+  }
+
   /**
    * For sorting in an array
    */

@@ -56,3 +56,38 @@ export function getVariableNames(expression: Expression) {
   }
   return variables
 }
+
+export function useEncoder() {
+  const textEncoder = new TextEncoder()
+  const textDecoder = new TextDecoder()
+
+  // Using 16 ASCII letters to encode utf-8. So, 2 chars per byte.
+  const charOffset = 'A'.charCodeAt(0)
+  function encodeName(name: string) {
+    const data = textEncoder.encode(name)
+    let output = ''
+    for (let i = 0; i < data.length; i++) {
+      const highBits = (data[i] >> 4) & 0x0f
+      const lowBits = data[i] & 0x0f
+      output += String.fromCharCode(highBits + charOffset) + String.fromCharCode(lowBits + charOffset)
+    }
+
+    return output
+  }
+
+  function decodeName(name: string) {
+    name = name.slice(1)
+    const output = new Uint8Array(name.length / 2)
+    for (let i = 0; i < name.length; i += 2) {
+      const highBits = name.charCodeAt(i) - charOffset
+      const lowBits = name.charCodeAt(i + 1) - charOffset
+      output[i / 2] = (highBits << 4) | lowBits
+    }
+    return textDecoder.decode(output)
+  }
+
+  return {
+    encodeName,
+    decodeName,
+  }
+}

@@ -28,7 +28,7 @@ export class ExpressionElement extends QuantumElement {
       if (value) {
         // TODO: Re-create getters and variables when the scope changes
         this.clearVariableValues()
-        this.clearPlaceholders()
+        this.clearResult()
         this.evaluateLater()
       } else {
         this.setGetters(new Set<string>())
@@ -79,7 +79,7 @@ export class ExpressionElement extends QuantumElement {
         const newGetter = scope.addGetter(variableName, this.blockPosition)
         watch(newGetter.data, (value) => {
           this.clearVariableValues()
-          this.clearPlaceholders()
+          this.clearResult()
           if (value !== undefined && value !== null) this.evaluateLater()
         })
         this.getters.set(variableName, newGetter)
@@ -112,9 +112,9 @@ export class ExpressionElement extends QuantumElement {
     this.variables.forEach((v) => v.setData(null))
   }
 
-  clearPlaceholders() {
+  clearResult() {
     // TODO: Reduce flashing (make this slightly delayed or something)
-    function clearPlaceholders(expression: Expression) {
+    function clearResult(expression: Expression) {
       if (Array.isArray(expression)) {
         const functionName = expression[0]
         const output = expression.slice()
@@ -135,7 +135,7 @@ export class ExpressionElement extends QuantumElement {
       }
     }
 
-    this.setExpression(clearPlaceholders(this.expression.value))
+    this.setExpression(clearResult(this.expression.value))
   }
 
   evaluateLater() {
