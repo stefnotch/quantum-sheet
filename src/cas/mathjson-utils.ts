@@ -28,6 +28,20 @@ export type ExpressionValue<T extends number = number> =
       }
     }
 
+export function handleExpressionValue<T extends number = number>(
+  expr: Expression<T>,
+  handler: {
+    number?: (value: number | bigint | string) => void
+    symbol?: (value: string) => void
+    string?: (value: string) => void
+    function?: (value: { head: string | Expression<T>[]; args: Expression<T>[] }) => void
+    dictionary?: (value: { [key: string]: Expression<T> }) => void
+  }
+) {
+  const value = getExpressionValue(expr)
+  handler[value.type]?.(value.value as any)
+}
+
 export function getExpressionValue<T extends number = number>(expr: Expression<T>): ExpressionValue<T> {
   // See https://cortexjs.io/math-json/
   switch (typeof expr) {

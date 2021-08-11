@@ -1,5 +1,5 @@
 import { Expression } from '@cortex-js/compute-engine'
-import { getExpressionValue } from './mathjson-utils'
+import { getExpressionValue, handleExpressionValue } from './mathjson-utils'
 
 // TODO: Ask mathlive creator about how to best do stuff like this
 // TODO: Use stuff from here https://github.com/cortex-js/compute-engine/blob/main/src/common/utils.ts
@@ -12,32 +12,30 @@ export function getGetterNames(expression: Expression) {
   const getters = new Set<string>()
 
   function extractGetters(expression: Expression) {
-    const value = getExpressionValue(expression)
-    if (value.type === 'symbol') {
-      getters.add(value.value)
-    } else if (value.type === 'function') {
-      value.value.args.forEach((v) => extractGetters(v))
-    }
+    handleExpressionValue(expression, {
+      symbol: (v) => getters.add(v),
+      function: (v) => v.args.forEach((u) => extractGetters(u)),
+    })
   }
 
-  const value = getExpressionValue(expression)
-  if (value.type === 'symbol') {
-    getters.add(value.value)
-  } else if (value.type === 'function') {
-    // TODO: Don't hardcode "Assign", "Equal", and "Evaluate"
-    if (value.value.head === 'Assign') {
-      // Only extract getters from the non-variable part
-      extractGetters(value.value.args[2])
-    } else if (value.value.head === 'Equal') {
-      // Numerical evaluation
-      extractGetters(value.value.args[1])
-    } else if (value.value.head === 'Evaluate') {
-      // Symbolical evaluation
-      extractGetters(value.value.args[1])
-    } else {
-      extractGetters(value.value.args)
-    }
-  }
+  handleExpressionValue(expression, {
+    symbol: (v) => getters.add(v),
+    function: (v) => {
+      // TODO: Don't hardcode "Assign", "Equal", and "Evaluate"
+      if (v.head === 'Assign') {
+        // Only extract getters from the non-variable part
+        extractGetters(v.args[2])
+      } else if (v.head === 'Equal') {
+        // Numerical evaluation
+        extractGetters(v.args[1])
+      } else if (v.head === 'Evaluate') {
+        // Symbolical evaluation
+        extractGetters(v.args[1])
+      } else {
+        extractGetters(v.args)
+      }
+    },
+  })
 
   return getters
 }
