@@ -3,7 +3,7 @@ import { Vector2 } from '../vectors'
 import type { ScopeElement } from './elements/scope-element'
 import { v4 as uuidv4, validate as uuidValidate } from 'uuid'
 
-type JsonType = null | boolean | number | string | JsonType[] | { [prop: string]: JsonType }
+export type JsonType = null | boolean | number | string | JsonType[] | { [prop: string]: JsonType }
 
 export type QuantumElementType<
   T extends QuantumElement = QuantumElement,
