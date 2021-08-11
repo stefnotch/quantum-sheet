@@ -1,6 +1,6 @@
 // Not recursive! The expression tree on the other hand will be recursive.
 
-import { QuantumElementCreationOptions, QuantumElementType, QuantumElement } from './document-element'
+import { QuantumElementCreationOptions, QuantumElementType, QuantumElement, JsonType } from './document-element'
 import { Vector2 } from '../vectors'
 import { readonly, shallowReactive, shallowRef, ref, watch } from 'vue'
 import arrayUtils from '../array-utils'
@@ -8,9 +8,7 @@ import { ScopeElement, ScopeElementType } from './elements/scope-element'
 import { ExpressionElement, ExpressionElementType } from './elements/expression-element'
 import { watchImmediate } from '../reactivity-utils'
 
-type JsonType = undefined | null | boolean | number | string | JsonType[] | { [prop: string]: JsonType }
-
-type SerializedDataType = {
+type SerializedDocument = {
   elements: JsonType[]
 }
 
@@ -286,7 +284,7 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
   }
 
   function serializeDocument() {
-    let serializedData: SerializedDataType = {
+    let serializedData: SerializedDocument = {
       elements: [],
     }
     elementList.elements.forEach((element: QuantumElement) => {
@@ -296,7 +294,7 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
     return serializedData
   }
 
-  function deserializeDocument(serializedData: SerializedDataType) {
+  function deserializeDocument(serializedData: SerializedDocument) {
     // Expression-Elements
     serializedData?.elements?.forEach((elementData: JsonType) => {
       let elementType = elementTypes[(elementData as any).typeName]

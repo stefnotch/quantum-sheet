@@ -64,7 +64,7 @@ import ExpressionElement, { ExpressionElementType } from './elements/ExpressionE
 import ScopeElement, { ScopeElementType } from './elements/ScopeStartElement.vue'
 import { useFocusedElementCommands, ElementCommands } from './elements/element-commands'
 import { Vector2 } from '../model/vectors'
-import { QuantumElement } from '../model/document/document-element'
+import { QuantumElement, JsonType } from '../model/document/document-element'
 import { useUI } from './ui'
 import interact from 'interactjs'
 
@@ -195,8 +195,6 @@ function useDocumentPreferences() {
     saveToFile,
   }
 }
-
-type JsonType = undefined | null | boolean | number | string | JsonType[] | { [prop: string]: JsonType }
 
 function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: UseQuantumDocument<T>) {
   // TODO: Investigate
