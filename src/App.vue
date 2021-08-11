@@ -18,7 +18,7 @@ import QuantumDocument from './ui/QuantumDocument.vue'
 import Header from './ui/Header.vue'
 import Footer from './ui/Footer.vue'
 import LandingPage from './ui/LandingPage.vue'
-import { useDocumentManager } from './model/document-manager'
+import { useDocumentManager } from './model/document/document-manager'
 
 export default defineComponent({
   name: 'App',

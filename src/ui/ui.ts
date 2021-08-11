@@ -1,5 +1,5 @@
 import { readonly, shallowReactive, shallowRef, ref, watch, Ref, inject } from 'vue'
-import { useDocumentManager } from '../model/document-manager'
+import { useDocumentManager } from '../model/document/document-manager'
 
 const docManager = useDocumentManager()
 

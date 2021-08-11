@@ -96,7 +96,7 @@ import { defineComponent, ref, inject, reactive } from 'vue'
 import { InboxOutlined, DownloadOutlined } from '@ant-design/icons-vue'
 
 import { useUI } from './ui'
-import { useDocumentManager } from '../model/document-manager'
+import { useDocumentManager } from '../model/document/document-manager'
 
 export default defineComponent({
   components: {

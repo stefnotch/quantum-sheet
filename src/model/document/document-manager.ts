@@ -1,6 +1,7 @@
 import { readonly, shallowReactive, shallowRef, ref, Ref, watch, unref, toRefs } from 'vue'
 
 const quantumDocument = ref()
+const hasUnsavedChanges = ref(false)
 
 export function useDocumentManager() {
   function registerQuantumDocumentEl(newQuantumDocument: Ref<HTMLElement>) {
