@@ -1,4 +1,5 @@
 import { Expression } from '@cortex-js/compute-engine'
+import { getExpressionValue } from './mathjson-utils'
 
 // TODO: Ask mathlive creator about how to best do stuff like this
 // TODO: Use stuff from here https://github.com/cortex-js/compute-engine/blob/main/src/common/utils.ts
@@ -10,30 +11,31 @@ import { Expression } from '@cortex-js/compute-engine'
 export function getGetterNames(expression: Expression) {
   const getters = new Set<string>()
 
-  if (!Array.isArray(expression)) {
-    if (typeof expression == 'string') {
-      getters.add(expression)
+  function extractGetters(expression: Expression) {
+    const value = getExpressionValue(expression)
+    if (value.type === 'symbol') {
+      getters.add(value.value)
+    } else if (value.type === 'function') {
+      value.value.args.forEach((v) => extractGetters(v))
     }
-  } else {
-    if (expression[0] == 'Assign') {
-      extractGetters(expression[2])
-    } else if (expression[0] == 'Equal') {
-      extractGetters(expression[1])
-    } else if (expression[0] == 'Evaluate') {
-      extractGetters(expression[1])
-    } else {
-      extractGetters(expression)
-    }
+  }
 
-    function extractGetters(expression: Expression) {
-      if (Array.isArray(expression)) {
-        const functionName = expression[0]
-        for (let i = 1; i < expression.length; i++) {
-          extractGetters(expression[i])
-        }
-      } else if (typeof expression === 'string') {
-        getters.add(expression)
-      }
+  const value = getExpressionValue(expression)
+  if (value.type === 'symbol') {
+    getters.add(value.value)
+  } else if (value.type === 'function') {
+    // TODO: Don't hardcode "Assign", "Equal", and "Evaluate"
+    if (value.value.head === 'Assign') {
+      // Only extract getters from the non-variable part
+      extractGetters(value.value.args[2])
+    } else if (value.value.head === 'Equal') {
+      // Numerical evaluation
+      extractGetters(value.value.args[1])
+    } else if (value.value.head === 'Evaluate') {
+      // Symbolical evaluation
+      extractGetters(value.value.args[1])
+    } else {
+      extractGetters(value.value.args)
     }
   }
 

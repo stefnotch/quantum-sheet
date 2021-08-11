@@ -28,7 +28,7 @@ export type ExpressionValue<T extends number = number> =
       }
     }
 
-export function getValue<T extends number = number>(expr: Expression<T>): ExpressionValue<T> {
+export function getExpressionValue<T extends number = number>(expr: Expression<T>): ExpressionValue<T> {
   // See https://cortexjs.io/math-json/
   switch (typeof expr) {
     case 'bigint': {
