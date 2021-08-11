@@ -198,39 +198,57 @@ function useDocumentPreferences() {
 
 type JsonType = undefined | null | boolean | number | string | JsonType[] | { [prop: string]: JsonType }
 
-function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: UseQuantumDocument<T>) {
+function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: UseQuantumDocument<T>, documentElement: Ref<HTMLElement>) {
   // TODO: Investigate
   // I got stuff to break by adding a few blocks, moving them around and stuff
   // Tell interactjs to make every .quantum-block interactive. This includes the ones that will get added in the future
-  interact('.quantum-block')
-    .draggable({
-      ignoreFrom: '.quantum-element',
-      modifiers: [
-        interact.modifiers.snap({
-          targets: [interact.snappers.grid({ x: quantumDocument.gridCellSize.x, y: quantumDocument.gridCellSize.y })],
-          range: Infinity,
-          relativePoints: [{ x: 0, y: 0 }],
-        }),
-        interact.modifiers.restrict({
-          restriction: '.quantum-document',
-          elementRect: { top: 0, left: 0, bottom: 1, right: 1 },
-          endOnly: true,
-        }),
-      ],
-      inertia: false,
-    })
-    .on('down', (event) => {
-      event.target?.classList.add('dragging')
-    })
-    .on('dragmove', (event) => {
-      const quantumElement = quantumDocument.getElementById(event.target.id)
-      let delta = new Vector2(event.dx / quantumDocument.gridCellSize.x, event.dy / quantumDocument.gridCellSize.y)
-      let newPos = quantumElement?.position.value.add(delta)
-      if (newPos) quantumElement?.setPosition(newPos)
-    })
-    .on('dragend', (event) => {
-      event.target?.classList.remove('dragging')
-    })
+  var cumulativeOffset = function (element) {
+    var top = 0,
+      left = 0
+    do {
+      top += element.offsetTop || 0
+      left += element.offsetLeft || 0
+      element = element.offsetParent
+    } while (element)
+
+    return {
+      top: top,
+      left: left,
+    }
+  }
+  nextTick(function () {
+    console.log('docel', documentElement, cumulativeOffset(documentElement.value).left)
+    interact('.quantum-block')
+      .draggable({
+        ignoreFrom: '.quantum-element',
+        modifiers: [
+          interact.modifiers.snap({
+            targets: [interact.snappers.grid({ x: quantumDocument.gridCellSize.x, y: quantumDocument.gridCellSize.y })],
+            range: Infinity,
+            relativePoints: [{ x: 0, y: 0 }],
+            offset: 'parent',
+          }),
+          interact.modifiers.restrict({
+            restriction: '.quantum-document',
+            elementRect: { top: 0, left: 0, bottom: 1, right: 1 },
+            endOnly: true,
+          }),
+        ],
+        inertia: false,
+      })
+      .on('down', (event) => {
+        event.target?.classList.add('dragging')
+      })
+      .on('dragmove', (event) => {
+        const quantumElement = quantumDocument.getElementById(event.target.id)
+        let delta = new Vector2(event.dx / quantumDocument.gridCellSize.x, event.dy / quantumDocument.gridCellSize.y)
+        let newPos = quantumElement?.position.value.add(delta)
+        if (newPos) quantumElement?.setPosition(newPos)
+      })
+      .on('dragend', (event) => {
+        event.target?.classList.remove('dragging')
+      })
+  })
 }
 
 /**
@@ -261,7 +279,7 @@ export default defineComponent({
     const focusedElementCommands = useFocusedElementCommands()
     const grid = useGrid(document, documentInputElement, focusedElementCommands.commands)
     const clipboard = useClipboard(document)
-    const elementDrag = useElementDrag(document)
+    const elementDrag = useElementDrag(document, documentElement)
 
     function log(ev: any) {
       console.log(ev)
