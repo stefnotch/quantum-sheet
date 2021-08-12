@@ -24,19 +24,20 @@ export function getGetterNames(expression: Expression) {
       // TODO: Don't hardcode "Assign", "Equal", and "Evaluate"
       if (v.head === 'Assign') {
         // Only extract getters from the non-variable part
-        extractGetters(v.args[2])
+        extractGetters(v.args[1])
       } else if (v.head === 'Equal') {
         // Numerical evaluation
-        extractGetters(v.args[1])
+        extractGetters(v.args[0])
       } else if (v.head === 'Evaluate') {
         // Symbolical evaluation
-        extractGetters(v.args[1])
+        extractGetters(v.args[0])
       } else {
         extractGetters(v.args)
       }
     },
   })
 
+  console.error(expression, [...getters.entries()])
   return getters
 }
 

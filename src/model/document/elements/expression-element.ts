@@ -14,7 +14,7 @@ export class ExpressionElement extends QuantumElement {
   typeName: typeof ElementType = ElementType
 
   // TODO: Make the getters and expression readonly to the outside
-  readonly expression = shallowRef<Expression>([])
+  readonly expression = shallowRef<Expression>('')
   readonly getters: Map<string, UseScopedGetter> = shallowReactive(new Map<string, UseScopedGetter>())
   readonly variables: Map<string, UseScopedVariable> = shallowReactive(new Map<string, UseScopedVariable>())
 
@@ -34,6 +34,7 @@ export class ExpressionElement extends QuantumElement {
 
       // If we have a new scope, recompute
       if (value) {
+        if (!this.hasExpression) return
         this.updateGetters(getGetterNames(this.expression.value))
         this.updateVariables(getVariableNames(this.expression.value))
 
@@ -41,6 +42,10 @@ export class ExpressionElement extends QuantumElement {
         this.evaluateLater()
       }
     })
+  }
+
+  get hasExpression() {
+    return this.expression.value !== '' && this.expression.value !== null && this.expression.value !== undefined
   }
 
   /**
@@ -52,6 +57,7 @@ export class ExpressionElement extends QuantumElement {
     this.expression.value = value
 
     if (!this.scope.value) return
+    if (!this.hasExpression) return
 
     this.updateGetters(getGetterNames(this.expression.value))
     this.updateVariables(getVariableNames(this.expression.value))
@@ -60,7 +66,7 @@ export class ExpressionElement extends QuantumElement {
     this.evaluateLater()
   }
 
-  clearResultAndVariables() {
+  private clearResultAndVariables() {
     // Cascading invalidation, only the topmost ones will be valid commands
     this.variables.forEach((v) => v.setData(null))
     this.expression.value = clearResult(this.expression.value)
@@ -114,10 +120,12 @@ export class ExpressionElement extends QuantumElement {
     })
   }
 
-  evaluateLater() {
+  private evaluateLater() {
     if (this.runningCasExpression.value) {
       cas.cancelCommand(this.runningCasExpression.value)
     }
+
+    if (!this.hasExpression) return
 
     // Check if all getters that should have a value actually do have a value
     const gettersData = new Map<string, any>()
@@ -225,6 +233,29 @@ export class ExpressionElement extends QuantumElement {
   }
 }
 
+function clearResult(expression: Expression) {
+  // TODO: Use patterns and replacements https://cortexjs.io/compute-engine/guides/patterns-and-rules/
+
+  if (Array.isArray(expression)) {
+    const functionName = expression[0]
+    const output = expression.slice()
+    if (functionName == 'Equal') {
+      output[1] = clearResult(expression[1])
+      output[2] = ['\\mathinner', ['Missing', '']]
+    } else if (functionName == 'Evaluate') {
+      output[1] = clearResult(expression[1])
+      output[3] = ['\\mathinner', ['Missing', '']]
+    } else {
+      for (let i = 1; i < expression.length; i++) {
+        output[i] = clearResult(expression[i])
+      }
+    }
+    return output
+  } else {
+    return expression
+  }
+}
+
 export const ExpressionElementType: QuantumElementType<ExpressionElement, typeof ExpressionElement, typeof ElementType> = {
   typeName: ElementType,
   elementType: ExpressionElement,
@@ -255,27 +286,4 @@ export const ExpressionElementType: QuantumElementType<ExpressionElement, typeof
       },
     }
   },
-}
-
-function clearResult(expression: Expression) {
-  // TODO: Use patterns and replacements https://cortexjs.io/compute-engine/guides/patterns-and-rules/
-
-  if (Array.isArray(expression)) {
-    const functionName = expression[0]
-    const output = expression.slice()
-    if (functionName == 'Equal') {
-      output[1] = clearResult(expression[1])
-      output[2] = ['\\mathinner', ['Missing', '']]
-    } else if (functionName == 'Evaluate') {
-      output[1] = clearResult(expression[1])
-      output[3] = ['\\mathinner', ['Missing', '']]
-    } else {
-      for (let i = 1; i < expression.length; i++) {
-        output[i] = clearResult(expression[i])
-      }
-    }
-    return output
-  } else {
-    return expression
-  }
 }
