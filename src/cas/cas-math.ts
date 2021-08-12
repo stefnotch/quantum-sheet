@@ -37,7 +37,6 @@ export function getGetterNames(expression: Expression) {
     },
   })
 
-  console.error(expression, [...getters.entries()])
   return getters
 }
 

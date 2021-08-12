@@ -7,9 +7,6 @@ export type WorkerMessage =
   | {
       type: 'python'
       id: string
-      data: {
-        [key: string]: any
-      }
       command: any
     }
   | {
@@ -453,10 +450,9 @@ export function usePyodide() {
     sendCommand({
       type: 'expression',
       id: command.id,
-      data: {},
       symbols: symbolNames,
       command: pythonExpression,
-    } as WorkerMessage)
+    })
   }
 
   function cancelCommand(command: CasCommand) {
