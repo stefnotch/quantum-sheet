@@ -2,13 +2,15 @@
 
 import { QuantumElementCreationOptions, QuantumElementType, QuantumElement, JsonType } from './document-element'
 import { Vector2 } from '../vectors'
-import { readonly, shallowReactive, shallowRef, ref, watch } from 'vue'
+import { readonly, shallowReactive, shallowRef, ref, watch, reactive } from 'vue'
 import arrayUtils from '../array-utils'
 import { ScopeElement, ScopeElementType } from './elements/scope-element'
 import { ExpressionElement, ExpressionElementType } from './elements/expression-element'
 import { watchImmediate } from '../reactivity-utils'
+import { deserializeOptions, DocumentOptions, serializeOptions } from './document-options'
 
 type SerializedDocument = {
+  options: JsonType
   elements: JsonType[]
 }
 
@@ -23,9 +25,9 @@ type GetQuantumElement<Type> = Type extends QuantumElementType<infer X> ? X : ne
  */
 export interface UseQuantumDocument<TElements extends QuantumDocumentElementTypes<readonly QuantumElementType[]>> {
   /**
-   * How large the grid cells are, in pixels
+   * Document options
    */
-  readonly gridCellSize: Readonly<Vector2>
+  readonly options: DocumentOptions
 
   /**
    * Which elements the document contains
@@ -81,9 +83,13 @@ export interface UseQuantumDocument<TElements extends QuantumDocumentElementType
   setFocus(element?: QuantumElement): void
 
   /**
-   * Serialize & Deserialize a document
+   * Serialize a document
    */
   serializeDocument(): JsonType
+
+  /**
+   * Deserialize a document's elements
+   */
   deserializeDocument(serializedData: JsonType): void
 }
 
@@ -223,7 +229,9 @@ function useElementFocus() {
 export function useDocument<TElements extends QuantumDocumentElementTypes<readonly QuantumElementType[]>>(
   elementTypes: TElements
 ): UseQuantumDocument<TElements> {
-  const gridCellSize = readonly(new Vector2(20, 20))
+  const options = reactive<DocumentOptions>({
+    gridCellSize: readonly(new Vector2(20, 20)),
+  })
 
   const elementRemoveCallbacks = new Map<string, () => void>()
   const elementList = useElementList()
@@ -285,6 +293,7 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
 
   function serializeDocument() {
     let serializedData: SerializedDocument = {
+      options: serializeOptions(options),
       elements: [],
     }
     elementList.elements.forEach((element: QuantumElement) => {
@@ -295,7 +304,10 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
   }
 
   function deserializeDocument(serializedData: SerializedDocument) {
-    // Expression-Elements
+    if (serializedData?.options) {
+      // TODO:
+      // options = reactive(deserializeOptions(serializedData?.options));
+    }
     serializedData?.elements?.forEach((elementData: JsonType) => {
       let elementType = elementTypes[(elementData as any).typeName]
       if (!elementType) {
@@ -308,7 +320,7 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
   }
 
   return {
-    gridCellSize,
+    options,
     elementTypes: elementTypes,
     elements: elementList.elements,
     createElement,

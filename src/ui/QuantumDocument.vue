@@ -5,8 +5,8 @@
     ref="documentElement"
     tabindex="-1"
     :style="{
-      '--grid-cell-size-x': `${document.gridCellSize.x}px`,
-      '--grid-cell-size-y': `${document.gridCellSize.y}px`,
+      '--grid-cell-size-x': `${document.options.gridCellSize.x}px`,
+      '--grid-cell-size-y': `${document.options.gridCellSize.y}px`,
     }"
     @pointerdown="grid.pointerDown($event)"
     @contextmenu="
@@ -90,15 +90,18 @@ function useGrid<T extends QuantumDocumentElementTypes>(
   function gridToStyle(gridPosition: Vector2 | Ref<Vector2>) {
     let pos = unref(gridPosition)
     return {
-      left: pos.x * document.gridCellSize.x + 'px',
-      top: pos.y * document.gridCellSize.y + 'px',
+      left: pos.x * document.options.gridCellSize.x + 'px',
+      top: pos.y * document.options.gridCellSize.y + 'px',
     }
   }
 
   function pointerDown(ev: PointerEvent) {
     // console.log('pointerdown', ev)
     if (ev.target == ev.currentTarget) {
-      crosshairPosition.value = new Vector2(Math.round(ev.offsetX / document.gridCellSize.x), Math.round(ev.offsetY / document.gridCellSize.y))
+      crosshairPosition.value = new Vector2(
+        Math.round(ev.offsetX / document.options.gridCellSize.x),
+        Math.round(ev.offsetY / document.options.gridCellSize.y)
+      )
       if (ev.button == 2) {
         // context menu
       }
@@ -205,7 +208,7 @@ function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: 
       ignoreFrom: '.quantum-element',
       modifiers: [
         interact.modifiers.snap({
-          targets: [interact.snappers.grid({ x: quantumDocument.gridCellSize.x, y: quantumDocument.gridCellSize.y })],
+          targets: [interact.snappers.grid({ x: quantumDocument.options.gridCellSize.x, y: quantumDocument.options.gridCellSize.y })],
           range: Infinity,
           relativePoints: [{ x: 0, y: 0 }],
           offset: 'parent',
@@ -223,7 +226,7 @@ function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: 
     })
     .on('dragmove', (event) => {
       const quantumElement = quantumDocument.getElementById(event.target.id)
-      let delta = new Vector2(event.dx / quantumDocument.gridCellSize.x, event.dy / quantumDocument.gridCellSize.y)
+      let delta = new Vector2(event.dx / quantumDocument.options.gridCellSize.x, event.dy / quantumDocument.options.gridCellSize.y)
       let newPos = quantumElement?.position.value.add(delta)
       if (newPos) quantumElement?.setPosition(newPos)
     })
@@ -260,7 +263,7 @@ export default defineComponent({
     const focusedElementCommands = useFocusedElementCommands()
     const grid = useGrid(document, documentInputElement, focusedElementCommands.commands)
     const clipboard = useClipboard(document)
-    const elementDrag = useElementDrag(document, documentElement)
+    const elementDrag = useElementDrag(document)
 
     function log(ev: any) {
       console.log(ev)
