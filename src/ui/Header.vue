@@ -80,9 +80,9 @@
     >
       Paper Style:
       <a-select
-        v-model:value="docManager.currentDocument.value.docPrefs.paperStyle.value"
+        v-model:value="docManager.currentDocument.value.options.paperStyle"
         style="width: 120px"
-        @change="(value) => (docManager.currentDocument.value.docPrefs.paperStyle.value = value)"
+        @change="(value) => (docManager.currentDocument.value.options.paperStyle = value)"
       >
         <a-select-option value="standard">Standard</a-select-option>
         <a-select-option value="engineer">Engineering</a-select-option>

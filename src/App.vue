@@ -3,7 +3,7 @@
     <Header />
     <a-layout class="content">
       <a-layout-content class="drawingtable center">
-        <quantum-document ref="quantumDocument"></quantum-document>
+        <quantum-document @quantum-document="(v) => docManager.registerQuantumDocument(v)"></quantum-document>
         <!-- <LandingPage /> -->
       </a-layout-content>
     </a-layout>
@@ -19,6 +19,7 @@ import Header from './ui/Header.vue'
 import Footer from './ui/Footer.vue'
 import LandingPage from './ui/LandingPage.vue'
 import { useDocumentManager } from './model/document/document-manager'
+import { UseQuantumDocument } from './model/document/document'
 
 export default defineComponent({
   name: 'App',
@@ -33,15 +34,9 @@ export default defineComponent({
       console.log(`${pkg.name} - ${pkg.version}`)
     }
 
-    const quantumDocument = ref<HTMLElement>()
     const docManager = useDocumentManager()
 
-    onMounted(() => {
-      // the DOM element will be assigned to the ref after initial render
-      docManager.registerQuantumDocumentEl(quantumDocument as Ref<HTMLElement>)
-    })
-
-    return { quantumDocument }
+    return { docManager }
   },
 })
 </script>

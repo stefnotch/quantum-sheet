@@ -6,6 +6,15 @@ export interface DocumentOptions {
    * How large the grid cells are, in pixels
    */
   gridCellSize: Readonly<Vector2>
+
+  /**
+   * How the background should look
+   */
+  paperStyle: 'standard' | 'engineering'
+
+  // TODO: Default Result Notation Style - Decimal (# Digits), Scientific, Fraction, other?
+  // TODO: Result Text Style? - Text, LaTeX
+  // TODO: Default Units
 }
 
 export function serializeOptions(options: DocumentOptions): JsonType {
@@ -76,6 +85,7 @@ function serializeToJson(value: any, debugContext?: string): JsonType | undefine
             type: 'object',
             value: obj,
           }
+          // TODO: Refactor this a bit (e.g. pass custom serialization rules object in here)
         } else if (value instanceof Vector2) {
           return {
             type: 'class',
@@ -149,8 +159,3 @@ function deserializeFromJson(value: any): any {
 export function deserializeOptions(serialized: JsonType): DocumentOptions {
   return deserializeFromJson(serialized) as DocumentOptions
 }
-
-// @ts-ignore
-window['ser'] = serializeToJson
-// @ts-ignore
-window['des'] = deserializeOptions

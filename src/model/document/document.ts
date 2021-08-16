@@ -231,6 +231,7 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
 ): UseQuantumDocument<TElements> {
   const options = reactive<DocumentOptions>({
     gridCellSize: readonly(new Vector2(20, 20)),
+    paperStyle: 'standard',
   })
 
   const elementRemoveCallbacks = new Map<string, () => void>()
@@ -305,8 +306,9 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
 
   function deserializeDocument(serializedData: SerializedDocument) {
     if (serializedData?.options) {
-      // TODO:
-      // options = reactive(deserializeOptions(serializedData?.options));
+      const deserializedOptions = deserializeOptions(serializedData?.options)
+      options.gridCellSize = deserializedOptions.gridCellSize ?? options.gridCellSize
+      options.paperStyle = deserializedOptions.paperStyle ?? options.paperStyle
     }
     serializedData?.elements?.forEach((elementData: JsonType) => {
       let elementType = elementTypes[(elementData as any).typeName]

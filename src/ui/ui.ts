@@ -28,7 +28,7 @@ export function useUI() {
   }
   // TODO: Close Confirm
   function openFileSaveModal() {
-    console.log('Saving: ', docManager.quantumDocument.value)
+    console.log('Saving: ', docManager.currentDocument.value)
     serializedDocument.value = docManager.saveDocument()
     fileSaveModal.value = true
   }

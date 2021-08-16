@@ -1,7 +1,7 @@
 <template>
   <div
     class="quantum-document"
-    :class="'theme-paper-' + docPrefs.paperStyle.value"
+    :class="'theme-paper-' + document.options.paperStyle"
     ref="documentElement"
     tabindex="-1"
     :style="{
@@ -177,28 +177,6 @@ function useGrid<T extends QuantumDocumentElementTypes>(
   }
 }
 
-function useDocumentPreferences() {
-  type PaperStyleType = Ref<'standard' | 'engineering'>
-  const paperStyle: PaperStyleType = ref('standard')
-  // TODO: Default Result Notation Style - Decimal (# Digits), Scientific, Fraction, other?
-  // TODO: Result Text Style? - Text, LaTeX
-  // TODO: Default Units
-
-  function loadFromFile(documentFile: any) {
-    paperStyle.value = documentFile?.preferences.paperStyle
-  }
-  function saveToFile(documentFile: any) {
-    // documentFile.preferences.paperStyle = paperStyle.value
-    Object.assign(documentFile, { preferences: { paperStyle: paperStyle.value } })
-    return documentFile
-  }
-  return {
-    paperStyle,
-    loadFromFile,
-    saveToFile,
-  }
-}
-
 function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: UseQuantumDocument<T>) {
   // TODO: Investigate
   // I got stuff to break by adding a few blocks, moving them around and stuff
@@ -236,7 +214,7 @@ function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: 
 }
 
 /**
- * To say with document-element type corresponds to which Vue.js component
+ * To say which document-element type corresponds to which Vue.js component
  */
 type TypeComponents<T extends UseQuantumDocument<any>> = T extends UseQuantumDocument<infer U> ? { [key in keyof U]: any } : any
 
@@ -245,9 +223,10 @@ export default defineComponent({
     ExpressionElement,
     ScopeElement,
   },
-  setup() {
-    const docPrefs = useDocumentPreferences()
-
+  emits: {
+    'quantum-document': (value: UseQuantumDocument<any>) => true,
+  },
+  setup(props, context) {
     const document = useDocument({ [ExpressionElementType.typeName]: ExpressionElementType, [ScopeElementType.typeName]: ScopeElementType })
 
     // let z = new document.elementTypes['scope-element'].elementType({})
@@ -275,7 +254,6 @@ export default defineComponent({
 
     function serialize() {
       let serializedData = document.serializeDocument()
-      serializedData = docPrefs.saveToFile(serializedData)
       // return JSON.stringify(serializedData)
       return serializedData
     }
@@ -283,9 +261,10 @@ export default defineComponent({
     function deserialize(documentObject: JsonType) {
       // convert from string here : JSON.parse()
       // let documentObject = JSON.parse(serializedDocument)
-      docPrefs.loadFromFile(documentObject)
       document.deserializeDocument(documentObject)
     }
+
+    context.emit('quantum-document', document)
 
     return {
       document,
@@ -300,8 +279,6 @@ export default defineComponent({
 
       serialize,
       deserialize,
-
-      docPrefs,
     }
   },
 })
