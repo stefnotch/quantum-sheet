@@ -11,6 +11,7 @@ export function useDocumentManager() {
   }
   function loadDocument(serializedData: string) {
     let documentObject = JSON.parse(serializedData)
+    // TODO: Reset document/create new document
     quantumDocument.value?.deserializeDocument(documentObject)
   }
   function saveDocument() {

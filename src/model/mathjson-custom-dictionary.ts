@@ -51,7 +51,6 @@ dictionary.push({
   associativity: 'left',
   trigger: { infix: '\\xrightarrow' },
   serialize: <SerializerFunction<number>>function (emitter, expr) {
-    console.log(expr)
     if (!Array.isArray(expr)) throw new Error('Expect array expression')
 
     return (
@@ -103,7 +102,6 @@ dictionary.push({
   associativity: 'left',
   trigger: { symbol: '\\text' },
   serialize: function (emitter, expr) {
-    console.warn(expr)
     if (!Array.isArray(expr)) throw new Error('Expect array expression')
     return ` \\text{${expr[1].str}} `
   },
