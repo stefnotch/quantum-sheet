@@ -151,15 +151,15 @@ function useGrid<T extends QuantumDocumentElementTypes>(
   }
 
   function moveCrosshairOut(element: QuantumElement, direction: Vector2) {
+    console.log(direction)
     let pos = element.position.value.add(new Vector2(direction.x > 0 ? element.size.value.x : 0, direction.y > 0 ? element.size.value.y : 0))
-
     crosshairPosition.value = pos.add(direction)
     focusUnderCrosshair()
   }
 
   function focusUnderCrosshair() {
     // Focus crosshair
-    inputElement.value?.focus()
+    inputElement.value?.focus({ preventScroll: true })
 
     // Focus element under crosshair
     let blockToFocus = document.getElementAt(crosshairPosition.value)
