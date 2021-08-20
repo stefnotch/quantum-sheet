@@ -4,8 +4,9 @@ import { QuantumElementCreationOptions, QuantumElementType, QuantumElement, Json
 import { Vector2 } from '../vectors'
 import { readonly, shallowReactive, shallowRef, ref, watch, reactive } from 'vue'
 import arrayUtils from '../array-utils'
-import { ScopeElement, ScopeElementType } from './elements/scope-element'
-import { ExpressionElement, ExpressionElementType } from './elements/expression-element'
+import { ScopeElementType } from './elements/scope-element'
+import type { ScopeElement } from './elements/scope-element'
+import { ExpressionElementType } from './elements/expression-element'
 import { watchImmediate } from '../reactivity-utils'
 import { deserializeOptions, DocumentOptions, serializeOptions } from './document-options'
 
