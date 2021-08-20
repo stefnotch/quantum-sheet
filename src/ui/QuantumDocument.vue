@@ -152,7 +152,6 @@ function useGrid<T extends QuantumDocumentElementTypes>(
   }
 
   function moveCrosshairOut(element: QuantumElement, direction: Vector2) {
-    console.log(direction)
     let pos = element.position.value.add(new Vector2(direction.x > 0 ? element.size.value.x : 0, direction.y > 0 ? element.size.value.y : 0))
     crosshairPosition.value = pos.add(direction)
     focusUnderCrosshair()
@@ -220,8 +219,6 @@ function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: 
 
 function usePages<T extends QuantumDocumentElementTypes>(quantumDocument: UseQuantumDocument<T>) {
   const pageCount = ref(1)
-  console.log('document', quantumDocument)
-
   const sheetSizes: any = {
     Letter: { width: 216, height: 279 },
     Legal: { width: 216, height: 356 },
@@ -253,7 +250,6 @@ function usePages<T extends QuantumDocumentElementTypes>(quantumDocument: UseQua
 
   function updatePageCount() {
     const maxElPos = getPageNumberOfPosition(lowestElementPosition(quantumDocument.elements))
-    console.log('lowest', maxElPos)
     pageCount.value = Math.ceil(maxElPos + 0.1)
   }
 
@@ -269,7 +265,6 @@ function usePages<T extends QuantumDocumentElementTypes>(quantumDocument: UseQua
   watch(
     () => quantumDocument.options.paperSize,
     (value) => {
-      console.log('sheet size change', value)
       width.value = sheetSizes[quantumDocument.options.paperSize].width
       height.value = sheetSizes[quantumDocument.options.paperSize].height
     }
