@@ -1,27 +1,27 @@
 import { readonly, shallowReactive, shallowRef, ref, Ref, watch, unref, toRefs } from 'vue'
+import type { UseQuantumDocument } from './document'
 
-const quantumDocument = ref()
+const quantumDocument = shallowRef<UseQuantumDocument<any>>()
 const hasUnsavedChanges = ref(false)
 
 export function useDocumentManager() {
-  function registerQuantumDocumentEl(newQuantumDocument: Ref<HTMLElement>) {
+  function registerQuantumDocument(newQuantumDocument: UseQuantumDocument<any>) {
     // TODO: Verify document integrity
-    quantumDocument.value = newQuantumDocument.value
+    quantumDocument.value = newQuantumDocument
   }
   function loadDocument(serializedData: string) {
     let documentObject = JSON.parse(serializedData)
-    quantumDocument.value.deserialize(documentObject)
+    quantumDocument.value?.deserializeDocument(documentObject)
   }
   function saveDocument() {
-    let serializedData = JSON.stringify(quantumDocument.value.serialize())
+    let serializedData = JSON.stringify(quantumDocument.value?.serializeDocument())
     return serializedData
   }
 
   return {
-    registerQuantumDocumentEl,
+    registerQuantumDocument,
     loadDocument,
     saveDocument,
     currentDocument: quantumDocument,
-    quantumDocument,
   }
 }
