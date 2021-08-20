@@ -87,6 +87,16 @@
         <a-select-option value="standard">Standard</a-select-option>
         <a-select-option value="engineer">Engineering</a-select-option>
       </a-select>
+      <br />
+      Paper Size:
+      <a-select
+        v-model:value="docManager.currentDocument.value.options.paperSize"
+        style="width: 120px"
+        @change="(value) => (docManager.currentDocument.value.options.paperSize = value)"
+      >
+        <a-select-option value="Letter">Letter</a-select-option>
+        <a-select-option value="Legal">Legal</a-select-option>
+      </a-select>
     </a-modal>
   </teleport>
 </template>

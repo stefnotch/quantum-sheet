@@ -232,6 +232,7 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
   const options = reactive<DocumentOptions>({
     gridCellSize: readonly(new Vector2(20, 20)),
     paperStyle: 'standard',
+    paperSize: 'Legal',
   })
 
   const elementRemoveCallbacks = new Map<string, () => void>()

@@ -7,6 +7,8 @@
     :style="{
       '--grid-cell-size-x': `${document.options.gridCellSize.x}px`,
       '--grid-cell-size-y': `${document.options.gridCellSize.y}px`,
+      'min-width': `${pages.width.value}mm`,
+      'min-height': `calc(${pages.height.value}mm * ${pages.pageCount.value})`,
     }"
     @pointerdown="grid.pointerDown($event)"
     @contextmenu="
@@ -56,9 +58,10 @@
       ></component>
     </div>
   </div>
+  <a-button @click="pages.addPage()">+ Page</a-button>
 </template>
 <script lang="ts">
-import { defineComponent, readonly, ref, Ref, nextTick, unref, onMounted, inject, provide } from 'vue'
+import { defineComponent, readonly, ref, Ref, nextTick, unref, onMounted, inject, provide, watch } from 'vue'
 import { useDocument, UseQuantumDocument, QuantumDocumentElementTypes } from '../model/document/document'
 import ExpressionElement, { ExpressionElementType } from './elements/ExpressionElement.vue'
 import ScopeElement, { ScopeElementType } from './elements/ScopeStartElement.vue'
@@ -177,7 +180,7 @@ function useGrid<T extends QuantumDocumentElementTypes>(
   }
 }
 
-function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: UseQuantumDocument<T>) {
+function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: UseQuantumDocument<T>, pages) {
   // TODO: Investigate
   // I got stuff to break by adding a few blocks, moving them around and stuff
   // Tell interactjs to make every .quantum-block interactive. This includes the ones that will get added in the future
@@ -210,7 +213,77 @@ function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: 
     })
     .on('dragend', (event) => {
       event.target?.classList.remove('dragging')
+      pages.updatePageCount()
     })
+}
+
+function usePages<T extends QuantumDocumentElementTypes>(quantumDocument: UseQuantumDocument<T>) {
+  const pageCount = ref(1)
+  console.log('document', quantumDocument)
+
+  const sheetSizes: any = {
+    Letter: { width: 216, height: 279 },
+    Legal: { width: 216, height: 356 },
+  }
+
+  const width = ref(0)
+  const height = ref(0)
+
+  function getPageNumberOfPosition(y: number) {
+    // (1in = 96px = 2.54cm = 25.4mm)
+    const yPos = (y * quantumDocument.options.gridCellSize.y * (25.4 / 96)) / sheetSizes[quantumDocument.options.paperSize].height
+    return yPos
+  }
+
+  function lowestElementPosition(arr) {
+    // The largest number at first should be the first element or null for empty array
+    var largest = arr[0].position.value.y || null
+    // Current number, handled by the loop
+    var number = null
+    for (var i = 0; i < arr.length; i++) {
+      // Update current number
+      number = Number(arr[i].position.value.y)
+      // Compares stored largest number with current number, stores the largest one
+      largest = Math.max(largest, number)
+    }
+
+    return largest
+  }
+
+  function updatePageCount() {
+    const maxElPos = getPageNumberOfPosition(lowestElementPosition(quantumDocument.elements))
+    console.log('lowest', maxElPos)
+    pageCount.value = Math.ceil(maxElPos + 0.1)
+  }
+
+  function addPage() {
+    pageCount.value += 1
+  }
+
+  // Element Added/Removed
+  watch(quantumDocument.elements, (value) => {
+    updatePageCount()
+  })
+
+  watch(
+    () => quantumDocument.options.paperSize,
+    (value) => {
+      console.log('sheet size change', value)
+      width.value = sheetSizes[quantumDocument.options.paperSize].width
+      height.value = sheetSizes[quantumDocument.options.paperSize].height
+    }
+  )
+
+  width.value = sheetSizes[quantumDocument.options.paperSize].width
+  height.value = sheetSizes[quantumDocument.options.paperSize].height
+
+  return {
+    pageCount,
+    updatePageCount,
+    addPage,
+    width, //: sheetSizes[quantumDocument.options.paperSize].width, //getSizeOfPaper(quantumDocument.options.paperSize).width,
+    height, //: sheetSizes[quantumDocument.options.paperSize].height, //getSizeOfPaper(quantumDocument.options.paperSize).height,
+  }
 }
 
 /**
@@ -241,8 +314,9 @@ export default defineComponent({
 
     const focusedElementCommands = useFocusedElementCommands()
     const grid = useGrid(document, documentInputElement, focusedElementCommands.commands)
+    const pages = usePages(document)
     const clipboard = useClipboard(document)
-    const elementDrag = useElementDrag(document)
+    const elementDrag = useElementDrag(document, pages)
 
     function log(ev: any) {
       console.log(ev)
@@ -273,6 +347,7 @@ export default defineComponent({
 
       focusedElementCommands,
       grid,
+      pages,
       clipboard,
       getTypeComponent,
       log,
@@ -306,8 +381,12 @@ export default defineComponent({
   position: relative;
   /* touch-action: none; */
 
-  width: 100%;
-  min-height: 100%;
+  /* width: 100%;
+  min-height: 100%; */
+
+  /* A4 Letter Size */
+  /* width: 21cm; */
+  /* min-height: 29.7cm; */
 }
 
 .quantum-block {

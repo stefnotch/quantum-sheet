@@ -57,10 +57,13 @@ export default defineComponent({
 }
 .drawingtable {
   /* A4 Letter */
-  --table-width: 21cm;
+  /* --table-width: 21cm;
   --table-height: 29.7cm;
   min-width: var(--table-width);
-  min-height: var(--table-height);
+  min-height: var(--table-height); */
+
+  min-height: min-content;
+  min-width: min-content;
   background: white;
   box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
   margin-top: 24px;
@@ -72,15 +75,5 @@ export default defineComponent({
 .center {
   margin-left: auto;
   margin-right: auto;
-}
-</style>
-
-<style>
-.page {
-  /* A4 Letter Size */
-  width: 21cm;
-  min-height: 29.7cm;
-  /* border: 1px solid rgb(212, 212, 212); */
-  box-shadow: 0px 0px 8px 2px #ccc;
 }
 </style>

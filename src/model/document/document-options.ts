@@ -12,6 +12,9 @@ export interface DocumentOptions {
    */
   paperStyle: 'standard' | 'engineering'
 
+  // The paper Size
+  paperSize: any
+
   // TODO: Default Result Notation Style - Decimal (# Digits), Scientific, Fraction, other?
   // TODO: Result Text Style? - Text, LaTeX
   // TODO: Default Units

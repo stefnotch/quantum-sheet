@@ -10,7 +10,6 @@ function useUIPreferences() {
 }
 
 export function useUI() {
-  // const $emitter = inject('$emitter')
   const fileNewModal: Ref<boolean> = ref(false)
   const fileSaveModal: Ref<boolean> = ref(false)
   const fileOpenModal: Ref<boolean> = ref(false)
