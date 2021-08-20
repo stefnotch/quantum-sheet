@@ -10,6 +10,10 @@ import { watchImmediate } from '../reactivity-utils'
 import { deserializeOptions, DocumentOptions, serializeOptions } from './document-options'
 
 type SerializedDocument = {
+  /**
+   * Used so that we can distinguish between different document versions/formats.
+   */
+  version: string
   options: JsonType
   elements: JsonType[]
 }
@@ -294,6 +298,7 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
 
   function serializeDocument() {
     let serializedData: SerializedDocument = {
+      version: 'v0.0.6',
       options: serializeOptions(options),
       elements: [],
     }
