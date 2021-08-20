@@ -39,6 +39,7 @@
     ></textarea>
 
     <div class="grid-crosshair" :style="grid.gridToStyle(grid.crosshairPosition.value)" v-show="grid.showCrosshair.value">+</div>
+    <div v-for="page in pages.pageCount.value - 1" class="page-divider" :key="page" :style="{ top: `calc(${pages.height.value}mm * ${page})` }"></div>
     <div
       class="quantum-block"
       v-for="element in document.elements"
@@ -58,7 +59,7 @@
       ></component>
     </div>
   </div>
-  <a-button @click="pages.addPage()">+ Page</a-button>
+  <!-- <a-button @click="pages.addPage()">+ Page</a-button> -->
 </template>
 <script lang="ts">
 import { defineComponent, readonly, ref, Ref, nextTick, unref, onMounted, inject, provide, watch } from 'vue'
@@ -429,5 +430,15 @@ export default defineComponent({
   transform: translate(-50%, -50%);
   padding: 1px;
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.page-divider {
+  position: absolute;
+  top: 21cm;
+  width: 100%;
+  height: 1px;
+  border-style: dashed;
+  border-color: rgb(173, 173, 173);
+  border-width: 0.5px;
 }
 </style>
