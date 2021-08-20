@@ -35,7 +35,7 @@
         document.setSelection();
         grid.showCrosshair.value = true;
       "
-      @blur="grid.showCrosshair.value = false"
+      @blur="grid.showCrosshair.value = false;"
     ></textarea>
 
     <div class="grid-crosshair" :style="grid.gridToStyle(grid.crosshairPosition.value)" v-show="grid.showCrosshair.value">+</div>
@@ -417,7 +417,7 @@ export default defineComponent({
 .quantum-document .input-element {
   transform: scale(0);
   resize: none;
-  position: absolute;
+  position: fixed;
   clip: rect(0 0 0 0);
   width: 0px;
   height: 0px;
