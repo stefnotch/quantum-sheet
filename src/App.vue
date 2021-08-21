@@ -45,16 +45,16 @@ export default defineComponent({
 .content {
   /* Background color = Scrollbar color */
   background-color: #f1f1f1;
-  position: absolute;
-  /* 100% minus Header and footer */
-  height: calc(100% - 36px - 36px);
-  /* Header */
-  top: 36px;
-  /* Footer */
-  bottom: 0px;
-  width: 100%;
+  display: flex;
+  /* Header and footer */
+  padding-top: 36px;
+  padding-bottom: 36px;
+  /* Sides */
+  padding-left: 12px;
+  padding-right: 12px;
   overflow: auto;
 }
+
 .drawingtable {
   /* A4 Letter */
   /* --table-width: 21cm;
@@ -68,6 +68,15 @@ export default defineComponent({
   box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
   margin-top: 24px;
   margin-bottom: 24px;
+  /*
+  TODO: For zooming
+  1. The background ends up having weird aliasing effects
+  2. The dragging doesn't work properly
+  3. The document isn't centered when zooming out
+  4. The container doesn't properly do the overflow stuff when zooming in (double scrollbar, cannot get to bottom)
+  transform: scale(0.6);
+  transform-origin: 0% 0%;
+  */
 }
 .extended {
   width: 90vw !important;
