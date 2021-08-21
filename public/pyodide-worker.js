@@ -20,24 +20,21 @@ Disable cache: 17.66s, 17.19s, 13.79s, 18.70s
 36.20 MB / 23.33 MB transferred
  */
 
-// TODO: Use new Pyodide APIs https://pyodide.org/en/stable/project/changelog.html#version-0-17-0
 globalThis.importScripts('./pyodide/pyodide.js')
 
+let pyodide = undefined
 const loadPyodide = globalThis
-  .loadPyodide({ indexURL: './pyodide/' })
-  .then(() => globalThis.pyodide.loadPackage(['mpmath', 'sympy']))
-  .then(() =>
-    fetch('./mathjson.py')
-      .then((response) => response.text())
-      .then((v) => {
-        globalThis.pyodide.runPython('import sys\nsys.setrecursionlimit(999)')
-        globalThis.pyodide.runPython(v)
-      })
-  )
-  .then(() => {
-    globalThis.pyodide.runPython(`import sys
-sys.setrecursionlimit(999)
-import sympy`)
+  .loadPyodide({
+    indexURL: './pyodide/',
+    fullStdLib: false, // Don't load the full standard library, hopefully this doesn't cause any issues
+  })
+  .then(async (pyodide) => {
+    const loadPackagePromise = pyodide.loadPackage(['mpmath', 'sympy'])
+    const mathjsonPy = await fetch('./mathjson.py').then((v) => v.text())
+    await loadPackagePromise
+    pyodide.runPython('import sys\nsys.setrecursionlimit(999)\nimport sympy')
+    pyodide.runPython(mathjsonPy)
+    return pyodide
   })
   .catch((error) => console.error(error))
 
@@ -47,13 +44,19 @@ if (globalThis.SharedWorkerGlobalScope) {
     messagePort.onmessage = function (event) {
       messagePort.postMessage(messageHandler(event))
     }
-    loadPyodide.then(() => messagePort.postMessage({ type: 'initialized' }))
+    loadPyodide.then((v) => {
+      messagePort.postMessage({ type: 'initialized' })
+      pyodide = v
+    })
   }
 } else if (globalThis.WorkerGlobalScope) {
   globalThis.onmessage = function (event) {
     globalThis.postMessage(messageHandler(event))
   }
-  loadPyodide.then(() => globalThis.postMessage({ type: 'initialized' }))
+  loadPyodide.then((v) => {
+    globalThis.postMessage({ type: 'initialized' })
+    pyodide = v
+  })
 } else {
   console.error('Please use this script in a web worker or shared worker')
 }
@@ -84,16 +87,9 @@ function messageHandler(event) {
     let pyodideResult = undefined
 
     if (message.type == 'python') {
-      if (message.data) {
-        Object.keys(message.data).forEach((key) => {
-          // Set them on globalThis, so that `from js import key` works.
-          // TODO: Superseded by the globals https://pyodide.org/en/stable/usage/quickstart.html
-          globalThis[key] = message.data[key]
-        })
-      }
-      pyodideResult = globalThis.pyodide.runPython(message.command)
+      pyodideResult = pyodide.runPython(message.command)
     } else if (message.type == 'expression') {
-      pyodideResult = globalThis.pyodide.runPython(wrapSympyCommand(message.symbols, message.command))
+      pyodideResult = pyodide.runPython(wrapSympyCommand(message.symbols, message.command))
     } else {
       throw new Error('Unknown command type', message)
     }

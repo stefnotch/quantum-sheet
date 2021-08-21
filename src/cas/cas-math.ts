@@ -1,4 +1,5 @@
 import { Expression } from '@cortex-js/compute-engine'
+import { getExpressionValue, handleExpressionValue } from './mathjson-utils'
 
 // TODO: Ask mathlive creator about how to best do stuff like this
 // TODO: Use stuff from here https://github.com/cortex-js/compute-engine/blob/main/src/common/utils.ts
@@ -10,32 +11,31 @@ import { Expression } from '@cortex-js/compute-engine'
 export function getGetterNames(expression: Expression) {
   const getters = new Set<string>()
 
-  if (!Array.isArray(expression)) {
-    if (typeof expression == 'string') {
-      getters.add(expression)
-    }
-  } else {
-    if (expression[0] == 'Assign') {
-      extractGetters(expression[2])
-    } else if (expression[0] == 'Equal') {
-      extractGetters(expression[1])
-    } else if (expression[0] == 'Evaluate') {
-      extractGetters(expression[1])
-    } else {
-      extractGetters(expression)
-    }
-
-    function extractGetters(expression: Expression) {
-      if (Array.isArray(expression)) {
-        const functionName = expression[0]
-        for (let i = 1; i < expression.length; i++) {
-          extractGetters(expression[i])
-        }
-      } else if (typeof expression === 'string') {
-        getters.add(expression)
-      }
-    }
+  function extractGetters(expression: Expression) {
+    handleExpressionValue(expression, {
+      symbol: (v) => getters.add(v),
+      function: (v) => v.args.forEach((u) => extractGetters(u)),
+    })
   }
+
+  handleExpressionValue(expression, {
+    symbol: (v) => getters.add(v),
+    function: (v) => {
+      // TODO: Don't hardcode "Assign", "Equal", and "Evaluate"
+      if (v.head === 'Assign') {
+        // Only extract getters from the non-variable part
+        extractGetters(v.args[1])
+      } else if (v.head === 'Equal') {
+        // Numerical evaluation
+        extractGetters(v.args[0])
+      } else if (v.head === 'Evaluate') {
+        // Symbolical evaluation
+        extractGetters(v.args[0])
+      } else {
+        extractGetters(v.args)
+      }
+    },
+  })
 
   return getters
 }

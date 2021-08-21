@@ -21,21 +21,20 @@ export interface DocumentOptions {
 }
 
 export function serializeOptions(options: DocumentOptions): JsonType {
-  // TODO: Make this available for anything
-  const serialized: JsonType = {}
-  Object.entries(options).forEach(([key, value]) => {
-    const jsonValue = serializeToJson(value, key)
-    if (jsonValue !== undefined) {
-      serialized[key] = jsonValue
-    }
-  })
+  const json = serializeToJson(options)
+  if (json === undefined) throw new Error('Failed to serialize the options ' + options)
+  return json
+}
 
-  return serialized
+export function deserializeOptions(serialized: JsonType): DocumentOptions {
+  return deserializeFromJson(serialized) as DocumentOptions
 }
 
 function isPureObject(obj: any) {
   return typeof obj === 'object' && obj !== null && Object.getPrototypeOf(obj).isPrototypeOf(Object)
 }
+
+// TODO: Make this available for anything
 
 function serializeToJson(value: any, debugContext?: string): JsonType | undefined {
   switch (typeof value) {
@@ -162,8 +161,4 @@ function deserializeFromJson(value: any): any {
     }
   }
   return undefined
-}
-
-export function deserializeOptions(serialized: JsonType): DocumentOptions {
-  return deserializeFromJson(serialized) as DocumentOptions
 }

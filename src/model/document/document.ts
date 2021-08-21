@@ -4,12 +4,17 @@ import { QuantumElementCreationOptions, QuantumElementType, QuantumElement, Json
 import { Vector2 } from '../vectors'
 import { readonly, shallowReactive, shallowRef, ref, watch, reactive } from 'vue'
 import arrayUtils from '../array-utils'
-import { ScopeElement, ScopeElementType } from './elements/scope-element'
-import { ExpressionElement, ExpressionElementType } from './elements/expression-element'
+import { ScopeElementType } from './elements/scope-element'
+import type { ScopeElement } from './elements/scope-element'
+import { ExpressionElementType } from './elements/expression-element'
 import { watchImmediate } from '../reactivity-utils'
 import { deserializeOptions, DocumentOptions, serializeOptions } from './document-options'
 
 type SerializedDocument = {
+  /**
+   * Used so that we can distinguish between different document versions/formats.
+   */
+  version: string
   options: JsonType
   elements: JsonType[]
 }
@@ -295,6 +300,7 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
 
   function serializeDocument() {
     let serializedData: SerializedDocument = {
+      version: 'v0.0.6',
       options: serializeOptions(options),
       elements: [],
     }
