@@ -20,6 +20,7 @@ import Footer from './ui/Footer.vue'
 import LandingPage from './ui/LandingPage.vue'
 import { useDocumentManager } from './model/document/document-manager'
 import { UseQuantumDocument } from './model/document/document'
+import { useUrlSearchParams } from '@vueuse/core'
 
 export default defineComponent({
   name: 'App',
@@ -33,8 +34,19 @@ export default defineComponent({
     if (import.meta.env.PROD) {
       console.log(`${pkg.name} - ${pkg.version}`)
     }
-
+    const urlParams = useUrlSearchParams('history')
     const docManager = useDocumentManager()
+
+    // Allow loading a document from a URL
+    const documentUrl = urlParams['document-url']
+    if (documentUrl && typeof documentUrl === 'string') {
+      // TODO: Warning/popup if a document is already loaded
+      fetch(documentUrl)
+        .then((v) => v.text())
+        .then((v) => {
+          docManager.loadDocument(v)
+        })
+    }
 
     return { docManager }
   },
