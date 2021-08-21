@@ -220,6 +220,7 @@ function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: 
 function usePages<T extends QuantumDocumentElementTypes>(quantumDocument: UseQuantumDocument<T>) {
   const pageCount = ref(1)
   const sheetSizes: any = {
+    A4: { width: 210, height: 297 },
     Letter: { width: 216, height: 279 },
     Legal: { width: 216, height: 356 },
   }
