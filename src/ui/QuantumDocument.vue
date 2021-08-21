@@ -39,7 +39,10 @@
     ></textarea>
 
     <div class="grid-crosshair" :style="grid.gridToStyle(grid.crosshairPosition.value)" v-show="grid.showCrosshair.value">+</div>
-    <div v-for="page in pages.pageCount.value - 1" class="page-divider" :key="page" :style="{ top: `calc(${pages.height.value}mm * ${page})` }"></div>
+    <div v-for="page in pages.pageCount.value - 1" class="page-divider" :key="page" :style="{ top: `calc(${pages.height.value}mm * ${page})` }">
+      <span class="page-number">{{ page }}</span>
+      <span class="next-page-number">{{ page + 1 }}</span>
+    </div>
     <div
       class="quantum-block"
       v-for="element in document.elements"
@@ -220,6 +223,7 @@ function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: 
 function usePages<T extends QuantumDocumentElementTypes>(quantumDocument: UseQuantumDocument<T>) {
   const pageCount = ref(1)
   const sheetSizes: any = {
+    A4: { width: 210, height: 297 },
     Letter: { width: 216, height: 279 },
     Legal: { width: 216, height: 356 },
   }
@@ -435,5 +439,22 @@ export default defineComponent({
   border-style: dashed;
   border-color: rgb(173, 173, 173);
   border-width: 0.5px;
+}
+
+.page-number,
+.next-page-number {
+  position: absolute;
+  right: -10px;
+  transform: translateX(100%);
+  color: rgb(90, 110, 129);
+  user-select: none;
+}
+
+.page-number {
+  bottom: 4px;
+}
+
+.next-page-number {
+  top: 4px;
 }
 </style>

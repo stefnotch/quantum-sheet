@@ -97,6 +97,7 @@
             style="width: 120px"
             @change="(value) => (docManager.currentDocument.value.options.paperSize = value)"
           >
+            <a-select-option value="A4">A4</a-select-option>
             <a-select-option value="Letter">Letter</a-select-option>
             <a-select-option value="Legal">Legal</a-select-option>
           </a-select>
