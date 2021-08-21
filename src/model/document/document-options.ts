@@ -149,12 +149,7 @@ function deserializeFromJson(value: any): any {
           }
         } else {
           console.warn('Invalid object ', value)
-          const obj: any = {}
-          Object.entries(value).forEach(([key, value]) => {
-            obj[key] = deserializeFromJson(value)
-          })
-          return obj
-          // return value
+          return value
         }
       }
       break
