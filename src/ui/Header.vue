@@ -40,6 +40,7 @@
 
       <a-col>
         <a-space :style="{ height: '36px' }">
+          <p>v{{ pkg.version }}</p>
           <div :style="{ width: '20px' }" />
         </a-space>
       </a-col>
@@ -110,6 +111,7 @@
 <script lang="ts">
 import { defineComponent, ref, inject, reactive } from 'vue'
 import { InboxOutlined, DownloadOutlined } from '@ant-design/icons-vue'
+import pkg from '../../package.json'
 
 import { useUI } from './ui'
 import { useDocumentManager } from '../model/document/document-manager'
@@ -157,6 +159,7 @@ export default defineComponent({
       docManager,
       download,
       beforeUpload,
+      pkg,
     }
   },
 })

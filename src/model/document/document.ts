@@ -9,6 +9,7 @@ import type { ScopeElement } from './elements/scope-element'
 import { ExpressionElementType } from './elements/expression-element'
 import { watchImmediate } from '../reactivity-utils'
 import { deserializeOptions, DocumentOptions, serializeOptions } from './document-options'
+import pkg from '../../../package.json'
 
 type SerializedDocument = {
   /**
@@ -300,7 +301,7 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
 
   function serializeDocument() {
     let serializedData: SerializedDocument = {
-      version: 'v0.0.6',
+      version: pkg.version,
       options: serializeOptions(options),
       elements: [],
     }
