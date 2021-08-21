@@ -317,6 +317,7 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
       const deserializedOptions = deserializeOptions(serializedData?.options)
       options.gridCellSize = deserializedOptions.gridCellSize ?? options.gridCellSize
       options.paperStyle = deserializedOptions.paperStyle ?? options.paperStyle
+      options.paperSize = deserializedOptions.paperSize ?? options.paperSize
     }
     serializedData?.elements?.forEach((elementData: JsonType) => {
       let elementType = elementTypes[(elementData as any).typeName]
