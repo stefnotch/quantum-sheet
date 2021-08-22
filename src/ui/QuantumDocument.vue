@@ -69,6 +69,7 @@ import { defineComponent, readonly, ref, Ref, nextTick, unref, onMounted, inject
 import { useDocument, UseQuantumDocument, QuantumDocumentElementTypes } from '../model/document/document'
 import ExpressionElement, { ExpressionElementType } from './elements/ExpressionElement.vue'
 import ScopeElement, { ScopeElementType } from './elements/ScopeStartElement.vue'
+import LatexElement, { LatexElementType } from './elements/LatexElement.vue'
 import { useFocusedElementCommands, ElementCommands } from './elements/element-commands'
 import { Vector2 } from '../model/vectors'
 import { QuantumElement, JsonType } from '../model/document/document-element'
@@ -119,21 +120,31 @@ function useGrid<T extends QuantumDocumentElementTypes>(
   function textInput(ev: InputEvent) {
     if (ev.isComposing) return
 
-    if (ev.data) {
-      let element = document.createElement(ExpressionElementType.typeName, {
-        position: crosshairPosition.value,
-        resizable: false,
-      })
-      document.setFocus(element)
-      nextTick(() => {
-        focusedElementCommands.value?.moveToStart?.()
-        focusedElementCommands.value?.insert?.(ev.data + '')
-      })
-    }
-
+    const text = ev.data
     if (ev.currentTarget) {
       ;(ev.currentTarget as HTMLTextAreaElement).value = ''
     }
+    if (!text) return
+
+    let elementType: string = ExpressionElementType.typeName
+    if (text === '@') {
+      // TODO: Temporary hack
+      const type = prompt('Which element type?')
+      if (type?.toLowerCase() === 'latex') {
+        elementType = LatexElementType.typeName
+      } else {
+        console.warn('Unknown type ' + type)
+      }
+    }
+    let element = document.createElement(elementType, {
+      position: crosshairPosition.value,
+      resizable: false,
+    })
+    document.setFocus(element)
+    nextTick(() => {
+      focusedElementCommands.value?.moveToStart?.()
+      focusedElementCommands.value?.insert?.(ev.data + '')
+    })
   }
 
   function keydown(ev: KeyboardEvent) {
@@ -368,18 +379,24 @@ export default defineComponent({
   components: {
     ExpressionElement,
     ScopeElement,
+    LatexElement,
   },
   emits: {
     'quantum-document': (value: UseQuantumDocument<any>) => true,
   },
   setup(props, context) {
-    const document = useDocument({ [ExpressionElementType.typeName]: ExpressionElementType, [ScopeElementType.typeName]: ScopeElementType })
+    const document = useDocument({
+      [ExpressionElementType.typeName]: ExpressionElementType,
+      [ScopeElementType.typeName]: ScopeElementType,
+      [LatexElementType.typeName]: LatexElementType,
+    })
 
     // let z = new document.elementTypes['scope-element'].elementType({})
 
     const typeComponents: TypeComponents<typeof document> = {
       [ExpressionElementType.typeName]: ExpressionElement,
       [ScopeElementType.typeName]: ScopeElement,
+      [LatexElementType.typeName]: LatexElement,
     }
 
     const documentElement = ref<HTMLElement>()
