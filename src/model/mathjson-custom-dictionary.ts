@@ -99,7 +99,7 @@ dictionary.push({
   precedence: 260,
   name: 'Text',
   requiredLatexArg: 1,
-  associativity: 'left',
+  associativity: 'non',
   trigger: { symbol: '\\text' },
   serialize: function (emitter, expr) {
     if (!Array.isArray(expr)) throw new Error('Expect array expression')

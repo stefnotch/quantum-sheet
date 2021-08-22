@@ -83,6 +83,7 @@ export default defineComponent({
 
       mathfield.value?.setValue(latex, {
         suppressChangeNotifications: true,
+        mode: 'math', // TODO: Why is this needed for `\text{}` to work?
       })
     })
 
