@@ -105,11 +105,12 @@ export class ScopeElement extends QuantumElement {
         const prev = arrayUtils.at(variableArray, index - 1)
         // Take some getters from prev
         if (prev?.getters) {
-          variable.getters = prev.getters.filter((v) => value.compareTo(v.position) <= 0)
+          // Warning: This has to be strictly less than 0. If they are on the same spot, the getter belongs to the previous variable
+          variable.getters = prev.getters.filter((v) => value.compareTo(v.position) < 0)
           variable.getters.forEach((v) => {
             v.variable = variable
           })
-          prev.getters = prev.getters.filter((v) => v.position.compareTo(value) < 0)
+          prev.getters = prev.getters.filter((v) => !(value.compareTo(v.position) < 0))
         }
         // Update variable indices
         for (let i = index; i < variableArray.length; i++) {
