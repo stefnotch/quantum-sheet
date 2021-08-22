@@ -79,31 +79,35 @@
       ok-text="Done"
       @ok="UI.closeDocPrefsModal()"
     >
-      <a-space direction="vertical">
-        <div>
-          Paper Style:
-          <a-select
-            v-model:value="docManager.currentDocument.value.options.paperStyle"
-            style="width: 120px"
-            @change="(value) => (docManager.currentDocument.value.options.paperStyle = value)"
-          >
-            <a-select-option value="standard">Standard</a-select-option>
-            <a-select-option value="engineer">Engineering</a-select-option>
-          </a-select>
-        </div>
-        <div>
-          Paper Size:
-          <a-select
-            v-model:value="docManager.currentDocument.value.options.paperSize"
-            style="width: 120px"
-            @change="(value) => (docManager.currentDocument.value.options.paperSize = value)"
-          >
-            <a-select-option value="A4">A4</a-select-option>
-            <a-select-option value="Letter">Letter</a-select-option>
-            <a-select-option value="Legal">Legal</a-select-option>
-          </a-select>
-        </div>
-      </a-space>
+      <a-form :label-col="{ span: 5 }" :wrapper-col="{ span: 12 }">
+        <a-form-item label="Paper Style:">
+          <div>
+            <!-- Paper Style: -->
+            <a-select
+              v-model:value="docManager.currentDocument.value.options.paperStyle"
+              style="width: 120px"
+              @change="(value) => (docManager.currentDocument.value.options.paperStyle = value)"
+            >
+              <a-select-option value="standard">Standard</a-select-option>
+              <a-select-option value="engineer">Engineering</a-select-option>
+            </a-select>
+          </div>
+        </a-form-item>
+        <a-form-item label="Paper Size:">
+          <div>
+            <!-- Paper Size: -->
+            <a-select
+              v-model:value="docManager.currentDocument.value.options.paperSize"
+              style="width: 120px"
+              @change="(value) => (docManager.currentDocument.value.options.paperSize = value)"
+            >
+              <a-select-option value="A4">A4</a-select-option>
+              <a-select-option value="Letter">Letter</a-select-option>
+              <a-select-option value="Legal">Legal</a-select-option>
+            </a-select>
+          </div>
+        </a-form-item>
+      </a-form>
     </a-modal>
   </teleport>
 </template>
