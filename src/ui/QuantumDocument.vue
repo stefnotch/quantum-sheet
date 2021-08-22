@@ -263,7 +263,8 @@ function useEvents<T extends QuantumDocumentElementTypes>(
   quantumDocument: UseQuantumDocument<T>,
   focusedElementCommands: Ref<ElementCommands | undefined>,
   grid,
-  selection
+  selection,
+  UI
 ) {
   function createElementAtEvent(ev: InputEvent) {
     let elementType: string = ExpressionElementType.typeName
@@ -313,12 +314,18 @@ function useEvents<T extends QuantumDocumentElementTypes>(
 
   function handleKeyboardEvent(event: KeyboardEvent) {
     if (event.type === 'keydown') {
+      // console.log(event)
       if (event.key === 'Delete') {
         selection.selectedIDs.value.forEach((id: string) => {
           quantumDocument.deleteElement(quantumDocument.getElementById(id) as QuantumElement)
         })
+      } else if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
+        grid.keydown(event)
+      } else if (event.code === 'KeyZ' && event.ctrlKey) {
+        UI.notify('warning', 'Unsupported Action', 'Undo/Redo unsupported at the moment')
+      } else {
+        // Nothing, pass along to potential InputEvents
       }
-      grid.keydown(event)
     } else if (event.type === 'keyup') {
       grid.keyup(event)
     }
@@ -437,13 +444,14 @@ export default defineComponent({
     const documentElement = ref<HTMLElement>()
     const documentInputElement = ref<HTMLElement>()
 
+    const UI = useUI()
     const focusedElementCommands = useFocusedElementCommands()
     const grid = useGrid(document, documentInputElement)
     const pages = usePages(document)
     const clipboard = useClipboard(document)
     const selection = useElementSelection(document)
     const elementDrag = useElementDrag(document, pages, selection.selectedIDs)
-    const events = useEvents(document, focusedElementCommands.commands, grid, selection)
+    const events = useEvents(document, focusedElementCommands.commands, grid, selection, UI)
 
     function log(ev: any) {
       console.log(ev)
@@ -478,6 +486,7 @@ export default defineComponent({
       clipboard,
       selection,
       events,
+      UI,
 
       getTypeComponent,
       log,
