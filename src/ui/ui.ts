@@ -49,7 +49,13 @@ export function useUI() {
     documentPrefsModal.value = false
   }
 
-  function notify(type: string, message: string, description: string) {
+  function notify(type: string, message: string, details: any) {
+    let description = ''
+    if (typeof details !== 'string') {
+      description = JSON.stringify(details)
+    } else {
+      description = details
+    }
     const config = {
       message,
       description,

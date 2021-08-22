@@ -2,6 +2,7 @@ import type {} from 'vite'
 import type { CasCommand } from './cas'
 import { getAllGetterNames, getGetterNames, useEncoder } from './cas-math'
 import { Expression, format } from '@cortex-js/compute-engine'
+import { useUI } from '../ui/ui'
 
 export type WorkerMessage =
   | {
@@ -30,6 +31,8 @@ export type WorkerResponse =
       id: string
       message: string
     }
+
+const UI = useUI()
 
 // TODO: Split out the python converter and contribute it to mathlive/cortex-js?
 function usePythonConverter() {
@@ -208,6 +211,7 @@ function usePythonConverter() {
     } else {
       // TODO: Make sure to handle all cases (string, number, bool, array, object, ...)
       console.warn('Unknown element type', { x: expression })
+      UI.notify('warning', 'Unknown element type', { x: expression })
       return ''
     }
   }
@@ -343,6 +347,7 @@ export function usePyodide() {
           commands.delete(response.id)
         } else if (response.type == 'error') {
           console.warn(response)
+          UI.notify('error', 'CAS error', response.message)
           commands.delete(response.id)
         } else {
           console.error('Unknown response type', response)
@@ -350,9 +355,11 @@ export function usePyodide() {
       }
       worker.onerror = (e) => {
         console.warn('Worker error', e)
+        UI.notify('warning', 'Worker Error', e)
       }
       worker.onmessageerror = (e) => {
         console.error('Message error', e)
+        UI.notify('error', 'Message Error', e)
       }
 
       commandBuffer.forEach((v) => sendCommand(v))
