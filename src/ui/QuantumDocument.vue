@@ -101,7 +101,6 @@ function useGrid<T extends QuantumDocumentElementTypes>(document: UseQuantumDocu
   }
 
   function pointerDown(ev: PointerEvent) {
-    // console.log('pointerdown', ev)
     if (ev.target == ev.currentTarget) {
       crosshairPosition.value = new Vector2(
         Math.round(ev.offsetX / document.options.gridCellSize.x),
@@ -115,8 +114,6 @@ function useGrid<T extends QuantumDocumentElementTypes>(document: UseQuantumDocu
 
   function keydown(ev: KeyboardEvent) {
     if (ev.isComposing) return
-
-    console.log('ev', ev)
 
     let direction =
       {
