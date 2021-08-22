@@ -40,7 +40,7 @@
 
       <a-col>
         <a-space :style="{ height: '36px' }">
-          <p>v{{ pkg.version }}</p>
+          <p>v{{ pkg.version }} - <a href="https://github.com/stefnotch/quantum-sheet">View on GitHub</a></p>
           <div :style="{ width: '20px' }" />
         </a-space>
       </a-col>
