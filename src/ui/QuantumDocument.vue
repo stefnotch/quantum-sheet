@@ -10,7 +10,7 @@
       'min-width': `${pages.width.value}mm`,
       'min-height': `calc(${pages.height.value}mm * ${pages.pageCount.value})`,
     }"
-    @pointerdown="grid.pointerDown($event)"
+    @pointerdown="events.handlePointerEvent($event)"
     @contextmenu="
       (e) => {
         e.preventDefault()
@@ -28,9 +28,9 @@
       autocomplete="off"
       autocorrect="off"
       spellcheck="false"
-      @input="grid.textInput($event)"
-      @keydown="grid.keydown($event)"
-      @keyup="grid.keyup($event)"
+      @input="events.handleInputEvent($event)"
+      @keydown="events.handleKeyboardEvent($event)"
+      @keyup="events.handleKeyboardEvent($event)"
       @focus="
         document.setSelection();
         grid.showCrosshair.value = true;
@@ -88,11 +88,7 @@ function useClipboard<T extends QuantumDocumentElementTypes>(document: UseQuantu
   }
 }
 
-function useGrid<T extends QuantumDocumentElementTypes>(
-  document: UseQuantumDocument<T>,
-  inputElement: Ref<HTMLElement | undefined>,
-  focusedElementCommands: Ref<ElementCommands | undefined>
-) {
+function useGrid<T extends QuantumDocumentElementTypes>(document: UseQuantumDocument<T>, inputElement: Ref<HTMLElement | undefined>) {
   const crosshairPosition = ref<Vector2>(new Vector2(2, 10))
   const showCrosshair = ref(true)
 
@@ -117,38 +113,10 @@ function useGrid<T extends QuantumDocumentElementTypes>(
     }
   }
 
-  function textInput(ev: InputEvent) {
-    if (ev.isComposing) return
-
-    const text = ev.data
-    if (ev.currentTarget) {
-      ;(ev.currentTarget as HTMLTextAreaElement).value = ''
-    }
-    if (!text) return
-
-    let elementType: string = ExpressionElementType.typeName
-    if (text === '@') {
-      // TODO: Temporary hack
-      const type = prompt('Which element type?')
-      if (type?.toLowerCase() === 'latex') {
-        elementType = LatexElementType.typeName
-      } else {
-        console.warn('Unknown type ' + type)
-      }
-    }
-    let element = document.createElement(elementType, {
-      position: crosshairPosition.value,
-      resizable: false,
-    })
-    document.setFocus(element)
-    nextTick(() => {
-      focusedElementCommands.value?.moveToStart?.()
-      focusedElementCommands.value?.insert?.(ev.data + '')
-    })
-  }
-
   function keydown(ev: KeyboardEvent) {
     if (ev.isComposing) return
+
+    console.log('ev', ev)
 
     let direction =
       {
@@ -186,7 +154,6 @@ function useGrid<T extends QuantumDocumentElementTypes>(
     showCrosshair,
     gridToStyle,
     pointerDown,
-    textInput,
     keydown,
     keyup,
 
@@ -295,6 +262,78 @@ function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: 
     })
 }
 
+function useEvents<T extends QuantumDocumentElementTypes>(
+  quantumDocument: UseQuantumDocument<T>,
+  focusedElementCommands: Ref<ElementCommands | undefined>,
+  grid,
+  selection
+) {
+  function createElementAtEvent(ev: InputEvent) {
+    let elementType: string = ExpressionElementType.typeName
+    if (ev.data === '@') {
+      // TODO: Temporary hack
+      const type = prompt('Which element type?')
+      if (type?.toLowerCase() === 'latex') {
+        elementType = LatexElementType.typeName
+      } else {
+        console.warn('Unknown type ' + type)
+      }
+    }
+    let element = quantumDocument.createElement(elementType, {
+      position: grid.crosshairPosition.value,
+      resizable: false,
+    })
+    quantumDocument.setFocus(element)
+    nextTick(() => {
+      focusedElementCommands.value?.moveToStart?.()
+      focusedElementCommands.value?.insert?.(ev.data + '')
+    })
+  }
+
+  function handleEvent(event: object) {
+    if (event instanceof InputEvent) {
+      handleInputEvent(event)
+    } else if (event instanceof KeyboardEvent) {
+      handleKeyboardEvent(event)
+    } else if (event instanceof PointerEvent) {
+      handlePointerEvent(event)
+    }
+  }
+
+  function handleInputEvent(event: InputEvent) {
+    // If already inputting in TextArea
+    if (event.isComposing) return
+
+    const text = event.data
+    if (event.currentTarget) {
+      ;(event.currentTarget as HTMLTextAreaElement).value = ''
+    }
+    if (!text) return
+
+    // else
+    createElementAtEvent(event)
+  }
+
+  function handleKeyboardEvent(event: KeyboardEvent) {
+    if (event.type === 'keydown') {
+      grid.keydown(event)
+    } else if (event.type === 'keyup') {
+      grid.keyup(event)
+    }
+  }
+
+  function handlePointerEvent(event: PointerEvent) {
+    grid.pointerDown(event)
+  }
+
+  return {
+    handleEvent,
+    handleInputEvent,
+    handleKeyboardEvent,
+    handlePointerEvent,
+  }
+}
+
 function usePages<T extends QuantumDocumentElementTypes>(quantumDocument: UseQuantumDocument<T>) {
   const pageCount = ref(1)
   const sheetSizes: any = {
@@ -397,11 +436,12 @@ export default defineComponent({
     const documentInputElement = ref<HTMLElement>()
 
     const focusedElementCommands = useFocusedElementCommands()
-    const grid = useGrid(document, documentInputElement, focusedElementCommands.commands)
+    const grid = useGrid(document, documentInputElement)
     const pages = usePages(document)
     const clipboard = useClipboard(document)
     const selection = useElementSelection(document)
     const elementDrag = useElementDrag(document, pages, selection.selectedIDs)
+    const events = useEvents(document, focusedElementCommands.commands, grid, selection)
 
     function log(ev: any) {
       console.log(ev)
@@ -435,6 +475,7 @@ export default defineComponent({
       pages,
       clipboard,
       selection,
+      events,
 
       getTypeComponent,
       log,
