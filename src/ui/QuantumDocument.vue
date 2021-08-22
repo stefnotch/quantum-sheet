@@ -467,9 +467,13 @@ export default defineComponent({
   background-color: var(--color);
   --selected-background-color: rgba(68, 148, 202, 0.24);
   --selected-color: rgba(57, 131, 180, 0.459);
-  background-size: var(--grid-cell-size-x) var(--grid-cell-size-y);
+
+  background-size: var(--grid-cell-size-x) var(--grid-cell-size-y), var(--grid-cell-size-x) var(--grid-cell-size-y),
+    calc(var(--grid-cell-size-x) * 5) calc(var(--grid-cell-size-y) * 5), calc(var(--grid-cell-size-x) * 5) calc(var(--grid-cell-size-y) * 5);
   background-image: linear-gradient(to right, var(--grid-color) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px), linear-gradient(to right, var(--grid-color) 1px, transparent 1px),
     linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
+
   position: relative;
   /* touch-action: none; */
 
