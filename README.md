@@ -1,6 +1,6 @@
 # (Prototype) QuantumSheet
 
-QuantumSheet - A web based computer algebra system aka fancy calculator
+QuantumSheet - An open, web-based frontend for computer algebra
 
 [**Try it out here**](https://stefnotch.github.io/quantum-sheet/)
 
