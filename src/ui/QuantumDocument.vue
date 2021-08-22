@@ -74,6 +74,7 @@ import { Vector2 } from '../model/vectors'
 import { QuantumElement, JsonType } from '../model/document/document-element'
 import { useUI } from './ui'
 import interact from 'interactjs'
+import Selecto from 'selecto'
 
 function useClipboard<T extends QuantumDocumentElementTypes>(document: UseQuantumDocument<T>) {
   function cut(ev: ClipboardEvent) {}
@@ -183,8 +184,71 @@ function useGrid<T extends QuantumDocumentElementTypes>(
   }
 }
 
-function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: UseQuantumDocument<T>, pages) {
-  // TODO: Investigate
+function useElementSelection<T extends QuantumDocumentElementTypes>(quantumDocument: UseQuantumDocument<T>) {
+  console.log('selecto', quantumDocument)
+  const selectedIDs = ref<string[]>([])
+  // let selecto = undefined
+  nextTick(function () {
+    const selecto = new Selecto({
+      // The container to add a selection element
+      container: document.querySelector('.quantum-document') as HTMLElement,
+      // Selecto's root container (No transformed container. (default: null)
+      // rootContainer: document.querySelector('.quantum-document'),
+      // The area to drag selection element (default: container)
+      // dragContainer: document.querySelector('.quantum-document') as HTMLElement,
+      // Targets to select. You can register a queryselector or an Element.
+      selectableTargets: ['.quantum-block'],
+      // Whether to select by click (default: true)
+      selectByClick: true,
+      // Whether to select from the target inside (default: true)
+      selectFromInside: false,
+      // After the select, whether to select the next target with the selected target (deselected if the target is selected again).
+      continueSelect: false,
+      // Determines which key to continue selecting the next target via keydown and keyup.
+      toggleContinueSelect: 'shift',
+      // The container for keydown and keyup events
+      // keyContainer: window,
+      // The rate at which the target overlaps the drag area to be selected. (default: 100)
+      hitRate: 100,
+      preventDragFromInside: false,
+      // preventDefault: true,
+    })
+    selecto
+      .on('select', (e) => {
+        // add to array
+        // selectedIDs.value = []
+        e.added.forEach((el) => {
+          el.classList.add('selected')
+          selectedIDs.value.push(el.id)
+        })
+        e.removed.forEach((el) => {
+          el.classList.remove('selected')
+          // remove from array
+          const index = selectedIDs.value.indexOf(el.id)
+          if (index > -1) {
+            selectedIDs.value.splice(index, 1)
+          }
+        })
+
+        console.log(e, selectedIDs)
+      })
+      .on('dragStart', (e) => {
+        const target = e.inputEvent.target
+        console.log('dragStart', e, target)
+        if (selecto.getSelectedTargets().includes(target)) {
+          console.log('nope!')
+          e.stop()
+        }
+      })
+  })
+
+  return {
+    selectedIDs,
+  }
+}
+
+function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: UseQuantumDocument<T>, pages, selectedIDs: Ref<string[]>) {
+  // TODO: Investigate or try out Moveable.js
   // I got stuff to break by adding a few blocks, moving them around and stuff
   // Tell interactjs to make every .quantum-block interactive. This includes the ones that will get added in the future
   interact('.quantum-block')
@@ -196,6 +260,7 @@ function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: 
           range: Infinity,
           relativePoints: [{ x: 0, y: 0 }],
           offset: 'parent',
+          // endOnly: true,
         }),
         interact.modifiers.restrict({
           restriction: '.quantum-document',
@@ -204,18 +269,23 @@ function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: 
         }),
       ],
       inertia: false,
+      autoScroll: true,
     })
-    .on('down', (event) => {
-      event.target?.classList.add('dragging')
-    })
+    .on('down', (event) => {})
     .on('dragmove', (event) => {
-      const quantumElement = quantumDocument.getElementById(event.target.id)
-      let delta = new Vector2(event.dx / quantumDocument.options.gridCellSize.x, event.dy / quantumDocument.options.gridCellSize.y)
-      let newPos = quantumElement?.position.value.add(delta)
-      if (newPos) quantumElement?.setPosition(newPos)
+      // event.target?.classList.add('dragging')
+      // const quantumElement = quantumDocument.getElementById(event.target.id)
+      console.log('sid', selectedIDs)
+      selectedIDs.value.forEach((id) => {
+        const quantumElement = quantumDocument.getElementById(id)
+        let delta = new Vector2(event.dx / quantumDocument.options.gridCellSize.x, event.dy / quantumDocument.options.gridCellSize.y)
+        let newPos = quantumElement?.position.value.add(delta)
+        if (newPos) quantumElement?.setPosition(newPos)
+      })
+      event.preventDefault()
     })
     .on('dragend', (event) => {
-      event.target?.classList.remove('dragging')
+      // event.target?.classList.remove('dragging')
       pages.updatePageCount()
     })
 }
@@ -281,8 +351,8 @@ function usePages<T extends QuantumDocumentElementTypes>(quantumDocument: UseQua
     pageCount,
     updatePageCount,
     addPage,
-    width, //: sheetSizes[quantumDocument.options.paperSize].width, //getSizeOfPaper(quantumDocument.options.paperSize).width,
-    height, //: sheetSizes[quantumDocument.options.paperSize].height, //getSizeOfPaper(quantumDocument.options.paperSize).height,
+    width,
+    height,
   }
 }
 
@@ -316,7 +386,8 @@ export default defineComponent({
     const grid = useGrid(document, documentInputElement, focusedElementCommands.commands)
     const pages = usePages(document)
     const clipboard = useClipboard(document)
-    const elementDrag = useElementDrag(document, pages)
+    const selection = useElementSelection(document)
+    const elementDrag = useElementDrag(document, pages, selection.selectedIDs)
 
     function log(ev: any) {
       console.log(ev)
@@ -349,9 +420,10 @@ export default defineComponent({
       grid,
       pages,
       clipboard,
+      selection,
+
       getTypeComponent,
       log,
-
       serialize,
       deserialize,
     }
@@ -383,10 +455,6 @@ export default defineComponent({
 
   /* width: 100%;
   min-height: 100%; */
-
-  /* A4 Letter Size */
-  /* width: 21cm; */
-  /* min-height: 29.7cm; */
 }
 
 .quantum-block {
@@ -400,10 +468,10 @@ export default defineComponent({
   border: 1px solid var(--selected-color);
   margin: 0px;
 }
-.quantum-block.dragging {
+/* .quantum-block.dragging {
   border: 1px solid var(--selected-color);
   margin: 0px;
-}
+} */
 .quantum-block:focus-within {
   border: 1px dashed var(--selected-color);
   margin: 0px;
@@ -458,3 +526,5 @@ export default defineComponent({
   top: 4px;
 }
 </style>
+
+<style></style>
