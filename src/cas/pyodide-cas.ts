@@ -1,6 +1,6 @@
 import type {} from 'vite'
 import type { CasCommand } from './cas'
-import { getGetterNames, useEncoder } from './cas-math'
+import { getAllGetterNames, getGetterNames, useEncoder } from './cas-math'
 import { Expression, format } from '@cortex-js/compute-engine'
 
 export type WorkerMessage =
@@ -366,7 +366,7 @@ export function usePyodide() {
   function executeCommand(command: CasCommand) {
     commands.set(command.id, command)
 
-    const getterNames = getGetterNames(command.expression)
+    const getterNames = getAllGetterNames(command.expression, command.gettersData)
     const symbolNames = Array.from(getterNames).map((key) => encodeName(key))
 
     const substitutions = Array.from(command.gettersData.entries())
@@ -446,7 +446,7 @@ export function usePyodide() {
       return
     }
 
-    console.log('Python expression', pythonExpression)
+    console.log('Python expression', pythonExpression, ' symbols', symbolNames)
     sendCommand({
       type: 'expression',
       id: command.id,

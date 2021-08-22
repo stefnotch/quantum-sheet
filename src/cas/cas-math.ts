@@ -41,6 +41,29 @@ export function getGetterNames(expression: Expression) {
 }
 
 /**
+ * Gets all the variables that are being read, including their references, recursively
+ */
+export function getAllGetterNames(expression: Expression, gettersData: Map<string, Expression>) {
+  // Recursively get all getters. If a getter references some other getter, we get its value.
+  const getterNames = new Set<string>()
+  const queue = [...getGetterNames(expression)]
+
+  while (queue.length > 0) {
+    const name = queue.pop()
+    if (name === undefined) continue
+    if (getterNames.has(name)) continue
+
+    getterNames.add(name)
+    const expressionData = gettersData.get(name)
+    if (expressionData !== undefined) {
+      queue.push(...getGetterNames(expressionData))
+    }
+  }
+
+  return getterNames
+}
+
+/**
  * Variables that are being *written* to
  */
 export function getVariableNames(expression: Expression) {
