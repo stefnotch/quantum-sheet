@@ -62,7 +62,7 @@ function usePythonConverter() {
       }
       return output
     } else if (typeof expression === 'string') {
-      return decodeName(expression)
+      return expression.startsWith('_') ? decodeName(expression) : expression
     } else {
       return expression
     }

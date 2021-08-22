@@ -309,7 +309,7 @@ function usePages<T extends QuantumDocumentElementTypes>(quantumDocument: UseQua
 
   function lowestElementPosition(arr) {
     // The largest number at first should be the first element or null for empty array
-    var largest = arr[0].position.value.y || null
+    var largest = arr.length > 0 ? arr[0].position.value.y : null
     // Current number, handled by the loop
     var number = null
     for (var i = 0; i < arr.length; i++) {
@@ -325,6 +325,9 @@ function usePages<T extends QuantumDocumentElementTypes>(quantumDocument: UseQua
   function updatePageCount() {
     const maxElPos = getPageNumberOfPosition(lowestElementPosition(quantumDocument.elements))
     pageCount.value = Math.ceil(maxElPos + 0.1)
+    if (pageCount.value < 1 || Number.isNaN(pageCount.value)) {
+      pageCount.value = 1
+    }
   }
 
   function addPage() {
