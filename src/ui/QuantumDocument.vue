@@ -196,7 +196,6 @@ function useGrid<T extends QuantumDocumentElementTypes>(
 }
 
 function useElementSelection<T extends QuantumDocumentElementTypes>(quantumDocument: UseQuantumDocument<T>) {
-  console.log('selecto', quantumDocument)
   const selectedIDs = ref<string[]>([])
   // let selecto = undefined
   nextTick(function () {
@@ -240,14 +239,10 @@ function useElementSelection<T extends QuantumDocumentElementTypes>(quantumDocum
             selectedIDs.value.splice(index, 1)
           }
         })
-
-        console.log(e, selectedIDs)
       })
       .on('dragStart', (e) => {
         const target = e.inputEvent.target
-        console.log('dragStart', e, target)
         if (selecto.getSelectedTargets().includes(target)) {
-          console.log('nope!')
           e.stop()
         }
       })
@@ -286,7 +281,6 @@ function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: 
     .on('dragmove', (event) => {
       // event.target?.classList.add('dragging')
       // const quantumElement = quantumDocument.getElementById(event.target.id)
-      console.log('sid', selectedIDs)
       selectedIDs.value.forEach((id) => {
         const quantumElement = quantumDocument.getElementById(id)
         let delta = new Vector2(event.dx / quantumDocument.options.gridCellSize.x, event.dy / quantumDocument.options.gridCellSize.y)
