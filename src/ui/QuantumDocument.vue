@@ -316,6 +316,11 @@ function useEvents<T extends QuantumDocumentElementTypes>(
 
   function handleKeyboardEvent(event: KeyboardEvent) {
     if (event.type === 'keydown') {
+      if (event.key === 'Delete') {
+        selection.selectedIDs.value.forEach((id: string) => {
+          quantumDocument.deleteElement(quantumDocument.getElementById(id) as QuantumElement)
+        })
+      }
       grid.keydown(event)
     } else if (event.type === 'keyup') {
       grid.keyup(event)
