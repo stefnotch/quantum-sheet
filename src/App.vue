@@ -21,6 +21,7 @@ import LandingPage from './ui/LandingPage.vue'
 import { useDocumentManager } from './model/document/document-manager'
 import { UseQuantumDocument } from './model/document/document'
 import { useUrlSearchParams } from '@vueuse/core'
+import { cas } from './model/cas' // Load the CAS as early as possible
 
 export default defineComponent({
   name: 'App',
@@ -47,6 +48,11 @@ export default defineComponent({
           docManager.loadDocument(v)
         })
     }
+
+    cas.doneLoading.then(() => {
+      // TODO: Properly show this in the bottom bar
+      console.log('Done loading')
+    })
 
     return { docManager }
   },

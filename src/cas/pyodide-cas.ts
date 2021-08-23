@@ -327,41 +327,43 @@ export function usePyodide() {
   const commandBuffer: WorkerMessage[] = []
   const { encodeName, decodeNames, expressionToPython, KnownLatexFunctions } = usePythonConverter()
   const commands = new Map<string, CasCommand>()
+  const doneLoading = new Promise<void>((resolve, reject) => {
+    getOrCreateWorker().then(
+      (result) => {
+        console.log('Done creating worker!')
+        worker = result
 
-  getOrCreateWorker().then(
-    (result) => {
-      console.log('Done creating worker!')
-      worker = result
+        worker.onmessage = (e) => {
+          let response = e.data as WorkerResponse
+          console.log('Response', response)
 
-      worker.onmessage = (e) => {
-        let response = e.data as WorkerResponse
-        console.log('Response', response)
-
-        if (response.type == 'result') {
-          const command = commands.get(response.id)
-          command?.callback(decodeNames(JSON.parse(response.data)))
-          commands.delete(response.id)
-        } else if (response.type == 'error') {
-          console.warn(response)
-          commands.delete(response.id)
-        } else {
-          console.error('Unknown response type', response)
+          if (response.type == 'result') {
+            const command = commands.get(response.id)
+            command?.callback(decodeNames(JSON.parse(response.data)))
+            commands.delete(response.id)
+          } else if (response.type == 'error') {
+            console.warn(response)
+            commands.delete(response.id)
+          } else {
+            console.error('Unknown response type', response)
+          }
         }
+        worker.onerror = (e) => {
+          console.warn('Worker error', e)
+        }
+        worker.onmessageerror = (e) => {
+          console.error('Message error', e)
+        }
+        resolve()
+        commandBuffer.forEach((v) => sendCommand(v))
+        commandBuffer.length = 0
+      },
+      (error) => {
+        console.error(error)
+        reject(new Error(error))
       }
-      worker.onerror = (e) => {
-        console.warn('Worker error', e)
-      }
-      worker.onmessageerror = (e) => {
-        console.error('Message error', e)
-      }
-
-      commandBuffer.forEach((v) => sendCommand(v))
-      commandBuffer.length = 0
-    },
-    (error) => {
-      throw new Error(error)
-    }
-  )
+    )
+  })
 
   function executeCommand(command: CasCommand) {
     commands.set(command.id, command)
@@ -470,6 +472,7 @@ export function usePyodide() {
   }
 
   return {
+    doneLoading,
     executeCommand,
     cancelCommand,
   }
