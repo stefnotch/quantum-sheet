@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { usePyodide } from './pyodide-cas'
 
 export interface UseCas {
+  doneLoading: Promise<void>
   executeCommand(command: CasCommand): void
   cancelCommand(command: CasCommand): void
 }
@@ -41,7 +42,8 @@ export function useCas(): UseCas {
   }
 
   return {
+    doneLoading: cas.doneLoading,
     executeCommand,
-    cancelCommand
+    cancelCommand,
   }
 }
