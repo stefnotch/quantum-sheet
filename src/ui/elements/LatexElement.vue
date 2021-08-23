@@ -28,6 +28,7 @@ export default defineComponent({
     'focused-element-commands': (value: ElementCommands | undefined) => true,
     'move-cursor-out': (direction: Vector2) => true, // TODO: Mathlive supports getting the screen position of the cursor. Use that!
     'delete-element': () => true,
+    'resized-element': () => true,
   },
   setup(props, context) {
     const mathfieldContainer = ref<HTMLElement>()
@@ -47,7 +48,6 @@ export default defineComponent({
     // Show expression when the document-latex changes
     watch([expressionElement.latex, mathfield], ([value, _]) => {
       mathfield.value?.setValue(value, {
-        suppressChangeNotifications: true,
         mode: 'math', // TODO: Why is this needed for `\text{}` to work?
       })
     })
@@ -65,6 +65,9 @@ export default defineComponent({
           smartFence: true,
           plonkSound: null,
           keypressSound: null,
+          onContentDidChange: (mathfield: MathLive.Mathfield) => {
+            context.emit('resized-element')
+          },
           onFocus: (mathfield: MathLive.Mathfield) => {
             expressionElement.setFocused(true)
             context.emit('focused-element-commands', {

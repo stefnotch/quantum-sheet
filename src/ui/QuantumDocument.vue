@@ -59,6 +59,7 @@
         @focused-element-commands="(value) => (focusedElementCommands.commands.value = value)"
         @move-cursor-out="(value) => grid.moveCrosshairOut(element, value)"
         @delete-element="document.deleteElement(element)"
+        @resized-element="() => resizedElement(element)"
       ></component>
     </div>
   </div>
@@ -219,7 +220,6 @@ function useElementSelection<T extends QuantumDocumentElementTypes>(quantumDocum
 
 function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: UseQuantumDocument<T>, pages, selectedIDs: Ref<string[]>) {
   // TODO: Investigate or try out Moveable.js
-  // I got stuff to break by adding a few blocks, moving them around and stuff
   // Tell interactjs to make every .quantum-block interactive. This includes the ones that will get added in the future
   interact('.quantum-block')
     .draggable({
@@ -411,7 +411,41 @@ function usePages<T extends QuantumDocumentElementTypes>(quantumDocument: UseQua
     height,
   }
 }
+function useFocusedSizeWatcher() {
+  let watchedElement: QuantumElement | null = null
 
+  const observer = new ResizeObserver((entries) => {
+    if (!watchedElement) return
+
+    // Minimum size
+    let width = 1
+    let height = 1
+    for (let entry of entries) {
+      if (entry.borderBoxSize) {
+        // The browser vendors can't agree on whether this should be an array or not
+        const boxSize: ResizeObserverSize = Array.isArray(entry.borderBoxSize) ? entry.borderBoxSize[0] : entry.borderBoxSize
+
+        width = Math.max(width, boxSize.inlineSize)
+        height = Math.max(height, boxSize.blockSize)
+      }
+    }
+    watchedElement.setSize(new Vector2(width, height))
+  })
+
+  function watchElement(element: QuantumElement, htmlElment: HTMLElement) {
+    watchedElement = element
+    observer.observe(htmlElment)
+  }
+
+  // TODO: Some elements will update their size after losing focus
+  // Maybe it'd be better to force the elements to set their size themselves.
+  function stopWatching() {
+    observer.disconnect()
+    watchedElement = null
+  }
+
+  return { watchElement, stopWatching }
+}
 /**
  * To say which document-element type corresponds to which Vue.js component
  */
@@ -451,6 +485,7 @@ export default defineComponent({
     const clipboard = useClipboard(document)
     const selection = useElementSelection(document)
     const elementDrag = useElementDrag(document, pages, selection.selectedIDs)
+    const focusedElementSize = useFocusedSizeWatcher()
     const events = useEvents(document, focusedElementCommands.commands, grid, selection, UI)
 
     function log(ev: any) {
@@ -475,12 +510,18 @@ export default defineComponent({
 
     context.emit('quantum-document', document)
 
+    function resizedElement(a, b) {
+      console.log(a, b)
+    }
+
     return {
       document,
       documentElement,
       documentInputElement,
 
       focusedElementCommands,
+      focusedElementSize,
+      resizedElement,
       grid,
       pages,
       clipboard,
@@ -498,7 +539,6 @@ export default defineComponent({
 </script>
 
 <style scoped>
-/*TODO: Use this https://github.com/vuejs/rfcs/blob/master/active-rfcs/0043-sfc-style-variables.md for the grid size and stuff? */
 .theme-paper-standard {
   /* Standard Grid Papaer Style */
   --color: white;
@@ -596,5 +636,3 @@ export default defineComponent({
   top: 4px;
 }
 </style>
-
-<style></style>

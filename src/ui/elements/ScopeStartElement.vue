@@ -18,6 +18,7 @@ export default defineComponent({
   },
   emits: {
     'focused-element-commands': (value: ElementCommands | undefined) => true,
+    'resized-element': () => true,
   },
   setup(props, context) {
     const scopeElement = props.modelGetter()

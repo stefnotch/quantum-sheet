@@ -55,6 +55,7 @@ export default defineComponent({
     'focused-element-commands': (value: ElementCommands | undefined) => true,
     'move-cursor-out': (direction: Vector2) => true, // TODO: Mathlive supports getting the screen position of the cursor. Use that!
     'delete-element': () => true,
+    'resized-element': () => true,
   },
   setup(props, context) {
     const mathfieldContainer = ref<HTMLElement>()
@@ -85,6 +86,7 @@ export default defineComponent({
         suppressChangeNotifications: true,
         mode: 'math', // TODO: Why is this needed for `\text{}` to work?
       })
+      context.emit('resized-element')
     })
 
     /**
@@ -122,6 +124,7 @@ export default defineComponent({
           keypressSound: null,
           onContentDidChange: (mathfield: MathLive.Mathfield) => {
             // TODO: If the expression is simple enough, we can optionally show a preview of the result
+            context.emit('resized-element')
           },
           onFocus: (mathfield: MathLive.Mathfield) => {
             expressionElement.setFocused(true)
