@@ -157,7 +157,7 @@ export default defineComponent({
   },
   props: {},
   setup(props, context) {
-    // Garbage, clean this up.
+    // TODO: This whole file is Garbage, clean this up.
     const appActions = useAppActions()
     const docActions = useDocActions()
 
