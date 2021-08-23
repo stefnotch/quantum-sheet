@@ -1,5 +1,6 @@
 import { readonly, shallowReactive, shallowRef, ref, watch, Ref, inject } from 'vue'
 import { useDocumentManager } from '../model/document/document-manager'
+import { notification } from 'ant-design-vue'
 
 const docManager = useDocumentManager()
 
@@ -48,6 +49,14 @@ export function useUI() {
     documentPrefsModal.value = false
   }
 
+  function notify(type: string, message: string, description: string) {
+    const config = {
+      message,
+      description,
+    }
+    notification[type](config)
+  }
+
   return {
     promptNewFile,
     promptCloseFile,
@@ -60,6 +69,8 @@ export function useUI() {
 
     closeDocPrefsModal,
     documentPrefsModal,
+
+    notify,
 
     serializedDocument,
   }
