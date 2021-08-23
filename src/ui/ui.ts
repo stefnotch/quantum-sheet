@@ -5,7 +5,7 @@ import { notification } from 'ant-design-vue'
 const docManager = useDocumentManager()
 
 function useUIPreferences() {
-  // TODO: Theme - Light, Dark, Custom?
+  // TODO: Theme - Light, Dark, Custom? (We can probably use https://vueuse.org/core/usepreferreddark/ )
   // TODO: Zoom
   // TODO: Page Numbers?
 }
@@ -49,7 +49,7 @@ export function useUI() {
     documentPrefsModal.value = false
   }
 
-  function notify(type: string, message: string, details: any) {
+  function notify(type: 'success' | 'error' | 'warning', message: string, details: any) {
     let description = ''
     if (typeof details !== 'string') {
       description = JSON.stringify(details)
