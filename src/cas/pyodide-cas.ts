@@ -331,12 +331,14 @@ export function usePyodide() {
   const commandBuffer: WorkerMessage[] = []
   const { encodeName, decodeNames, expressionToPython, KnownLatexFunctions } = usePythonConverter()
   const commands = new Map<string, CasCommand>()
+  UI.CASStatus.setDisconnected()
   const doneLoading = new Promise<void>((resolve, reject) => {
     getOrCreateWorker().then(
       (result) => {
         console.log('Done creating worker!')
         worker = result
         UI.notify('success', 'Pyodide worker created', 'You can use Quantum Sheet now')
+        UI.CASStatus.setReady()
 
         worker.onmessage = (e) => {
           let response = e.data as WorkerResponse
@@ -348,7 +350,7 @@ export function usePyodide() {
             commands.delete(response.id)
           } else if (response.type == 'error') {
             console.warn(response)
-            UI.notify('error', 'CAS error', response.message)
+            UI.error('CAS error', response.message)
             commands.delete(response.id)
           } else {
             console.error('Unknown response type', response)
@@ -356,11 +358,11 @@ export function usePyodide() {
         }
         worker.onerror = (e) => {
           console.warn('Worker error', e)
-          UI.notify('warning', 'Worker Error', e)
+          UI.warn('Worker Error', e)
         }
         worker.onmessageerror = (e) => {
           console.error('Message error', e)
-          UI.notify('error', 'Message Error', e)
+          UI.error('Message Error', e)
         }
         resolve()
         commandBuffer.forEach((v) => sendCommand(v))
@@ -368,7 +370,8 @@ export function usePyodide() {
       },
       (error) => {
         console.error(error)
-        UI.notify('error', 'Pyodide worker error', error)
+        UI.error('Pyodide worker error', error)
+        UI.CASStatus.setError()
         reject(new Error(error))
       }
     )

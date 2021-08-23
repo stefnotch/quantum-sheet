@@ -6,8 +6,15 @@
           <div :style="{ width: '20px' }" />
           <a-tooltip :mouseEnterDelay="1">
             <template #title> Calculate </template>
-            <a-button size="small" type="primary" @click="appActions.compute">
-              <CalculatorOutlined />
+            <a-button
+              size="small"
+              :type="{ ready: 'primary', disconnected: 'dashed' }[UI.CASStatus.casState.value]"
+              :danger="UI.CASStatus.casState.value === 'error'"
+              @click="appActions.compute"
+            >
+              <!-- <CalculatorOutlined /> -->
+              <!-- <a-icon :type="UI.CASStatus.icon.value" /> -->
+              <Icon :icon="UI.CASStatus.icon.value" :id="UI.CASStatus.icon.value" />
             </a-button>
           </a-tooltip>
           <!-- Auto Calculate -->
@@ -100,39 +107,23 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, reactive, inject } from 'vue'
+import { defineComponent, ref, reactive, inject, watch } from 'vue'
 import { ExportOutlined, CalculatorOutlined, AppstoreOutlined } from '@ant-design/icons-vue'
+import { useUI } from './ui'
+import { Icon } from './icon'
 
-function useDocOptions() {
-  const state = reactive({
-    scrollPosition: null,
-    outputFormat: 'LaTeX',
-    mathOptions: {
-      numberformat: 'decimals',
-      decimals: 5,
-      outputFormat: 'LaTeX',
-    },
-  })
-  return state
-}
-
-function useDocActions($emitter: any, docOptions: any, appActions: any) {
-  function handleChangeNformat(value: any) {
-    docOptions.mathOptions.numberformat = value
-    updateDocOptions()
+function useDocActions() {
+  function handleChangeNformat() {
+    return
   }
   function handleChangeOUTformat(value: any) {
-    console.log(value)
-    docOptions.mathOptions.outputFormat = value
-    updateDocOptions()
-    appActions.compute()
+    return
   }
   function handleChangeDecimalPlaces(value: any) {
-    docOptions.mathOptions.decimals = value
-    updateDocOptions()
+    return
   }
   function updateDocOptions() {
-    $emitter.emit('doc-math-options', docOptions.mathOptions)
+    return
   }
   return {
     handleChangeNformat,
@@ -140,16 +131,15 @@ function useDocActions($emitter: any, docOptions: any, appActions: any) {
     handleChangeDecimalPlaces,
   }
 }
-function useAppActions($emitter: any) {
+function useAppActions() {
   function handleChangeScratchPad(value: any) {
-    console.log(value)
-    $emitter.emit('togglescratch', value)
+    return
   }
   function togglevirtualkb() {
-    $emitter.emit('togglevirtualkb')
+    return
   }
   function compute() {
-    $emitter.emit('compute')
+    return
   }
   return {
     handleChangeScratchPad,
@@ -163,18 +153,21 @@ export default defineComponent({
     ExportOutlined,
     CalculatorOutlined,
     AppstoreOutlined,
+    Icon,
   },
   props: {},
   setup(props, context) {
-    const $emitter = inject('$emitter')
-    const docOptions = useDocOptions()
-    const appActions = useAppActions($emitter)
-    const docActions = useDocActions($emitter, docOptions, appActions)
+    // Garbage, clean this up.
+    const appActions = useAppActions()
+    const docActions = useDocActions()
+
+    const UI = useUI()
 
     return {
-      docActions,
-      docOptions,
       appActions,
+      docActions,
+
+      UI,
     }
   },
 })

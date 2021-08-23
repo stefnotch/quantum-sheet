@@ -1,6 +1,8 @@
-import { readonly, shallowReactive, shallowRef, ref, watch, Ref, inject } from 'vue'
+import { readonly, shallowReactive, shallowRef, ref, watch, Ref, inject, defineComponent, computed } from 'vue'
 import { useDocumentManager } from '../model/document/document-manager'
 import { notification } from 'ant-design-vue'
+
+const casState = ref('disconnected')
 
 const docManager = useDocumentManager()
 
@@ -8,6 +10,45 @@ function useUIPreferences() {
   // TODO: Theme - Light, Dark, Custom?
   // TODO: Zoom
   // TODO: Page Numbers?
+}
+
+function useCASStatus(CASStatus: Ref<string>) {
+  const statusIcons = {
+    disconnected: 'ApiOutlined',
+    loading: 'LoadingOutlined',
+    ready: 'CalculatorOutlined',
+    error: 'WarningOutlined',
+  }
+
+  const icon = computed(() => statusIcons[casState.value])
+
+  function setStatus(s: string) {
+    casState.value = s
+  }
+
+  function setReady() {
+    casState.value = 'ready'
+    console.log('ready', casState, casState.value)
+  }
+  function setLoading() {
+    casState.value = 'loading'
+  }
+  function setDisconnected() {
+    casState.value = 'disconnected'
+  }
+  function setError() {
+    casState.value = 'error'
+  }
+
+  return {
+    casState,
+    icon,
+    setStatus,
+    setReady,
+    setLoading,
+    setDisconnected,
+    setError,
+  }
 }
 
 export function useUI() {
@@ -19,6 +60,7 @@ export function useUI() {
   const fileConfirmClose: Ref<boolean> = ref(false)
   const serializedDocument: Ref<string> = ref('')
   // TODO: UI Preferences
+  const CASStatus = useCASStatus(casState)
 
   function promptNewFile() {
     fileNewModal.value = true
@@ -50,12 +92,7 @@ export function useUI() {
   }
 
   function notify(type: string, message: string, details: any) {
-    let description = ''
-    if (typeof details !== 'string') {
-      description = JSON.stringify(details)
-    } else {
-      description = details
-    }
+    let description = typeof details !== 'string' ? JSON.stringify(details) : details
     const config = {
       message,
       description,
@@ -63,7 +100,36 @@ export function useUI() {
     notification[type](config)
   }
 
+  function log(message: string, details: any) {
+    let description = typeof details !== 'string' ? JSON.stringify(details) : details
+    const config = {
+      message,
+      description,
+    }
+    notification.info(config)
+  }
+
+  function warn(message: string, details: any) {
+    let description = typeof details !== 'string' ? JSON.stringify(details) : details
+    const config = {
+      message,
+      description,
+    }
+    notification.warn(config)
+  }
+
+  function error(message: string, details: any) {
+    let description = typeof details !== 'string' ? JSON.stringify(details) : details
+    const config = {
+      message,
+      description,
+    }
+    notification.error(config)
+  }
+
   return {
+    CASStatus,
+
     promptNewFile,
     promptCloseFile,
     openFileSaveModal,
@@ -77,6 +143,9 @@ export function useUI() {
     documentPrefsModal,
 
     notify,
+    log,
+    warn,
+    error,
 
     serializedDocument,
   }
