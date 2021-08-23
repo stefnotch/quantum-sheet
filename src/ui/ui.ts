@@ -28,7 +28,6 @@ function useCASStatus(CASStatus: Ref<string>) {
 
   function setReady() {
     casState.value = 'ready'
-    console.log('ready', casState, casState.value)
   }
   function setLoading() {
     casState.value = 'loading'
