@@ -43,6 +43,7 @@
       <span class="page-number">{{ page }}</span>
       <span class="next-page-number">{{ page + 1 }}</span>
     </div>
+    <!-- TODO: Investigate moving quantum-blocks into a component, preferably one that has a <slot> for the actual components -->
     <div
       class="quantum-block"
       v-for="element in document.elements"
