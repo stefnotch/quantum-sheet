@@ -64,23 +64,6 @@ export function getAllGetterNames(expression: Expression, gettersData: Map<strin
   return getterNames
 }
 
-/**
- * Variables that are being *written* to
- */
-export function getVariableNames(expression: Expression) {
-  // TODO: This can easily be done with the match function
-  const variables = new Set<string>()
-  if (Array.isArray(expression) && expression[0] == 'Assign') {
-    if (typeof expression[1] == 'string') {
-      variables.add(expression[1])
-    } else {
-      // TODO: Handle variable arrays
-      throw new Error('Cannot assign to this ' + expression[1])
-    }
-  }
-  return variables
-}
-
 export function useEncoder() {
   const textEncoder = new TextEncoder()
   const textDecoder = new TextDecoder()

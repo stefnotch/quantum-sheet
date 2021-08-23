@@ -9,10 +9,9 @@ export interface UseCas {
 }
 
 // TODO: Top level commands
-// "Assign", "Evaluate", "Equals"
+// "Evaluate", "Equals", "Apply"
 /**
  *
- * Assign: Assign the result to a variable or to multiple variables
  *
  * Equal: Numerical evaluation
  *
@@ -20,7 +19,7 @@ export interface UseCas {
  *
  * TODO: Apply: | apply *3 | apply +2 and things like that
  */
-export type CasExpression = ['Assign' | 'Equal' | 'Evaluate', ...Expression[]]
+export type CasExpression = ['Equal' | 'Evaluate', ...Expression[]]
 
 /**
  * A command has one expression. It is expected that all expressions/commands are submitted and executed in order.

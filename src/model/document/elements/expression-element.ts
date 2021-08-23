@@ -4,9 +4,10 @@ import { UseScopedVariable, UseScopedGetter, ScopeElementType } from './scope-el
 import { cas } from '../../cas'
 import { assert } from '../../assert'
 import { CasCommand } from '../../../cas/cas'
-import { getGetterNames, getVariableNames } from '../../../cas/cas-math'
+import { getGetterNames } from '../../../cas/cas-math'
 import { Expression, match, substitute } from '@cortex-js/compute-engine'
 import { Vector2 } from '../../vectors'
+import { handleExpressionValue } from './../../../cas/mathjson-utils'
 
 export const ElementType = 'expression-element'
 
@@ -203,21 +204,33 @@ export class ExpressionElement extends QuantumElement {
       }
     }
 
+    handleExpressionValue(this.expression.value, {
+      function: (value) => {
+        if (typeof value.head !== 'string') return
+
+        // Maybe don't hardcode this here, it seems like it'd be worth documenting *somewhere*
+        if (value.head == 'Assign') {
+          evaluateExpression(value.args[1], (result) => {
+            this.runningCasExpression.value = new CasCommand(
+              gettersData, // TODO: Don't pass in all getters (or pass in a reference to the getters?)
+              ['Equal', result, null],
+              (result) => {
+                // TODO: Support assigning to multiple variables
+                assert(this.variables.size === 1, 'Assigning to multiple variables not supported yet')
+                this.variables.forEach((v) => v.setData(result))
+              }
+            )
+            cas.executeCommand(this.runningCasExpression.value)
+          })
+        } else {
+          assert(this.variables.size === 0, 'Expected no variables')
+          evaluateExpression(this.expression.value, (result) => {})
+        }
+      },
+    })
+
     if (Array.isArray(this.expression.value) && this.expression.value[0] == 'Assign') {
-      evaluateExpression(this.expression.value[2], (result) => {
-        this.runningCasExpression.value = new CasCommand(
-          gettersData, // TODO: Don't pass in all getters (or pass in a reference to the getters?)
-          ['Equal', result, null],
-          (result) => {
-            // TODO: Support assigning to multiple variables
-            assert(this.variables.size === 1, 'Assigning to multiple variables not supported yet')
-            this.variables.forEach((v) => v.setData(result))
-          }
-        )
-        cas.executeCommand(this.runningCasExpression.value)
-      })
     } else {
-      assert(this.variables.size === 0, 'Expected no variables')
       evaluateExpression(this.expression.value, (result) => {})
     }
   }
@@ -244,6 +257,23 @@ function clearResult(expression: Expression) {
   } else {
     return expression
   }
+}
+
+/**
+ * Variables that are being *written* to
+ */
+function getVariableNames(expression: Expression) {
+  // TODO: This can be done with the match function (compute engine, wait for next version)
+  const variables = new Set<string>()
+  if (Array.isArray(expression) && expression[0] == 'Assign') {
+    if (typeof expression[1] == 'string') {
+      variables.add(expression[1])
+    } else {
+      // TODO: Handle variable arrays
+      throw new Error('Cannot assign to this ' + expression[1])
+    }
+  }
+  return variables
 }
 
 export const ExpressionElementType: QuantumElementType<ExpressionElement, typeof ExpressionElement, typeof ElementType> = {
