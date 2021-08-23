@@ -4,6 +4,7 @@ import { Vector2 } from '../../vectors'
 import arrayUtils from '../../array-utils'
 import { assert } from '../../assert'
 import { watchImmediate } from '../../reactivity-utils'
+import type { Expression } from '@cortex-js/compute-engine'
 
 export const ElementType = 'scope-element'
 
@@ -121,7 +122,7 @@ export class ScopeElement extends QuantumElement {
       }
     )
 
-    function setData(data: any) {
+    function setData(data: Expression | null | undefined) {
       variable.data = data
     }
 
@@ -228,7 +229,7 @@ export interface UseScopedVariable {
    * - `null` is a variable without data
    * - anything else is data
    */
-  setData(data: any): void // TODO: Use MathJson type
+  setData(data: Expression | null | undefined): void
   remove(): void
 }
 
@@ -238,7 +239,7 @@ export interface UseScopedGetter {
    * - `null` is a variable without data
    * - anything else is data
    */
-  data: ComputedRef<any>
+  data: ComputedRef<Expression | null | undefined>
   remove(): void
 }
 

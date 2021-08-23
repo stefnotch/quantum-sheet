@@ -8,6 +8,10 @@ export interface UseCas {
   cancelCommand(command: CasCommand): void
 }
 
+// TODO: Top level commands
+// "Assign", "Evaluate", "Equals"
+// type CasExpression = ["Assign"|"Evaluate"|"Equal"|"Apply", ...Expression[]]
+
 export class CasCommand {
   readonly id: string
   readonly gettersData: Map<string, any>

@@ -1,6 +1,6 @@
 import type {} from 'vite'
 import type { CasCommand } from './cas'
-import { getAllGetterNames, getGetterNames, useEncoder } from './cas-math'
+import { getAllGetterNames, useEncoder } from './cas-math'
 import { Expression, format } from '@cortex-js/compute-engine'
 
 export type WorkerMessage =

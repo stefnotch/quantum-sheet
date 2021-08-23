@@ -49,6 +49,26 @@ export class ExpressionElement extends QuantumElement {
   }
 
   /**
+   * Gets all the data from every getter
+   * @returns The expressions or undefined if at least one getter doesn't have its value
+   */
+  private getGettersData() {
+    const gettersData = new Map<string, Expression>()
+    for (const [name, getter] of this.getters) {
+      const data = getter.data.value
+      if (data === undefined) {
+        // It's a symbol
+      } else if (data === null) {
+        // Variable is missing its data
+        return
+      } else {
+        gettersData.set(name, data)
+      }
+    }
+    return gettersData
+  }
+
+  /**
    * User expression input
    * @param value Expression that the user typed
    */
@@ -127,24 +147,22 @@ export class ExpressionElement extends QuantumElement {
 
     if (!this.hasExpression) return
 
-    // Check if all getters that should have a value actually do have a value
-    const gettersData = new Map<string, any>()
-    let allDataDefined = true
-    this.getters.forEach((value, key) => {
-      const data = value.data.value
-      if (data === undefined) {
-        // It's a symbol
-      } else if (data === null) {
-        // Variable is missing its data
-        allDataDefined = false
-      } else {
-        gettersData.set(key, data)
-      }
-    })
-
-    if (!allDataDefined || !this.expression.value) {
+    const gettersData = this.getGettersData()
+    if (!gettersData) {
       return
     }
+    /**
+     * TODO: Where do I document this?
+     * Expression:
+["top level CAS command", actual expression]
+
+Actual expression:
+- Has some direct getters (e.g. 3x+5+1 has `x` as a getter)
+- Those direct getters are either 
+  - symbols (undefined, so then 3x+5+1 would be equal to 3x+6) 
+  - reference some value (e.g. 7, so then 3x+5+1 would be equal to 27)
+  - reference some value with symbols (e.g. 7cm, so then 3x+5+1 would be equal to 21cm+6)
+     */
 
     // TODO:
     /*

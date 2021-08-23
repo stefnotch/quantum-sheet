@@ -41,6 +41,7 @@ export function getGetterNames(expression: Expression) {
 }
 
 /**
+ * TODO: Actually this does too much. Instead, we want to get all direct getters and then any symbols that the getter might be using
  * Gets all the variables that are being read, including their references, recursively
  */
 export function getAllGetterNames(expression: Expression, gettersData: Map<string, Expression>) {
