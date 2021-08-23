@@ -10,16 +10,33 @@ export interface UseCas {
 
 // TODO: Top level commands
 // "Assign", "Evaluate", "Equals"
-// type CasExpression = ["Assign"|"Evaluate"|"Equal"|"Apply", ...Expression[]]
+/**
+ *
+ * Assign: Assign the result to a variable or to multiple variables
+ *
+ * Equal: Numerical evaluation
+ *
+ * Evaluate: Symbolical evaluation
+ *
+ * TODO: Apply: | apply *3 | apply +2 and things like that
+ */
+export type CasExpression = ['Assign' | 'Equal' | 'Evaluate', ...Expression[]]
 
+/**
+ * A command has one expression. It is expected that all expressions/commands are submitted and executed in order.
+ *
+ * The expression can have some direct getters (e.g. 3x+5+1 has `x` as a getter)
+ * Those getters can have a value with some *undefined* symbols. For example `x = 3`, `x = 7cm` and `x = undefined` are all valid values.
+ * Notably, a getter with another getter is not okay. We do not recursively evaluate getters, instead it's expected that it has already been evaluated.
+ */
 export class CasCommand {
   readonly id: string
   readonly gettersData: Map<string, any>
-  readonly expression: Expression
+  readonly expression: CasExpression
 
   readonly callback: (result: any) => void
 
-  constructor(gettersData: Map<string, any>, expression: Expression, callback: (result: any) => void) {
+  constructor(gettersData: Map<string, any>, expression: CasExpression, callback: (result: any) => void) {
     this.id = uuidv4()
     this.gettersData = gettersData
     this.expression = expression

@@ -151,34 +151,6 @@ export class ExpressionElement extends QuantumElement {
     if (!gettersData) {
       return
     }
-    /**
-     * TODO: Where do I document this?
-     * Expression:
-["top level CAS command", actual expression]
-
-Actual expression:
-- Has some direct getters (e.g. 3x+5+1 has `x` as a getter)
-- Those direct getters are either 
-  - symbols (undefined, so then 3x+5+1 would be equal to 3x+6) 
-  - reference some value (e.g. 7, so then 3x+5+1 would be equal to 27)
-  - reference some value with symbols (e.g. 7cm, so then 3x+5+1 would be equal to 21cm+6)
-     */
-
-    // TODO:
-    /*
-      - Topmost can optionally be ["Assign", variables, executeable-expression]
-        - Variables can be "variable" or ["???", "variable", "variable", ...]
-          - Variables will always remain sorted!
-        
-        - Executeable Expression topmost can optionally be
-          - ["Equal", executeable-expression, options, ["Result???", null|result]] = (but only use 2 decimal places) = cm = m
-          - ["Solve", executeable-expression, options, ["Result???", null|result]] --solve, n-->
-          - ["Apply", executeable-expression, options, ["Result???", null|result]] | apply *3 | apply +2
-          - Or it can be a simple-expression
-        
-        - Simple Expression can contain 
-          - "Add", "Subtract", "Multiply", "Divide", ===, <, and so on
-      */
 
     const self = this
     // TODO: Fix c:=8+4=
