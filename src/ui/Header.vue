@@ -1,5 +1,5 @@
 <template>
-  <div class="header">
+  <header class="header">
     <a-row type="flex" justify="space-between" :style="{ height: '36px', lineHeight: '36px', paddingLeft: '20px' }">
       <a-col :span="4">
         <a-space :style="{ height: '36px', alignItems: 'revert' }">
@@ -45,7 +45,7 @@
         </a-space>
       </a-col>
     </a-row>
-  </div>
+  </header>
   <teleport to="#modal">
     <!-- OPEN modal -->
     <a-modal v-model:visible="UI.fileOpenModal.value" title="Open File" ok-text="Open" @ok="UI.confirmFileOpenModal()">

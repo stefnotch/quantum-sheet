@@ -1,5 +1,5 @@
 <template>
-  <div class="footer">
+  <footer class="footer">
     <a-row type="flex" justify="space-between">
       <a-col :span="4">
         <a-space :style="{ height: '36px' }">
@@ -96,7 +96,7 @@
         </a-space>
       </a-col>
     </a-row>
-  </div>
+  </footer>
 </template>
 
 <script lang="ts">
