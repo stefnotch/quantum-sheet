@@ -372,6 +372,7 @@ export function usePyodide() {
     const symbolNames = Array.from(getterNames).map((key) => encodeName(key))
 
     const substitutions = Array.from(command.gettersData.entries())
+      .filter(([key, _]) => getterNames.has(key)) // Only substitute those that actually appear in the expression
       .map(([key, value]) => `${encodeName(key)}:${expressionToPython(value)}`)
       .join(',')
 

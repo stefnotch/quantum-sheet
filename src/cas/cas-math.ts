@@ -32,7 +32,7 @@ export function getGetterNames(expression: Expression) {
         // Symbolical evaluation
         extractGetters(v.args[0])
       } else {
-        extractGetters(v.args)
+        extractGetters([v.head, ...v.args])
       }
     },
   })

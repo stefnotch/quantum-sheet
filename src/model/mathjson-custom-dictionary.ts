@@ -31,6 +31,7 @@ export const dictionary = LatexSyntax.getDictionary() as LatexDictionary<any> //
 
 // `a == b =` should be parsed as `(a == b) =`
 // Basically, it should first check whether the two are equivalent and then calculate the result
+// TODO: Add solve argument
 dictionary.find((v) => v.name === 'EqualEqual')!.precedence = 265
 
 dictionary.find((v) => v.name === 'Equal')!.associativity = 'left'
