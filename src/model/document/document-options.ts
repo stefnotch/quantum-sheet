@@ -23,6 +23,7 @@ export interface DocumentOptions {
   // TODO: Default Result Notation Style - Decimal (# Digits), Scientific, Fraction, other?
   // TODO: Result Text Style? - Text, LaTeX
   // TODO: Default Units
+  // TODO: paperOrientation
 }
 
 export function serializeOptions(options: DocumentOptions): JsonType {
