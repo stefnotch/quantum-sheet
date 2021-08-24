@@ -5,15 +5,19 @@ export interface DocumentOptions {
   /**
    * How large the grid cells are, in pixels
    */
-  gridCellSize: Readonly<Vector2>
+  gridCellSize: Vector2
 
   /**
    * How the background should look
    */
   paperStyle: 'standard' | 'engineering'
 
-  // The paper Size
-  paperSize: any
+  // TODO: One interesting size would be "Infinity" or "Unlimited".
+  //       That would work a bit like websites already do, with the document/website growing to fit the content
+  /**
+   * The paper size
+   */
+  paperSize: 'A4' | 'Letter' | 'Legal'
 
   // TODO: Default Result Notation Style - Decimal (# Digits), Scientific, Fraction, other?
   // TODO: Result Text Style? - Text, LaTeX
