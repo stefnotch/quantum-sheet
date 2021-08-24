@@ -110,7 +110,9 @@
 import { defineComponent, ref, reactive, inject, watch } from 'vue'
 import { ExportOutlined, CalculatorOutlined, AppstoreOutlined } from '@ant-design/icons-vue'
 import * as UI from './ui'
+import * as Notification from './notification'
 import { Icon } from './icon'
+import { cas } from './../model/cas'
 
 function useDocActions() {
   function handleChangeNformat() {
@@ -161,7 +163,17 @@ export default defineComponent({
     const appActions = useAppActions()
     const docActions = useDocActions()
 
-    // const UI = useUI()
+    cas.doneLoading.then(
+      () => {
+        // TODO: Maybe make this notification a bit more subtle? And instead make the loading indicator somewhat more obvious?
+        Notification.notify('success', 'Pyodide worker created', 'You can use Quantum Sheet now')
+        UI.casStatus.setReady()
+      },
+      (error) => {
+        Notification.error('CAS loading error', error)
+        UI.casStatus.setError()
+      }
+    )
 
     return {
       appActions,

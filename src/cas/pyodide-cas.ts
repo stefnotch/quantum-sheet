@@ -2,7 +2,7 @@ import type {} from 'vite'
 import type { CasCommand } from './cas'
 import { getAllGetterNames, getGetterNames, useEncoder } from './cas-math'
 import { Expression, format } from '@cortex-js/compute-engine'
-import * as UI from '../ui/ui'
+import * as UI from '../ui/notification'
 
 export type WorkerMessage =
   | {
@@ -31,8 +31,6 @@ export type WorkerResponse =
       id: string
       message: string
     }
-
-// const UI = useUI()
 
 // TODO: Split out the python converter and contribute it to mathlive/cortex-js?
 function usePythonConverter() {
@@ -211,7 +209,6 @@ function usePythonConverter() {
     } else {
       // TODO: Make sure to handle all cases (string, number, bool, array, object, ...)
       console.warn('Unknown element type', { x: expression })
-      UI.notify('warning', 'Unknown element type', { x: expression })
       return ''
     }
   }
@@ -331,14 +328,11 @@ export function usePyodide() {
   const commandBuffer: WorkerMessage[] = []
   const { encodeName, decodeNames, expressionToPython, KnownLatexFunctions } = usePythonConverter()
   const commands = new Map<string, CasCommand>()
-  UI.casStatus.setDisconnected()
   const doneLoading = new Promise<void>((resolve, reject) => {
     getOrCreateWorker().then(
       (result) => {
         console.log('Done creating worker!')
         worker = result
-        UI.notify('success', 'Pyodide worker created', 'You can use Quantum Sheet now')
-        UI.casStatus.setReady()
 
         worker.onmessage = (e) => {
           let response = e.data as WorkerResponse
@@ -350,22 +344,30 @@ export function usePyodide() {
             commands.delete(response.id)
           } else if (response.type == 'error') {
             console.warn(response)
-            UI.error('CAS error', response.message)
+            UI.error('CAS error', response.message) // TODO: Make CAS independent of UI
             const command = commands.get(response.id)
-            command?.callback('error') // Put 'error' to right of equal sign
+            command?.callback(['Error', 'Missing', { str: (response.message + '').slice(0, 40) }]) // Put 'error' to right of equal sign
             commands.delete(response.id)
           } else {
             console.error('Unknown response type', response)
-            UI.error('Unknown response type', response)
+            setTimeout(() => {
+              throw new Error('Unknown response type ' + response)
+            }, 0)
           }
         }
         worker.onerror = (e) => {
-          console.warn('Worker error', e)
-          UI.warn('Worker Error', e)
+          // If this happens, it's a bug
+          console.error('Worker error', e)
+          setTimeout(() => {
+            throw new Error('Worker Error: ' + e.message)
+          }, 0)
         }
         worker.onmessageerror = (e) => {
+          // If this happens, it's a bug
           console.error('Message error', e)
-          UI.error('Message Error', e)
+          setTimeout(() => {
+            throw new Error('Worker Message Error')
+          }, 0)
         }
         resolve()
         commandBuffer.forEach((v) => sendCommand(v))
@@ -373,9 +375,7 @@ export function usePyodide() {
       },
       (error) => {
         console.error(error)
-        UI.error('Pyodide worker error', error)
-        UI.casStatus.setError()
-        reject(new Error(error))
+        reject(error instanceof Error ? error : new Error(error))
       }
     )
   })
