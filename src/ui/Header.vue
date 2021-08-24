@@ -90,6 +90,7 @@
             >
               <a-select-option value="standard">Standard</a-select-option>
               <a-select-option value="engineer">Engineering</a-select-option>
+              <a-select-option value="printer">Printer</a-select-option>
             </a-select>
           </div>
         </a-form-item>

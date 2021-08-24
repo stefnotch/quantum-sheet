@@ -510,6 +510,11 @@ export default defineComponent({
   --color: #fffdf8;
   --grid-color: #c5dec467;
 }
+.theme-paper-printer {
+  /* Printer Papaer Style */
+  --color: white;
+  --grid-color: white;
+}
 .quantum-document {
   background-color: var(--color);
   --selected-background-color: rgba(68, 148, 202, 0.24);
