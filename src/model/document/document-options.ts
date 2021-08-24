@@ -19,6 +19,7 @@ export interface DocumentOptions {
    */
   paperSize: 'A4' | 'Letter' | 'Legal'
 
+  // TODO: Switch between floats everywhere and real/integers (see sympy)
   // TODO: Default Result Notation Style - Decimal (# Digits), Scientific, Fraction, other?
   // TODO: Result Text Style? - Text, LaTeX
   // TODO: Default Units

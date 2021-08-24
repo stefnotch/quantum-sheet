@@ -3,6 +3,7 @@
     <Header />
     <a-layout class="content">
       <a-layout-content class="drawingtable center">
+        <!-- TODO: Add an "id" property (with a uuid) so that we can recreate the document whenever we want a new document -->
         <quantum-document @quantum-document="(v) => docManager.registerQuantumDocument(v)"></quantum-document>
         <!-- <LandingPage /> -->
       </a-layout-content>
