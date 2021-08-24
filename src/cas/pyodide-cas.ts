@@ -351,6 +351,8 @@ export function usePyodide() {
           } else if (response.type == 'error') {
             console.warn(response)
             UI.error('CAS error', response.message)
+            const command = commands.get(response.id)
+            command?.callback('error') // Put 'error' to right of equal sign
             commands.delete(response.id)
           } else {
             console.error('Unknown response type', response)
