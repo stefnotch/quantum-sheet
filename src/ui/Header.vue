@@ -10,13 +10,13 @@
             <a-button ghost style="height: 36px; color: black">File</a-button>
             <template #overlay>
               <a-menu>
-                <a-menu-item @click="UI.promptNewFile()">
+                <a-menu-item @click="UI.fileInterface.promptNewFile()">
                   <a :style="{ color: 'black' }">New</a>
                 </a-menu-item>
-                <a-menu-item @click="UI.openFileOpenModal()">
+                <a-menu-item @click="UI.fileInterface.openFileOpenModal()">
                   <a :style="{ color: 'black' }">Open...</a>
                 </a-menu-item>
-                <a-menu-item @click="UI.openFileSaveModal()">
+                <a-menu-item @click="UI.fileInterface.openFileSaveModal()">
                   <a :style="{ color: 'black' }">Save as...</a>
                 </a-menu-item>
                 <!-- <a-menu-item @click="UI.promptCloseFile()">
@@ -29,7 +29,7 @@
             <a-button ghost style="height: 36px; color: black">Edit</a-button>
             <template #overlay>
               <a-menu>
-                <a-menu-item @click="() => (UI.documentPrefsModal.value = true)">
+                <a-menu-item @click="() => (UI.fileInterface.documentPrefsModal.value = true)">
                   <a :style="{ color: 'black' }">Document Preferences</a>
                 </a-menu-item>
               </a-menu>
@@ -48,8 +48,12 @@
   </header>
   <teleport to="#modal">
     <!-- OPEN modal -->
-    <a-modal v-model:visible="UI.fileOpenModal.value" title="Open File" ok-text="Open" @ok="UI.confirmFileOpenModal()">
-      <a-textarea v-model:value="UI.serializedDocument.value" :auto-size="{ minRows: 8, maxRows: 20 }" :style="{ marginBottom: '20px' }" />
+    <a-modal v-model:visible="UI.fileInterface.fileOpenModal.value" title="Open File" ok-text="Open" @ok="UI.fileInterface.confirmFileOpenModal()">
+      <a-textarea
+        v-model:value="UI.fileInterface.serializedDocument.value"
+        :auto-size="{ minRows: 8, maxRows: 20 }"
+        :style="{ marginBottom: '20px' }"
+      />
       <a-upload-dragger name="file" :multiple="false" :before-upload="beforeUpload">
         <p class="ant-upload-drag-icon">
           <InboxOutlined />
@@ -60,8 +64,12 @@
   </teleport>
   <teleport to="#modal">
     <!-- SAVE modal -->
-    <a-modal v-model:visible="UI.fileSaveModal.value" title="Save File" ok-text="Done" @ok="UI.closeFileSaveModal()">
-      <a-textarea v-model:value="UI.serializedDocument.value" :auto-size="{ minRows: 8, maxRows: 20 }" :style="{ marginBottom: '20px' }" />
+    <a-modal v-model:visible="UI.fileInterface.fileSaveModal.value" title="Save File" ok-text="Done" @ok="UI.fileInterface.closeFileSaveModal()">
+      <a-textarea
+        v-model:value="UI.fileInterface.serializedDocument.value"
+        :auto-size="{ minRows: 8, maxRows: 20 }"
+        :style="{ marginBottom: '20px' }"
+      />
       <a-button type="primary" size="large" block @click="download()">
         <template #icon>
           <DownloadOutlined />
@@ -74,10 +82,10 @@
     <!-- Document Preferences Modal -->
     <a-modal
       v-if="docManager.currentDocument.value"
-      v-model:visible="UI.documentPrefsModal.value"
+      v-model:visible="UI.fileInterface.documentPrefsModal.value"
       title="Document Prefereences"
       ok-text="Done"
-      @ok="UI.closeDocPrefsModal()"
+      @ok="UI.fileInterface.closeDocPrefsModal()"
     >
       <a-form :label-col="{ span: 5 }" :wrapper-col="{ span: 12 }">
         <a-form-item label="Paper Style:">
@@ -118,7 +126,7 @@ import { defineComponent, ref, inject, reactive } from 'vue'
 import { InboxOutlined, DownloadOutlined } from '@ant-design/icons-vue'
 import pkg from '../../package.json'
 
-import { useUI } from './ui'
+import * as UI from './ui'
 import { useDocumentManager } from '../model/document/document-manager'
 
 export default defineComponent({
@@ -127,13 +135,13 @@ export default defineComponent({
     DownloadOutlined,
   },
   setup(props, context) {
-    const UI = useUI()
+    // const UI = useUI()
     const docManager = useDocumentManager()
 
     function download(filename: string, text: string) {
       // defaults
       filename ? filename : (filename = 'quantum_document.qd')
-      text ? text : (text = UI.serializedDocument.value)
+      text ? text : (text = UI.fileInterface.serializedDocument.value)
       var element = document.createElement('a')
       element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text))
       element.setAttribute('download', filename)
@@ -153,7 +161,7 @@ export default defineComponent({
         let data = (blob as string)?.split(',')
         let base64 = data[1]
         let string = atob(base64)
-        UI.serializedDocument.value = string
+        UI.fileInterface.serializedDocument.value = string
       })
       reader.readAsDataURL(file)
       return false // to prevent antd fron trying to upload somewhere

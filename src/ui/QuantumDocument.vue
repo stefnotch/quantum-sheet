@@ -74,7 +74,7 @@ import LatexElement, { LatexElementType } from './elements/LatexElement.vue'
 import { useFocusedElementCommands, ElementCommands } from './elements/element-commands'
 import { Vector2 } from '../model/vectors'
 import { QuantumElement, JsonType } from '../model/document/document-element'
-import { useUI } from './ui'
+import * as UI from './ui'
 import interact from 'interactjs'
 import Selecto from 'selecto'
 
@@ -323,7 +323,7 @@ function useEvents<T extends QuantumDocumentElementTypes>(
       } else if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
         grid.keydown(event)
       } else if (event.code === 'KeyZ' && event.ctrlKey) {
-        UI.notify('warning', 'Unsupported Action', 'Undo/Redo unsupported at the moment')
+        UI.warn('Unsupported Action', 'Undo/Redo unsupported at the moment')
       } else {
         // Nothing, pass along to potential InputEvents
       }
@@ -445,7 +445,7 @@ export default defineComponent({
     const documentElement = ref<HTMLElement>()
     const documentInputElement = ref<HTMLElement>()
 
-    const UI = useUI()
+    // const UI = useUI()
     const focusedElementCommands = useFocusedElementCommands()
     const grid = useGrid(document, documentInputElement)
     const pages = usePages(document)

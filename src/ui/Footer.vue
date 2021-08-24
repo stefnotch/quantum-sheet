@@ -8,13 +8,13 @@
             <template #title> Calculate </template>
             <a-button
               size="small"
-              :type="{ ready: 'primary', disconnected: 'dashed' }[UI.CASStatus.casState.value]"
-              :danger="UI.CASStatus.casState.value === 'error'"
+              :type="{ ready: 'primary', disconnected: 'dashed' }[UI.casStatus.casState.value]"
+              :danger="UI.casStatus.casState.value === 'error'"
               @click="appActions.compute"
             >
               <!-- <CalculatorOutlined /> -->
-              <!-- <a-icon :type="UI.CASStatus.icon.value" /> -->
-              <Icon :icon="UI.CASStatus.icon.value" :id="UI.CASStatus.icon.value" />
+              <!-- <a-icon :type="UI.casStatus.icon.value" /> -->
+              <Icon :icon="UI.casStatus.casIcon.value" :id="UI.casStatus.casIcon.value" />
             </a-button>
           </a-tooltip>
           <!-- Auto Calculate -->
@@ -109,7 +109,7 @@
 <script lang="ts">
 import { defineComponent, ref, reactive, inject, watch } from 'vue'
 import { ExportOutlined, CalculatorOutlined, AppstoreOutlined } from '@ant-design/icons-vue'
-import { useUI } from './ui'
+import * as UI from './ui'
 import { Icon } from './icon'
 
 function useDocActions() {
@@ -161,7 +161,7 @@ export default defineComponent({
     const appActions = useAppActions()
     const docActions = useDocActions()
 
-    const UI = useUI()
+    // const UI = useUI()
 
     return {
       appActions,

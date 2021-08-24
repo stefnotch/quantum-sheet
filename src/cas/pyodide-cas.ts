@@ -2,7 +2,7 @@ import type {} from 'vite'
 import type { CasCommand } from './cas'
 import { getAllGetterNames, getGetterNames, useEncoder } from './cas-math'
 import { Expression, format } from '@cortex-js/compute-engine'
-import { useUI } from '../ui/ui'
+import * as UI from '../ui/ui'
 
 export type WorkerMessage =
   | {
@@ -32,7 +32,7 @@ export type WorkerResponse =
       message: string
     }
 
-const UI = useUI()
+// const UI = useUI()
 
 // TODO: Split out the python converter and contribute it to mathlive/cortex-js?
 function usePythonConverter() {
@@ -331,14 +331,14 @@ export function usePyodide() {
   const commandBuffer: WorkerMessage[] = []
   const { encodeName, decodeNames, expressionToPython, KnownLatexFunctions } = usePythonConverter()
   const commands = new Map<string, CasCommand>()
-  UI.CASStatus.setDisconnected()
+  UI.casStatus.setDisconnected()
   const doneLoading = new Promise<void>((resolve, reject) => {
     getOrCreateWorker().then(
       (result) => {
         console.log('Done creating worker!')
         worker = result
         UI.notify('success', 'Pyodide worker created', 'You can use Quantum Sheet now')
-        UI.CASStatus.setReady()
+        UI.casStatus.setReady()
 
         worker.onmessage = (e) => {
           let response = e.data as WorkerResponse
@@ -354,6 +354,7 @@ export function usePyodide() {
             commands.delete(response.id)
           } else {
             console.error('Unknown response type', response)
+            UI.error('Unknown response type', response)
           }
         }
         worker.onerror = (e) => {
@@ -371,7 +372,7 @@ export function usePyodide() {
       (error) => {
         console.error(error)
         UI.error('Pyodide worker error', error)
-        UI.CASStatus.setError()
+        UI.casStatus.setError()
         reject(new Error(error))
       }
     )

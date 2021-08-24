@@ -221,6 +221,9 @@ export class ExpressionElement extends QuantumElement {
           (result) => {
             // TODO: Support assigning to multiple variables
             assert(this.variables.size === 1, 'Assigning to multiple variables not supported yet')
+            if (this.variables.size !== 1) {
+              UI.warn('Worker Error', e)
+            }
             this.variables.forEach((v) => v.setData(result))
           }
         )

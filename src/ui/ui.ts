@@ -5,14 +5,22 @@ import { notification } from 'ant-design-vue'
 const casState = ref('disconnected')
 
 const docManager = useDocumentManager()
+const fileNewModal: Ref<boolean> = ref(false)
+const fileSaveModal: Ref<boolean> = ref(false)
+const fileOpenModal: Ref<boolean> = ref(false)
+const documentPrefsModal: Ref<boolean> = ref(false)
 
+const fileConfirmClose: Ref<boolean> = ref(false)
+const serializedDocument: Ref<string> = ref('')
+
+// TODO: UI Preferences
 function useUIPreferences() {
   // TODO: Theme - Light, Dark, Custom? (We can probably use https://vueuse.org/core/usepreferreddark/ )
   // TODO: Zoom
   // TODO: Page Numbers?
 }
 
-function useCASStatus(CASStatus: Ref<string>) {
+function useCasStatus() {
   const statusIcons = {
     disconnected: 'ApiOutlined',
     loading: 'LoadingOutlined',
@@ -20,7 +28,7 @@ function useCASStatus(CASStatus: Ref<string>) {
     error: 'WarningOutlined',
   }
 
-  const icon = computed(() => statusIcons[casState.value])
+  const casIcon = computed(() => statusIcons[casState.value])
 
   function setStatus(s: string) {
     casState.value = s
@@ -41,7 +49,7 @@ function useCASStatus(CASStatus: Ref<string>) {
 
   return {
     casState,
-    icon,
+    casIcon,
     setStatus,
     setReady,
     setLoading,
@@ -50,17 +58,7 @@ function useCASStatus(CASStatus: Ref<string>) {
   }
 }
 
-export function useUI() {
-  const fileNewModal: Ref<boolean> = ref(false)
-  const fileSaveModal: Ref<boolean> = ref(false)
-  const fileOpenModal: Ref<boolean> = ref(false)
-  const documentPrefsModal: Ref<boolean> = ref(false)
-
-  const fileConfirmClose: Ref<boolean> = ref(false)
-  const serializedDocument: Ref<string> = ref('')
-  // TODO: UI Preferences
-  const CASStatus = useCASStatus(casState)
-
+function useFileInterface() {
   function promptNewFile() {
     fileNewModal.value = true
   }
@@ -90,62 +88,60 @@ export function useUI() {
     documentPrefsModal.value = false
   }
 
-  function notify(type: 'success' | 'error' | 'warning', message: string, details: any) {
-    let description = typeof details !== 'string' ? JSON.stringify(details) : details
-    const config = {
-      message,
-      description,
-    }
-    notification[type](config)
-  }
-
-  function log(message: string, details: any) {
-    let description = typeof details !== 'string' ? JSON.stringify(details) : details
-    const config = {
-      message,
-      description,
-    }
-    notification.info(config)
-  }
-
-  function warn(message: string, details: any) {
-    let description = typeof details !== 'string' ? JSON.stringify(details) : details
-    const config = {
-      message,
-      description,
-    }
-    notification.warn(config)
-  }
-
-  function error(message: string, details: any) {
-    let description = typeof details !== 'string' ? JSON.stringify(details) : details
-    const config = {
-      message,
-      description,
-    }
-    notification.error(config)
-  }
-
   return {
-    CASStatus,
-
+    serializedDocument,
+    fileNewModal,
+    fileSaveModal,
+    fileOpenModal,
+    documentPrefsModal,
+    fileConfirmClose,
     promptNewFile,
     promptCloseFile,
     openFileSaveModal,
     closeFileSaveModal,
-    fileSaveModal,
     openFileOpenModal,
     confirmFileOpenModal,
-    fileOpenModal,
-
     closeDocPrefsModal,
-    documentPrefsModal,
-
-    notify,
-    log,
-    warn,
-    error,
-
-    serializedDocument,
   }
 }
+
+function notify(type: 'success' | 'error' | 'warning', message: string, details: any) {
+  let description = typeof details !== 'string' ? JSON.stringify(details) : details
+  const config = {
+    message,
+    description,
+  }
+  notification[type](config)
+}
+
+function log(message: string, details: any) {
+  let description = typeof details !== 'string' ? JSON.stringify(details) : details
+  const config = {
+    message,
+    description,
+  }
+  notification.info(config)
+}
+
+function warn(message: string, details: any) {
+  let description = typeof details !== 'string' ? JSON.stringify(details) : details
+  const config = {
+    message,
+    description,
+  }
+  notification.warn(config)
+}
+
+function error(message: string, details: any) {
+  let description = typeof details !== 'string' ? JSON.stringify(details) : details
+  const config = {
+    message,
+    description,
+  }
+  notification.error(config)
+}
+
+const casStatus = useCasStatus()
+const fileInterface = useFileInterface()
+
+export { fileInterface, notify, log, warn, error, casStatus }
