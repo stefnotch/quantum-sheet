@@ -219,7 +219,11 @@ function useElementSelection<T extends QuantumDocumentElementTypes>(quantumDocum
   }
 }
 
-function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: UseQuantumDocument<T>, pages, selectedIDs: Ref<string[]>) {
+function useElementDrag<T extends QuantumDocumentElementTypes>(
+  quantumDocument: UseQuantumDocument<T>,
+  pages: ReturnType<typeof usePages>,
+  selectedIDs: Ref<string[]>
+) {
   // TODO: Investigate or try out Moveable.js
   // I got stuff to break by adding a few blocks, moving them around and stuff
   // Tell interactjs to make every .quantum-block interactive. This includes the ones that will get added in the future
@@ -272,10 +276,10 @@ function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: 
 function useEvents<T extends QuantumDocumentElementTypes>(
   quantumDocument: UseQuantumDocument<T>,
   focusedElementCommands: Ref<ElementCommands | undefined>,
-  grid,
-  selection,
+  grid: ReturnType<typeof useGrid>,
+  selection: ReturnType<typeof useElementSelection>,
   UI,
-  elementDrag
+  elementDrag: ReturnType<typeof useElementDrag>
 ) {
   function createElementAtEvent(ev: InputEvent) {
     let elementType: string = ExpressionElementType.typeName
@@ -389,18 +393,15 @@ function usePages<T extends QuantumDocumentElementTypes>(quantumDocument: UseQua
   }
 
   function lowestElementPosition(arr: readonly QuantumElement[]) {
-    // The largest number at first should be the first element or null for empty array
-    var largest = arr.length > 0 ? arr[0].position.value.y : null
-    // Current number, handled by the loop
-    var number = null
+    // At the very least, we have to be at the top (y: 0)
+    let largest = 0
     for (var i = 0; i < arr.length; i++) {
-      // Update current number
-      number = Number(arr[i].position.value.y)
+      const number = +arr[i].position.value.y
       // Compares stored largest number with current number, stores the largest one
-      largest = Math.max(largest as number, number)
+      largest = Math.max(largest, number)
     }
 
-    return largest as number
+    return largest
   }
 
   function updatePageCount() {
@@ -626,5 +627,3 @@ export default defineComponent({
   top: 4px;
 }
 </style>
-
-<style></style>
