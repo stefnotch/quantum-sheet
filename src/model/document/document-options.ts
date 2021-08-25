@@ -17,7 +17,7 @@ export interface DocumentOptions {
   /**
    * The paper size
    */
-  paperSize: 'A4' | 'Letter' | 'Legal'
+  paperSize: 'A3' | 'A4' | 'A5' | 'ANSI_A' | 'ANSI_B' | 'ARCH_A' | 'ARCH_B'
 
   // TODO: Switch between floats everywhere and real/integers (see sympy)
   // TODO: Default Result Notation Style - Decimal (# Digits), Scientific, Fraction, other?

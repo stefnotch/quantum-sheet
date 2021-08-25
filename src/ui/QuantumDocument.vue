@@ -372,7 +372,8 @@ function useEvents<T extends QuantumDocumentElementTypes>(
 
 function usePages<T extends QuantumDocumentElementTypes>(quantumDocument: UseQuantumDocument<T>) {
   const pageCount = ref(1)
-  const sheetSizes: any = {
+  const defaultSheetSize = 'A4'
+  const sheetSizes = {
     A3: { width: 297, height: 420 },
     A4: { width: 210, height: 297 },
     A5: { width: 148, height: 210 },
@@ -381,14 +382,15 @@ function usePages<T extends QuantumDocumentElementTypes>(quantumDocument: UseQua
     ARCH_A: { width: 229, height: 305 },
     ARCH_B: { width: 305, height: 457 },
     // Legal: { width: 216, height: 356 },
-  }
+  } as const
 
   const width = ref(0)
   const height = ref(0)
 
   function getPageNumberOfPosition(y: number) {
     // (1in = 96px = 2.54cm = 25.4mm)
-    const yPos = (y * quantumDocument.options.gridCellSize.y * (25.4 / 96)) / sheetSizes[quantumDocument.options.paperSize].height
+    const paperSize = quantumDocument.options.paperSize in sheetSizes ? quantumDocument.options.paperSize : defaultSheetSize
+    const yPos = (y * quantumDocument.options.gridCellSize.y * (25.4 / 96)) / sheetSizes[paperSize].height
     return yPos
   }
 
@@ -424,6 +426,7 @@ function usePages<T extends QuantumDocumentElementTypes>(quantumDocument: UseQua
   watchImmediate(
     () => quantumDocument.options.paperSize,
     (value) => {
+      if (!(value in sheetSizes)) value = defaultSheetSize
       width.value = sheetSizes[value].width
       height.value = sheetSizes[value].height
     }
