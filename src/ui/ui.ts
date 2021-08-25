@@ -1,6 +1,5 @@
-import { readonly, shallowReactive, shallowRef, ref, watch, Ref, inject, defineComponent, computed } from 'vue'
+import { ref, Ref, computed } from 'vue'
 import { useDocumentManager } from '../model/document/document-manager'
-import { notification } from 'ant-design-vue'
 
 const casState = ref('disconnected')
 
@@ -26,7 +25,7 @@ function useCasStatus() {
     loading: 'LoadingOutlined',
     ready: 'CalculatorOutlined',
     error: 'WarningOutlined',
-  }
+  } as const
 
   const casIcon = computed(() => statusIcons[casState.value])
 
