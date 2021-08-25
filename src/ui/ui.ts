@@ -1,25 +1,63 @@
-import { readonly, shallowReactive, shallowRef, ref, watch, Ref, inject } from 'vue'
+import { ref, Ref, computed } from 'vue'
 import { useDocumentManager } from '../model/document/document-manager'
-import { notification } from 'ant-design-vue'
+
+const casState = ref('disconnected')
 
 const docManager = useDocumentManager()
+const fileNewModal: Ref<boolean> = ref(false)
+const fileSaveModal: Ref<boolean> = ref(false)
+const fileOpenModal: Ref<boolean> = ref(false)
+const documentPrefsModal: Ref<boolean> = ref(false)
 
+const fileConfirmClose: Ref<boolean> = ref(false)
+const serializedDocument: Ref<string> = ref('')
+
+// TODO: UI Preferences
 function useUIPreferences() {
-  // TODO: Theme - Light, Dark, Custom?
+  // TODO: Theme - Light, Dark, Custom? (We can probably use https://vueuse.org/core/usepreferreddark/ )
   // TODO: Zoom
   // TODO: Page Numbers?
 }
 
-export function useUI() {
-  const fileNewModal: Ref<boolean> = ref(false)
-  const fileSaveModal: Ref<boolean> = ref(false)
-  const fileOpenModal: Ref<boolean> = ref(false)
-  const documentPrefsModal: Ref<boolean> = ref(false)
+function useCasStatus() {
+  const statusIcons = {
+    disconnected: 'ApiOutlined',
+    loading: 'LoadingOutlined',
+    ready: 'CalculatorOutlined',
+    error: 'WarningOutlined',
+  } as const
 
-  const fileConfirmClose: Ref<boolean> = ref(false)
-  const serializedDocument: Ref<string> = ref('')
-  // TODO: UI Preferences
+  const casIcon = computed(() => statusIcons[casState.value])
 
+  function setStatus(s: string) {
+    casState.value = s
+  }
+
+  function setReady() {
+    casState.value = 'ready'
+  }
+  function setLoading() {
+    casState.value = 'loading'
+  }
+  function setDisconnected() {
+    casState.value = 'disconnected'
+  }
+  function setError() {
+    casState.value = 'error'
+  }
+
+  return {
+    casState,
+    casIcon,
+    setStatus,
+    setReady,
+    setLoading,
+    setDisconnected,
+    setError,
+  }
+}
+
+function useFileInterface() {
   function promptNewFile() {
     fileNewModal.value = true
   }
@@ -49,29 +87,24 @@ export function useUI() {
     documentPrefsModal.value = false
   }
 
-  function notify(type: string, message: string, description: string) {
-    const config = {
-      message,
-      description,
-    }
-    notification[type](config)
-  }
-
   return {
+    serializedDocument,
+    fileNewModal,
+    fileSaveModal,
+    fileOpenModal,
+    documentPrefsModal,
+    fileConfirmClose,
     promptNewFile,
     promptCloseFile,
     openFileSaveModal,
     closeFileSaveModal,
-    fileSaveModal,
     openFileOpenModal,
     confirmFileOpenModal,
-    fileOpenModal,
-
     closeDocPrefsModal,
-    documentPrefsModal,
-
-    notify,
-
-    serializedDocument,
   }
 }
+
+const casStatus = useCasStatus()
+const fileInterface = useFileInterface()
+
+export { fileInterface, casStatus }

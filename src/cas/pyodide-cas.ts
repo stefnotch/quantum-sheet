@@ -2,6 +2,7 @@ import type {} from 'vite'
 import type { CasCommand } from './cas'
 import { getAllGetterNames, useEncoder } from './cas-math'
 import { Expression, format } from '@cortex-js/compute-engine'
+import * as UI from '../ui/notification'
 
 export type WorkerMessage =
   | {
@@ -343,16 +344,30 @@ export function usePyodide() {
             commands.delete(response.id)
           } else if (response.type == 'error') {
             console.warn(response)
+            UI.error('CAS error', response.message) // TODO: Make CAS independent of UI
+            const command = commands.get(response.id)
+            command?.callback(['Error', 'Missing', { str: (response.message + '').slice(0, 40) }]) // Put 'error' to right of equal sign
             commands.delete(response.id)
           } else {
             console.error('Unknown response type', response)
+            setTimeout(() => {
+              throw new Error('Unknown response type ' + response)
+            }, 0)
           }
         }
         worker.onerror = (e) => {
-          console.warn('Worker error', e)
+          // If this happens, it's a bug
+          console.error('Worker error', e)
+          setTimeout(() => {
+            throw new Error('Worker Error: ' + e.message)
+          }, 0)
         }
         worker.onmessageerror = (e) => {
+          // If this happens, it's a bug
           console.error('Message error', e)
+          setTimeout(() => {
+            throw new Error('Worker Message Error')
+          }, 0)
         }
         resolve()
         commandBuffer.forEach((v) => sendCommand(v))
@@ -360,7 +375,7 @@ export function usePyodide() {
       },
       (error) => {
         console.error(error)
-        reject(new Error(error))
+        reject(error instanceof Error ? error : new Error(error))
       }
     )
   })

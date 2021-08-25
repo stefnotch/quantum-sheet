@@ -3,6 +3,7 @@
     <Header />
     <a-layout class="content">
       <a-layout-content class="drawingtable center">
+        <!-- TODO: Add an "id" property (with a uuid) so that we can recreate the document whenever we want a new document -->
         <quantum-document @quantum-document="(v) => docManager.registerQuantumDocument(v)"></quantum-document>
         <!-- <LandingPage /> -->
       </a-layout-content>
@@ -21,7 +22,15 @@ import LandingPage from './ui/LandingPage.vue'
 import { useDocumentManager } from './model/document/document-manager'
 import { UseQuantumDocument } from './model/document/document'
 import { useUrlSearchParams } from '@vueuse/core'
-import { cas } from './model/cas' // Load the CAS as early as possible
+import * as Notification from './ui/notification'
+
+window.addEventListener('error', (ev) => {
+  Notification.error('Unhandled error', ev.error)
+})
+window.addEventListener('unhandledrejection', (ev) => {
+  console.error('Unhandled error (promise)', ev.reason)
+  Notification.error('Unhandled error (promise)', ev.reason)
+})
 
 export default defineComponent({
   name: 'App',
@@ -49,11 +58,6 @@ export default defineComponent({
         })
     }
 
-    cas.doneLoading.then(() => {
-      // TODO: Properly show this in the bottom bar
-      console.log('Done loading')
-    })
-
     return { docManager }
   },
 })
@@ -74,15 +78,8 @@ export default defineComponent({
 }
 
 .drawingtable {
-  /* A4 Letter */
-  /* --table-width: 21cm;
-  --table-height: 29.7cm;
-  min-width: var(--table-width);
-  min-height: var(--table-height); */
-
   min-height: min-content;
   min-width: min-content;
-  background: white;
   box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
   margin-top: 24px;
   margin-bottom: 24px;
@@ -96,9 +93,7 @@ export default defineComponent({
   transform-origin: 0% 0%;
   */
 }
-.extended {
-  width: 90vw !important;
-}
+
 .center {
   margin-left: auto;
   margin-right: auto;

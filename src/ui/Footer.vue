@@ -1,19 +1,26 @@
 <template>
-  <div class="footer">
+  <footer class="footer">
     <a-row type="flex" justify="space-between">
       <a-col :span="4">
         <a-space :style="{ height: '36px' }">
           <div :style="{ width: '20px' }" />
           <a-tooltip :mouseEnterDelay="1">
-            <template #title> Calculate </template>
-            <a-button size="small" type="primary" @click="appActions.compute">
-              <CalculatorOutlined />
+            <template #title> (Re)Calculate </template>
+            <a-button
+              size="small"
+              :type="{ ready: 'primary', disconnected: 'dashed' }[UI.casStatus.casState.value]"
+              :danger="UI.casStatus.casState.value === 'error'"
+              @click="appActions.compute"
+            >
+              <!-- <CalculatorOutlined /> -->
+              <!-- <a-icon :type="UI.casStatus.icon.value" /> -->
+              <Icon :icon="UI.casStatus.casIcon.value" :id="UI.casStatus.casIcon.value" />
             </a-button>
           </a-tooltip>
           <!-- Auto Calculate -->
           <a-tooltip>
             <template #title> Auto Calculate </template>
-            <a-switch size="small" disabled />
+            <a-switch size="small" disabled default-checked />
           </a-tooltip>
         </a-space>
       </a-col>
@@ -96,60 +103,45 @@
         </a-space>
       </a-col>
     </a-row>
-  </div>
+  </footer>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, reactive, inject } from 'vue'
+import { defineComponent, ref, reactive, inject, watch } from 'vue'
 import { ExportOutlined, CalculatorOutlined, AppstoreOutlined } from '@ant-design/icons-vue'
+import * as UI from './ui'
+import * as Notification from './notification'
+import { Icon } from './icon'
+import { cas } from './../model/cas'
 
-function useDocOptions() {
-  const state = reactive({
-    scrollPosition: null,
-    outputFormat: 'LaTeX',
-    mathOptions: {
-      numberformat: 'decimals',
-      decimals: 5,
-      outputFormat: 'LaTeX',
-    },
-  })
-  return state
-}
-
-function useDocActions($emitter: any, docOptions: any, appActions: any) {
-  function handleChangeNformat(value: any) {
-    docOptions.mathOptions.numberformat = value
-    updateDocOptions()
+function useDocActions() {
+  function handleChangeNumberFormat() {
+    return
   }
-  function handleChangeOUTformat(value: any) {
-    console.log(value)
-    docOptions.mathOptions.outputFormat = value
-    updateDocOptions()
-    appActions.compute()
+  function handleChangeOutputFormat(value: any) {
+    return
   }
   function handleChangeDecimalPlaces(value: any) {
-    docOptions.mathOptions.decimals = value
-    updateDocOptions()
+    return
   }
   function updateDocOptions() {
-    $emitter.emit('doc-math-options', docOptions.mathOptions)
+    return
   }
   return {
-    handleChangeNformat,
-    handleChangeOUTformat,
+    handleChangeNumberFormat,
+    handleChangeOutputFormat,
     handleChangeDecimalPlaces,
   }
 }
-function useAppActions($emitter: any) {
+function useAppActions() {
   function handleChangeScratchPad(value: any) {
-    console.log(value)
-    $emitter.emit('togglescratch', value)
+    return
   }
   function togglevirtualkb() {
-    $emitter.emit('togglevirtualkb')
+    return
   }
   function compute() {
-    $emitter.emit('compute')
+    return
   }
   return {
     handleChangeScratchPad,
@@ -163,18 +155,31 @@ export default defineComponent({
     ExportOutlined,
     CalculatorOutlined,
     AppstoreOutlined,
+    Icon,
   },
   props: {},
   setup(props, context) {
-    const $emitter = inject('$emitter')
-    const docOptions = useDocOptions()
-    const appActions = useAppActions($emitter)
-    const docActions = useDocActions($emitter, docOptions, appActions)
+    // TODO: This whole file is Garbage, clean this up.
+    const appActions = useAppActions()
+    const docActions = useDocActions()
+
+    cas.doneLoading.then(
+      () => {
+        // TODO: Maybe make this notification a bit more subtle? And instead make the loading indicator somewhat more obvious?
+        Notification.notify('success', 'Pyodide worker created', 'You can use QuantumSheet now')
+        UI.casStatus.setReady()
+      },
+      (error) => {
+        Notification.error('CAS loading error', error)
+        UI.casStatus.setError()
+      }
+    )
 
     return {
-      docActions,
-      docOptions,
       appActions,
+      docActions,
+
+      UI,
     }
   },
 })

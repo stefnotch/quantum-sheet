@@ -43,6 +43,7 @@
       <span class="page-number">{{ page }}</span>
       <span class="next-page-number">{{ page + 1 }}</span>
     </div>
+    <!-- TODO: Investigate moving quantum-blocks into a component, preferably one that has a <slot> for the actual components -->
     <div
       class="quantum-block"
       v-for="element in document.elements"
@@ -65,7 +66,7 @@
   <!-- <a-button @click="pages.addPage()">+ Page</a-button> -->
 </template>
 <script lang="ts">
-import { defineComponent, readonly, ref, Ref, nextTick, unref, onMounted, inject, provide, watch } from 'vue'
+import { defineComponent, readonly, ref, Ref, nextTick, unref, watch } from 'vue'
 import { useDocument, UseQuantumDocument, QuantumDocumentElementTypes } from '../model/document/document'
 import ExpressionElement, { ExpressionElementType } from './elements/ExpressionElement.vue'
 import ScopeElement, { ScopeElementType } from './elements/ScopeStartElement.vue'
@@ -73,7 +74,8 @@ import LatexElement, { LatexElementType } from './elements/LatexElement.vue'
 import { useFocusedElementCommands, ElementCommands } from './elements/element-commands'
 import { Vector2 } from '../model/vectors'
 import { QuantumElement, JsonType } from '../model/document/document-element'
-import { useUI } from './ui'
+import { watchImmediate } from '../model/reactivity-utils'
+import * as UI from './ui'
 import interact from 'interactjs'
 import Selecto from 'selecto'
 
@@ -217,7 +219,11 @@ function useElementSelection<T extends QuantumDocumentElementTypes>(quantumDocum
   }
 }
 
-function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: UseQuantumDocument<T>, pages, selectedIDs: Ref<string[]>) {
+function useElementDrag<T extends QuantumDocumentElementTypes>(
+  quantumDocument: UseQuantumDocument<T>,
+  pages: ReturnType<typeof usePages>,
+  selectedIDs: Ref<string[]>
+) {
   // TODO: Investigate or try out Moveable.js
   // I got stuff to break by adding a few blocks, moving them around and stuff
   // Tell interactjs to make every .quantum-block interactive. This includes the ones that will get added in the future
@@ -244,27 +250,36 @@ function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: 
     .on('down', (event) => {})
     .on('dragmove', (event) => {
       // event.target?.classList.add('dragging')
-      // const quantumElement = quantumDocument.getElementById(event.target.id)
-      selectedIDs.value.forEach((id) => {
-        const quantumElement = quantumDocument.getElementById(id)
-        let delta = new Vector2(event.dx / quantumDocument.options.gridCellSize.x, event.dy / quantumDocument.options.gridCellSize.y)
-        let newPos = quantumElement?.position.value.add(delta)
-        if (newPos) quantumElement?.setPosition(newPos)
-      })
+      let delta = new Vector2(event.dx / quantumDocument.options.gridCellSize.x, event.dy / quantumDocument.options.gridCellSize.y)
+      moveElementsByID(selectedIDs.value, delta)
       event.preventDefault()
     })
     .on('dragend', (event) => {
       // event.target?.classList.remove('dragging')
       pages.updatePageCount()
     })
+
+  function moveElementsByID(IDs: string[], delta: Vector2) {
+    // TODO: dont let it move outside sheet (thus no longer needing 'interact.modifiers.restrict')
+    IDs.forEach((id) => {
+      const quantumElement = quantumDocument.getElementById(id)
+      let newPos = quantumElement?.position.value.add(delta)
+      if (newPos) quantumElement?.setPosition(newPos)
+    })
+  }
+
+  return {
+    moveElementsByID,
+  }
 }
 
 function useEvents<T extends QuantumDocumentElementTypes>(
   quantumDocument: UseQuantumDocument<T>,
   focusedElementCommands: Ref<ElementCommands | undefined>,
-  grid,
-  selection,
-  UI
+  grid: ReturnType<typeof useGrid>,
+  selection: ReturnType<typeof useElementSelection>,
+  UI,
+  elementDrag: ReturnType<typeof useElementDrag>
 ) {
   function createElementAtEvent(ev: InputEvent) {
     let elementType: string = ExpressionElementType.typeName
@@ -320,9 +335,21 @@ function useEvents<T extends QuantumDocumentElementTypes>(
           quantumDocument.deleteElement(quantumDocument.getElementById(id) as QuantumElement)
         })
       } else if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
-        grid.keydown(event)
+        if (selection.selectedIDs.value.length > 0) {
+          let direction =
+            {
+              ArrowLeft: new Vector2(-1, 0),
+              ArrowRight: new Vector2(1, 0),
+              ArrowUp: new Vector2(0, -1),
+              ArrowDown: new Vector2(0, 1),
+            }[event.key] ?? Vector2.zero
+
+          elementDrag.moveElementsByID(selection.selectedIDs.value, direction)
+        } else {
+          grid.keydown(event)
+        }
       } else if (event.code === 'KeyZ' && event.ctrlKey) {
-        UI.notify('warning', 'Unsupported Action', 'Undo/Redo unsupported at the moment')
+        UI.warn('Unsupported Action', 'Undo/Redo unsupported at the moment')
       } else {
         // Nothing, pass along to potential InputEvents
       }
@@ -346,9 +373,14 @@ function useEvents<T extends QuantumDocumentElementTypes>(
 function usePages<T extends QuantumDocumentElementTypes>(quantumDocument: UseQuantumDocument<T>) {
   const pageCount = ref(1)
   const sheetSizes: any = {
+    A3: { width: 297, height: 420 },
     A4: { width: 210, height: 297 },
-    Letter: { width: 216, height: 279 },
-    Legal: { width: 216, height: 356 },
+    A5: { width: 148, height: 210 },
+    ANSI_A: { width: 216, height: 279 },
+    ANSI_B: { width: 279, height: 432 },
+    ARCH_A: { width: 229, height: 305 },
+    ARCH_B: { width: 305, height: 457 },
+    // Legal: { width: 216, height: 356 },
   }
 
   const width = ref(0)
@@ -360,14 +392,11 @@ function usePages<T extends QuantumDocumentElementTypes>(quantumDocument: UseQua
     return yPos
   }
 
-  function lowestElementPosition(arr) {
-    // The largest number at first should be the first element or null for empty array
-    var largest = arr.length > 0 ? arr[0].position.value.y : null
-    // Current number, handled by the loop
-    var number = null
+  function lowestElementPosition(arr: readonly QuantumElement[]) {
+    // At the very least, we have to be at the top (y: 0)
+    let largest = 0
     for (var i = 0; i < arr.length; i++) {
-      // Update current number
-      number = Number(arr[i].position.value.y)
+      const number = +arr[i].position.value.y
       // Compares stored largest number with current number, stores the largest one
       largest = Math.max(largest, number)
     }
@@ -392,16 +421,13 @@ function usePages<T extends QuantumDocumentElementTypes>(quantumDocument: UseQua
     updatePageCount()
   })
 
-  watch(
+  watchImmediate(
     () => quantumDocument.options.paperSize,
     (value) => {
-      width.value = sheetSizes[quantumDocument.options.paperSize].width
-      height.value = sheetSizes[quantumDocument.options.paperSize].height
+      width.value = sheetSizes[value].width
+      height.value = sheetSizes[value].height
     }
   )
-
-  width.value = sheetSizes[quantumDocument.options.paperSize].width
-  height.value = sheetSizes[quantumDocument.options.paperSize].height
 
   return {
     pageCount,
@@ -444,14 +470,14 @@ export default defineComponent({
     const documentElement = ref<HTMLElement>()
     const documentInputElement = ref<HTMLElement>()
 
-    const UI = useUI()
+    // const UI = useUI()
     const focusedElementCommands = useFocusedElementCommands()
     const grid = useGrid(document, documentInputElement)
     const pages = usePages(document)
     const clipboard = useClipboard(document)
     const selection = useElementSelection(document)
     const elementDrag = useElementDrag(document, pages, selection.selectedIDs)
-    const events = useEvents(document, focusedElementCommands.commands, grid, selection, UI)
+    const events = useEvents(document, focusedElementCommands.commands, grid, selection, UI, elementDrag)
 
     function log(ev: any) {
       console.log(ev)
@@ -508,6 +534,11 @@ export default defineComponent({
   /* Engineering Paper Style */
   --color: #fffdf8;
   --grid-color: #c5dec467;
+}
+.theme-paper-printer {
+  /* Printer Papaer Style */
+  --color: white;
+  --grid-color: white;
 }
 .quantum-document {
   background-color: var(--color);
@@ -596,5 +627,3 @@ export default defineComponent({
   top: 4px;
 }
 </style>
-
-<style></style>

@@ -3,7 +3,6 @@ import { get, set } from 'idb-keyval'
 import { computed, readonly, ref, shallowReactive, shallowRef, toRaw, watch } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 
-// TODO: Schema version
 interface DatabaseFile {
   /** ID to uniquely identify this particular file */
   id: string
@@ -53,6 +52,12 @@ export function useDocumentStorage() {
     return id
   }
 
+  async function removeFile(id: string) {
+    if (files.delete(id)) {
+      await set('documents', toRaw(files))
+    }
+  }
+
   /** Gets the actual content of a file */
   async function getFileContent(id: string): Promise<string | undefined> {
     await initPromise
@@ -81,11 +86,10 @@ export function useDocumentStorage() {
     )
   }
 
-  // TODO: Remove function
-
   return {
     isLoaded,
     addFile,
+    removeFile,
     getFileContent,
     saveFile,
     files: computed(() =>

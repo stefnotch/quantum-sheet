@@ -33,9 +33,9 @@ export class CasCommand {
   readonly gettersData: Map<string, any>
   readonly expression: CasExpression
 
-  readonly callback: (result: any) => void
+  readonly callback: (result: any | Error) => void
 
-  constructor(gettersData: Map<string, any>, expression: CasExpression, callback: (result: any) => void) {
+  constructor(gettersData: Map<string, any>, expression: CasExpression, callback: (result: any | Error) => void) {
     this.id = uuidv4()
     this.gettersData = gettersData
     this.expression = expression
