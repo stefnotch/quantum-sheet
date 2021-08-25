@@ -3,10 +3,12 @@ import { ref, Ref, watch, reactive, shallowRef, computed, watchEffect, shallowRe
 import { UseScopedVariable, UseScopedGetter, ScopeElementType } from './scope-element'
 import { cas } from '../../cas'
 import { assert } from '../../assert'
-import { CasCommand } from '../../../cas/cas'
-import { getGetterNames, getVariableNames } from '../../../cas/cas-math'
+import { CasCommand, CasExpression } from '../../../cas/cas'
+import { getGetterNames } from '../../../cas/cas-math'
 import { Expression, match, substitute } from '@cortex-js/compute-engine'
 import { Vector2 } from '../../vectors'
+import { getExpressionValue, handleExpressionValue } from './../../../cas/mathjson-utils'
+import * as Notification from '../../../ui/notification'
 
 export const ElementType = 'expression-element'
 
@@ -18,7 +20,7 @@ export class ExpressionElement extends QuantumElement {
   readonly getters: Map<string, UseScopedGetter> = shallowReactive(new Map<string, UseScopedGetter>())
   readonly variables: Map<string, UseScopedVariable> = shallowReactive(new Map<string, UseScopedVariable>())
 
-  private readonly runningCasExpression: Ref<CasCommand | undefined> = shallowRef()
+  private readonly runningCasCommand: Ref<CasCommand | undefined> = shallowRef()
   private readonly blockPosition = computed(() => this.position.value)
 
   constructor(options: QuantumElementCreationOptions) {
@@ -28,8 +30,8 @@ export class ExpressionElement extends QuantumElement {
       // Remove getters and variables when the scope changes
       this.updateGetters(new Set<string>())
       this.updateVariables(new Set<string>())
-      if (this.runningCasExpression.value) {
-        cas.cancelCommand(this.runningCasExpression.value)
+      if (this.runningCasCommand.value) {
+        cas.cancelCommand(this.runningCasCommand.value)
       }
 
       // If we have a new scope, recompute
@@ -46,6 +48,26 @@ export class ExpressionElement extends QuantumElement {
 
   get hasExpression() {
     return this.expression.value !== '' && this.expression.value !== null && this.expression.value !== undefined
+  }
+
+  /**
+   * Gets all the data from every getter
+   * @returns The expressions or undefined if at least one getter doesn't have its value
+   */
+  private getGettersData() {
+    const gettersData = new Map<string, Expression>()
+    for (const [name, getter] of this.getters) {
+      const data = getter.data.value
+      if (data === undefined) {
+        // It's a symbol
+      } else if (data === null) {
+        // Variable is missing its data
+        return
+      } else {
+        gettersData.set(name, data)
+      }
+    }
+    return gettersData
   }
 
   /**
@@ -120,115 +142,133 @@ export class ExpressionElement extends QuantumElement {
     })
   }
 
+  /**
+   * Returns `true` if it's an "Equal" or "Evaluate" expression.
+   */
+  private isCasExpression(expression: Expression): expression is CasExpression {
+    // Woah, user defined type guards are fancy https://2ality.com/2020/06/type-guards-assertion-functions-typescript.html#user-defined-type-guards
+    const value = getExpressionValue(expression)
+    if (value.type === 'function') {
+      const { head } = value.value
+      if (head === 'Equal' || head === 'Evaluate') {
+        return true
+      }
+    }
+    return false
+  }
+
+  private executeCasExpression(
+    expression: CasExpression,
+    gettersData: Map<string, Expression<number>>,
+    callback: (result: any | null, resultingExpression: Expression) => void
+  ) {
+    const value = getExpressionValue(expression)
+    assert(value.type === 'function', 'Expected a function expression')
+
+    // Test for nested CAS expressions. This relies on all CAS expressions being ["something", stuff to eval, "Missing"]
+    if (this.isCasExpression(expression[1])) {
+      this.executeCasExpression(expression[1], gettersData, (result, resultingExpression) => {
+        // Show that expression (callback can get called multiple times for that reason)
+        expression = expression.slice() as CasExpression
+        expression[1] = resultingExpression // TODO: This can result in more getters existing https://github.com/stefnotch/quantum-sheet/issues/40
+        callback(null, expression)
+
+        const computeExpression = expression.slice() as CasExpression
+        computeExpression[1] = result
+        // And now compute a bit more
+        this.runningCasCommand.value = new CasCommand(
+          gettersData, // TODO: Don't pass in all getters (or pass in a reference to the getters?)
+          computeExpression,
+          (result) => {
+            if (result instanceof Error) {
+              // TODO: Show the errors inline instead of using a big notification
+              Notification.error('CAS error', result.message)
+              result = ['Error', 'Missing', { str: (result.message + '').slice(0, 40) }] // Put 'error' to right of equal sign
+            }
+
+            const output = expression.slice()
+            if (expression[0] === 'Evaluate') {
+              output[3] = ['\\mathinner', result] // ["Evaluate", lhs, solve arguments, rhs]
+            } else {
+              output[2] = ['\\mathinner', result] // A part of the expression, namely the one with the placeholder, gets replaced
+            }
+            callback(result, output)
+          }
+        )
+        cas.executeCommand(this.runningCasCommand.value)
+      })
+    } else {
+      this.runningCasCommand.value = new CasCommand(
+        gettersData, // TODO: Don't pass in all getters (or pass in a reference to the getters?)
+        expression,
+        (result) => {
+          if (result instanceof Error) {
+            // TODO: Show the errors inline instead of using a big notification
+            Notification.error('CAS error', result.message)
+            result = ['Error', 'Missing', { str: (result.message + '').slice(0, 40) }] // Put 'error' to right of equal sign
+          }
+          const output = expression.slice()
+          if (expression[0] === 'Evaluate') {
+            output[3] = ['\\mathinner', result] // ["Evaluate", lhs, solve arguments, rhs]
+          } else {
+            output[2] = ['\\mathinner', result] // A part of the expression, namely the one with the placeholder, gets replaced
+          }
+          callback(result, output)
+        }
+      )
+      cas.executeCommand(this.runningCasCommand.value)
+    }
+  }
+
   private evaluateLater() {
-    if (this.runningCasExpression.value) {
-      cas.cancelCommand(this.runningCasExpression.value)
+    if (this.runningCasCommand.value) {
+      cas.cancelCommand(this.runningCasCommand.value)
     }
 
     if (!this.hasExpression) return
 
-    // Check if all getters that should have a value actually do have a value
-    const gettersData = new Map<string, any>()
-    let allDataDefined = true
-    this.getters.forEach((value, key) => {
-      const data = value.data.value
-      if (data === undefined) {
-        // It's a symbol
-      } else if (data === null) {
-        // Variable is missing its data
-        allDataDefined = false
-      } else {
-        gettersData.set(key, data)
-      }
-    })
-
-    if (!allDataDefined || !this.expression.value) {
+    const gettersData = this.getGettersData()
+    if (!gettersData) {
       return
     }
 
-    // TODO:
-    /*
-      - Topmost can optionally be ["Assign", variables, executeable-expression]
-        - Variables can be "variable" or ["???", "variable", "variable", ...]
-          - Variables will always remain sorted!
-        
-        - Executeable Expression topmost can optionally be
-          - ["Equal", executeable-expression, options, ["Result???", null|result]] = (but only use 2 decimal places) = cm = m
-          - ["Solve", executeable-expression, options, ["Result???", null|result]] --solve, n-->
-          - ["Apply", executeable-expression, options, ["Result???", null|result]] | apply *3 | apply +2
-          - Or it can be a simple-expression
-        
-        - Simple Expression can contain 
-          - "Add", "Subtract", "Multiply", "Divide", ===, <, and so on
-      */
+    // TODO: What about very nested evaluate signs? Like `a:=(1+2=)^2`
 
-    const self = this
-    // TODO: Fix c:=8+4=
-    function evaluateExpression(expression: any, callback: (result: any) => void) {
-      if (Array.isArray(expression)) {
-        const functionName = expression[0]
-        if (functionName == 'Equal') {
-          evaluateExpression(expression[1], (result) => {
-            const casExpression = expression.slice()
-            casExpression[1] = result
+    const value = getExpressionValue(this.expression.value)
+    if (value.type === 'function') {
+      const { head, args } = value.value
 
-            self.runningCasExpression.value = new CasCommand(
-              gettersData, // TODO: Don't pass in all getters (or pass in a reference to the getters?)
-              casExpression,
-              (result) => {
-                // TODO: Fix this for nested equals signs/expressions
-                const output = expression.slice()
-                output[2] = ['\\mathinner', result] // A part of the expression, namely the one with the placeholder, gets replaced
-                self.expression.value = output
-                callback(result)
-              }
-            )
-            cas.executeCommand(self.runningCasExpression.value)
-          })
-        } else if (functionName == 'Evaluate') {
-          evaluateExpression(expression[1], (result) => {
-            const casExpression = expression.slice()
-            casExpression[1] = result
+      if (head === 'Assign') {
+        // Only top-level assignments are supported
+        // Everything else is probably an assignment to a variable that only exists inside the expression (e.g. $\sum_{i:=1}^n$)
+        const innerExpression = args[1]
 
-            self.runningCasExpression.value = new CasCommand(
-              gettersData, // TODO: Don't pass in all getters (or pass in a reference to the getters?)
-              casExpression,
-              (result) => {
-                // TODO: Fix this for nested equals signs/expressions
-                const output = expression.slice()
-                output[3] = ['\\mathinner', result]
-                self.expression.value = output
-                callback(result)
-              }
-            )
-            cas.executeCommand(self.runningCasExpression.value)
-          })
-        } else if (functionName == 'Apply') {
-          // TODO:
-        } else {
-          callback(expression)
-        }
-      } else {
-        callback(expression)
-      }
-    }
+        if (this.isCasExpression(innerExpression)) {
+          // e.g. a := 3+5 =
+          this.executeCasExpression(innerExpression, gettersData, (result, resultingExpression) => {
+            this.expression.value = [head, args[0], resultingExpression]
 
-    if (Array.isArray(this.expression.value) && this.expression.value[0] == 'Assign') {
-      evaluateExpression(this.expression.value[2], (result) => {
-        this.runningCasExpression.value = new CasCommand(
-          gettersData, // TODO: Don't pass in all getters (or pass in a reference to the getters?)
-          ['Equal', result, null],
-          (result) => {
             // TODO: Support assigning to multiple variables
             assert(this.variables.size === 1, 'Assigning to multiple variables not supported yet')
             this.variables.forEach((v) => v.setData(result))
-          }
-        )
-        cas.executeCommand(this.runningCasExpression.value)
-      })
+          })
+        } else {
+          // e.g. a := 3
+          this.executeCasExpression(['Evaluate', innerExpression, 'Missing', 'Missing'], gettersData, (result, _) => {
+            // TODO: Support assigning to multiple variables
+            assert(this.variables.size === 1, 'Assigning to multiple variables not supported yet')
+            this.variables.forEach((v) => v.setData(result))
+          })
+        }
+      } else if (this.isCasExpression(this.expression.value)) {
+        // e.g. 3+5 =
+        assert(this.variables.size === 0, 'Expected no variables')
+        this.executeCasExpression(this.expression.value, gettersData, (_, resultingExpression) => {
+          this.expression.value = resultingExpression
+        })
+      }
     } else {
-      assert(this.variables.size === 0, 'Expected no variables')
-      evaluateExpression(this.expression.value, (result) => {})
+      // Not a function, do nothing
     }
   }
 }
@@ -254,6 +294,23 @@ function clearResult(expression: Expression) {
   } else {
     return expression
   }
+}
+
+/**
+ * Variables that are being *written* to
+ */
+function getVariableNames(expression: Expression) {
+  // TODO: This can be done with the match function (compute engine, wait for next version)
+  const variables = new Set<string>()
+  if (Array.isArray(expression) && expression[0] == 'Assign') {
+    if (typeof expression[1] == 'string') {
+      variables.add(expression[1])
+    } else {
+      // TODO: Handle variable arrays
+      throw new Error('Cannot assign to this ' + expression[1])
+    }
+  }
+  return variables
 }
 
 export const ExpressionElementType: QuantumElementType<ExpressionElement, typeof ExpressionElement, typeof ElementType> = {
