@@ -5,7 +5,7 @@
         <a-space :style="{ height: '36px' }">
           <div :style="{ width: '20px' }" />
           <a-tooltip :mouseEnterDelay="1">
-            <template #title> Calculate </template>
+            <template #title> (Re)Calculate </template>
             <a-button
               size="small"
               :type="{ ready: 'primary', disconnected: 'dashed' }[UI.casStatus.casState.value]"
@@ -20,7 +20,7 @@
           <!-- Auto Calculate -->
           <a-tooltip>
             <template #title> Auto Calculate </template>
-            <a-switch size="small" disabled />
+            <a-switch size="small" disabled default-checked />
           </a-tooltip>
         </a-space>
       </a-col>
@@ -166,7 +166,7 @@ export default defineComponent({
     cas.doneLoading.then(
       () => {
         // TODO: Maybe make this notification a bit more subtle? And instead make the loading indicator somewhat more obvious?
-        Notification.notify('success', 'Pyodide worker created', 'You can use Quantum Sheet now')
+        Notification.notify('success', 'Pyodide worker created', 'You can use QuantumSheet now')
         UI.casStatus.setReady()
       },
       (error) => {
