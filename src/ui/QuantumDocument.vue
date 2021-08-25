@@ -236,40 +236,68 @@ function useElementDrag<T extends QuantumDocumentElementTypes>(
   // TODO: Investigate or try out Moveable.js
   // I got stuff to break by adding a few blocks, moving them around and stuff
   // Tell interactjs to make every .quantum-block interactive. This includes the ones that will get added in the future
-  interact('.quantum-block')
-    .draggable({
-      ignoreFrom: '.quantum-element',
-      modifiers: [
-        interact.modifiers.snap({
-          targets: [interact.snappers.grid({ x: quantumDocument.options.gridCellSize.x, y: quantumDocument.options.gridCellSize.y })],
-          range: Infinity,
-          relativePoints: [{ x: 0, y: 0 }],
-          offset: 'parent',
-          // endOnly: true,
-        }),
-        interact.modifiers.restrict({
-          restriction: '.quantum-document',
-          elementRect: { top: 0, left: 0, bottom: 1, right: 1 },
-          // endOnly: true,
-        }),
-      ],
-      inertia: false,
-      autoScroll: true,
+  let previousScrollTop = 0
+  let previousScrollLeft = 0
+  let dragging = false
+
+  nextTick(function () {
+    interact('.quantum-block')
+      .draggable({
+        ignoreFrom: '.quantum-element',
+        modifiers: [
+          interact.modifiers.snap({
+            targets: [interact.snappers.grid({ x: quantumDocument.options.gridCellSize.x, y: quantumDocument.options.gridCellSize.y })],
+            range: Infinity,
+            relativePoints: [{ x: 0, y: 0 }],
+            offset: 'parent',
+            // endOnly: true,
+          }),
+          interact.modifiers.restrict({
+            restriction: '.quantum-document',
+            elementRect: { top: 0, left: 0, bottom: 1, right: 1 },
+            // endOnly: true,
+          }),
+        ],
+        inertia: false,
+        autoScroll: {
+          container: document.querySelector('.content') as HTMLElement,
+          margin: 50,
+          distance: 5,
+          interval: 10,
+          speed: 500,
+        },
+      })
+      .on('down', (event) => {
+        dragging = true
+      })
+      .on('dragmove', (event) => {
+        // event.target?.classList.add('dragging')
+        let delta = new Vector2(event.dx / quantumDocument.options.gridCellSize.x, event.dy / quantumDocument.options.gridCellSize.y)
+        moveElementsByID(selectedIDs.value, delta)
+        event.preventDefault()
+      })
+      .on('dragend', (event) => {
+        // event.target?.classList.remove('dragging')
+        pages.updatePageCount()
+        dragging = false
+      })
+
+    document.querySelector('.content')?.addEventListener('scroll', function (e) {
+      console.log('scroll', e, e.target.scrollTop)
+      if (e.target && dragging) {
+        let scrollLeft = e.target.scrollLeft != 0 ? e.target.scrollLeft / quantumDocument.options.gridCellSize.x : 0
+        let scrollTop = e.target.scrollTop != 0 ? e.target.scrollTop / quantumDocument.options.gridCellSize.y : 0
+        let delta = new Vector2(scrollLeft - previousScrollLeft, scrollTop - previousScrollTop)
+        moveElementsByID(selectedIDs.value, delta)
+
+        previousScrollTop = scrollTop
+        previousScrollLeft = scrollLeft
+      }
     })
-    .on('down', (event) => {})
-    .on('dragmove', (event) => {
-      // event.target?.classList.add('dragging')
-      let delta = new Vector2(event.dx / quantumDocument.options.gridCellSize.x, event.dy / quantumDocument.options.gridCellSize.y)
-      moveElementsByID(selectedIDs.value, delta)
-      event.preventDefault()
-    })
-    .on('dragend', (event) => {
-      // event.target?.classList.remove('dragging')
-      pages.updatePageCount()
-    })
+  })
 
   function moveElementsByID(IDs: string[], delta: Vector2) {
-    // TODO: dont let it move outside sheet (thus no longer needing 'interact.modifiers.restrict')
+    // TODO: dont let it move outside sheet (thus no longer needing 'interact.modifiers.restrict'?)
     IDs.forEach((id) => {
       const quantumElement = quantumDocument.getElementById(id)
       let newPos = quantumElement?.position.value.add(delta)

@@ -69,7 +69,7 @@ export default defineComponent({
   background-color: #f1f1f1;
   display: flex;
   /* Header and footer */
-  overflow-y: scroll;
+  overflow-y: auto;
   height: calc(100vh - 36px - 36px);
   /* Sides */
   padding-left: 12px;
