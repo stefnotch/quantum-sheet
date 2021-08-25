@@ -105,43 +105,7 @@ function useFileInterface() {
   }
 }
 
-function notify(type: 'success' | 'error' | 'warning', message: string, details: any) {
-  let description = typeof details !== 'string' ? JSON.stringify(details) : details
-  const config = {
-    message,
-    description,
-  }
-  notification[type](config)
-}
-
-function log(message: string, details: any) {
-  let description = typeof details !== 'string' ? JSON.stringify(details) : details
-  const config = {
-    message,
-    description,
-  }
-  notification.info(config)
-}
-
-function warn(message: string, details: any) {
-  let description = typeof details !== 'string' ? JSON.stringify(details) : details
-  const config = {
-    message,
-    description,
-  }
-  notification.warn(config)
-}
-
-function error(message: string, details: any) {
-  let description = typeof details !== 'string' ? JSON.stringify(details) : details
-  const config = {
-    message,
-    description,
-  }
-  notification.error(config)
-}
-
 const casStatus = useCasStatus()
 const fileInterface = useFileInterface()
 
-export { fileInterface, notify, log, warn, error, casStatus }
+export { fileInterface, casStatus }

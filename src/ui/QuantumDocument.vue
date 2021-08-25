@@ -66,7 +66,7 @@
   <!-- <a-button @click="pages.addPage()">+ Page</a-button> -->
 </template>
 <script lang="ts">
-import { defineComponent, readonly, ref, Ref, nextTick, unref, onMounted, inject, provide, watch } from 'vue'
+import { defineComponent, readonly, ref, Ref, nextTick, unref, watch } from 'vue'
 import { useDocument, UseQuantumDocument, QuantumDocumentElementTypes } from '../model/document/document'
 import ExpressionElement, { ExpressionElementType } from './elements/ExpressionElement.vue'
 import ScopeElement, { ScopeElementType } from './elements/ScopeStartElement.vue'
@@ -74,6 +74,7 @@ import LatexElement, { LatexElementType } from './elements/LatexElement.vue'
 import { useFocusedElementCommands, ElementCommands } from './elements/element-commands'
 import { Vector2 } from '../model/vectors'
 import { QuantumElement, JsonType } from '../model/document/document-element'
+import { watchImmediate } from '../model/reactivity-utils'
 import * as UI from './ui'
 import interact from 'interactjs'
 import Selecto from 'selecto'
@@ -398,16 +399,13 @@ function usePages<T extends QuantumDocumentElementTypes>(quantumDocument: UseQua
     updatePageCount()
   })
 
-  watch(
+  watchImmediate(
     () => quantumDocument.options.paperSize,
     (value) => {
-      width.value = sheetSizes[quantumDocument.options.paperSize].width
-      height.value = sheetSizes[quantumDocument.options.paperSize].height
+      width.value = sheetSizes[value].width
+      height.value = sheetSizes[value].height
     }
   )
-
-  width.value = sheetSizes[quantumDocument.options.paperSize].width
-  height.value = sheetSizes[quantumDocument.options.paperSize].height
 
   return {
     pageCount,
