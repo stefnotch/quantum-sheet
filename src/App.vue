@@ -2,7 +2,7 @@
   <a-layout>
     <Header />
     <a-layout class="content">
-      <a-layout-content class="drawingtable center">
+      <a-layout-content class="drawingtable center print-area">
         <!-- TODO: Add an "id" property (with a uuid) so that we can recreate the document whenever we want a new document -->
         <quantum-document @quantum-document="(v) => docManager.registerQuantumDocument(v)"></quantum-document>
         <!-- <LandingPage /> -->
@@ -97,5 +97,23 @@ export default defineComponent({
 .center {
   margin-left: auto;
   margin-right: auto;
+}
+</style>
+
+<style>
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    margin-top: 0px !important;
+    margin-bottom: 0px !important;
+  }
 }
 </style>
