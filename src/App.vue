@@ -114,6 +114,12 @@ export default defineComponent({
     top: 0;
     margin-top: 0px !important;
     margin-bottom: 0px !important;
+    margin-left: 0px !important;
+    margin-right: 0px !important;
+  }
+  .page-divider * {
+    visibility: hidden;
+    display: none;
   }
 }
 </style>
