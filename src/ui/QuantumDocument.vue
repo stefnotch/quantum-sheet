@@ -388,7 +388,7 @@ function usePages<T extends QuantumDocumentElementTypes>(quantumDocument: UseQua
     return yPos
   }
 
-  function lowestElementPosition(arr) {
+  function lowestElementPosition(arr: readonly QuantumElement[]) {
     // The largest number at first should be the first element or null for empty array
     var largest = arr.length > 0 ? arr[0].position.value.y : null
     // Current number, handled by the loop
@@ -397,10 +397,10 @@ function usePages<T extends QuantumDocumentElementTypes>(quantumDocument: UseQua
       // Update current number
       number = Number(arr[i].position.value.y)
       // Compares stored largest number with current number, stores the largest one
-      largest = Math.max(largest, number)
+      largest = Math.max(largest as number, number)
     }
 
-    return largest
+    return largest as number
   }
 
   function updatePageCount() {
