@@ -192,8 +192,16 @@ export default defineComponent({
          }
          .ML__fieldcontainer__field {
           min-height: 12px  !important;
+          padding: 0px; 
          }`
           mathfield.value.shadowRoot?.appendChild?.(MLfieldcontainerCustomStyle)
+
+          // Make mathfield thinner
+          const shorterMathfieldCustomStyle = document.createElement('style')
+          shorterMathfieldCustomStyle.innerHTML = `.ML__fieldcontainer__field {
+          padding: 0px !important; 
+         }`
+          mathfield.value.shadowRoot?.appendChild?.(shorterMathfieldCustomStyle)
         }
 
         value.innerHTML = ''

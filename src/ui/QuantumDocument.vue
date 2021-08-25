@@ -53,6 +53,8 @@
       :class="{ selected: element.selected.value }"
       @pointerdown="() => {}"
     >
+      <!-- TODO: Use v-if="element.selected.value" -->
+      <div class="selection-region"></div>
       <component
         :is="getTypeComponent(element.typeName)"
         class="quantum-element"
@@ -564,25 +566,21 @@ export default defineComponent({
 .quantum-block {
   position: absolute;
   min-width: 50px;
-  padding: 4px;
-  margin: 1px;
+  padding: 0px 4px;
+  outline-offset: -1px;
 }
 
 .quantum-block:hover {
-  border: 1px solid var(--selected-color);
-  margin: 0px;
+  outline: 1px solid var(--selected-color);
 }
 /* .quantum-block.dragging {
-  border: 1px solid var(--selected-color);
-  margin: 0px;
+  outline: 1px solid var(--selected-color);
 } */
 .quantum-block:focus-within {
-  border: 1px dashed var(--selected-color);
-  margin: 0px;
+  outline: 1px dashed var(--selected-color);
 }
 .quantum-block.selected {
-  border: 1px solid var(--selected-color);
-  margin: 0px;
+  outline: 1px solid var(--selected-color);
   background: var(--selected-background-color);
 }
 
@@ -593,6 +591,20 @@ export default defineComponent({
   clip: rect(0 0 0 0);
   width: 0px;
   height: 0px;
+}
+.selection-region {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  left: -4px;
+  right: -4px;
+}
+.quantum-block:focus-within .selection-region,
+.quantum-block.selected .selection-region {
+  top: -10px;
+  bottom: -10px;
+  left: -10px;
+  right: -10px;
 }
 
 .grid-crosshair {
