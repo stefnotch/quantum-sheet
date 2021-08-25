@@ -246,19 +246,26 @@ function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: 
     .on('down', (event) => {})
     .on('dragmove', (event) => {
       // event.target?.classList.add('dragging')
-      // const quantumElement = quantumDocument.getElementById(event.target.id)
-      selectedIDs.value.forEach((id) => {
-        const quantumElement = quantumDocument.getElementById(id)
-        let delta = new Vector2(event.dx / quantumDocument.options.gridCellSize.x, event.dy / quantumDocument.options.gridCellSize.y)
-        let newPos = quantumElement?.position.value.add(delta)
-        if (newPos) quantumElement?.setPosition(newPos)
-      })
+      let delta = new Vector2(event.dx / quantumDocument.options.gridCellSize.x, event.dy / quantumDocument.options.gridCellSize.y)
+      moveElementsByID(selectedIDs.value, delta)
       event.preventDefault()
     })
     .on('dragend', (event) => {
       // event.target?.classList.remove('dragging')
       pages.updatePageCount()
     })
+
+  function moveElementsByID(IDs: string[], delta: Vector2) {
+    IDs.forEach((id) => {
+      const quantumElement = quantumDocument.getElementById(id)
+      let newPos = quantumElement?.position.value.add(delta)
+      if (newPos) quantumElement?.setPosition(newPos)
+    })
+  }
+
+  return {
+    moveElementsByID,
+  }
 }
 
 function useEvents<T extends QuantumDocumentElementTypes>(
@@ -266,7 +273,8 @@ function useEvents<T extends QuantumDocumentElementTypes>(
   focusedElementCommands: Ref<ElementCommands | undefined>,
   grid,
   selection,
-  UI
+  UI,
+  elementDrag
 ) {
   function createElementAtEvent(ev: InputEvent) {
     let elementType: string = ExpressionElementType.typeName
@@ -322,7 +330,19 @@ function useEvents<T extends QuantumDocumentElementTypes>(
           quantumDocument.deleteElement(quantumDocument.getElementById(id) as QuantumElement)
         })
       } else if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
-        grid.keydown(event)
+        if (selection.selectedIDs.value.length > 0) {
+          let direction =
+            {
+              ArrowLeft: new Vector2(-1, 0),
+              ArrowRight: new Vector2(1, 0),
+              ArrowUp: new Vector2(0, -1),
+              ArrowDown: new Vector2(0, 1),
+            }[event.key] ?? Vector2.zero
+
+          elementDrag.moveElementsByID(selection.selectedIDs.value, direction)
+        } else {
+          grid.keydown(event)
+        }
       } else if (event.code === 'KeyZ' && event.ctrlKey) {
         UI.warn('Unsupported Action', 'Undo/Redo unsupported at the moment')
       } else {
@@ -455,7 +475,7 @@ export default defineComponent({
     const clipboard = useClipboard(document)
     const selection = useElementSelection(document)
     const elementDrag = useElementDrag(document, pages, selection.selectedIDs)
-    const events = useEvents(document, focusedElementCommands.commands, grid, selection, UI)
+    const events = useEvents(document, focusedElementCommands.commands, grid, selection, UI, elementDrag)
 
     function log(ev: any) {
       console.log(ev)
