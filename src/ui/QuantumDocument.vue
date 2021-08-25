@@ -173,9 +173,9 @@ function useElementSelection<T extends QuantumDocumentElementTypes>(quantumDocum
       // Selecto's root container (No transformed container. (default: null)
       // rootContainer: document.querySelector('.quantum-document'),
       // The area to drag selection element (default: container)
-      // dragContainer: document.querySelector('.quantum-document') as HTMLElement,
+      // dragContainer: document.querySelector('.selection-region') as HTMLElement,
       // Targets to select. You can register a queryselector or an Element.
-      selectableTargets: ['.quantum-block'],
+      selectableTargets: ['.selection-region'],
       // Whether to select by click (default: true)
       selectByClick: true,
       // Whether to select from the target inside (default: true)
@@ -194,12 +194,19 @@ function useElementSelection<T extends QuantumDocumentElementTypes>(quantumDocum
     selecto
       .on('select', (e) => {
         // add to array
-        // selectedIDs.value = []
         e.added.forEach((el) => {
+          if (el.className === 'selection-region') {
+            // selection-region is the child element, we want the id of the parent, quantum-element
+            el = el.parentElement as HTMLElement
+          }
           el.classList.add('selected')
           selectedIDs.value.push(el.id)
         })
         e.removed.forEach((el) => {
+          if (el.className === 'selection-region') {
+            // selection-region is the child element, we want the id of the parent, quantum-element
+            el = el.parentElement as HTMLElement
+          }
           el.classList.remove('selected')
           // remove from array
           const index = selectedIDs.value.indexOf(el.id)
