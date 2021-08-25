@@ -23,6 +23,7 @@ export type CasExpression = ['Equal' | 'Evaluate', ...Expression[]]
 
 /**
  * A command has one expression. It is expected that all expressions/commands are submitted and executed in order.
+ * We'll only parse the topmost "Equal"/"Evaluate". If an expression has multiple instances of those, the user is expected to create multiple CAS commands.
  *
  * The expression can have some direct getters (e.g. 3x+5+1 has `x` as a getter)
  * Those getters can have a value with some *undefined* symbols. For example `x = 3`, `x = 7cm` and `x = undefined` are all valid values.

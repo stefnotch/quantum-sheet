@@ -2,7 +2,6 @@ import type {} from 'vite'
 import type { CasCommand } from './cas'
 import { getAllGetterNames, useEncoder } from './cas-math'
 import { Expression, format } from '@cortex-js/compute-engine'
-import * as UI from '../ui/notification'
 
 export type WorkerMessage =
   | {
@@ -336,17 +335,16 @@ export function usePyodide() {
 
         worker.onmessage = (e) => {
           let response = e.data as WorkerResponse
-          console.log('Response', response)
 
           if (response.type == 'result') {
+            console.log('Response', response)
             const command = commands.get(response.id)
             command?.callback(decodeNames(JSON.parse(response.data)))
             commands.delete(response.id)
           } else if (response.type == 'error') {
             console.warn(response)
-            UI.error('CAS error', response.message) // TODO: Make CAS independent of UI
             const command = commands.get(response.id)
-            command?.callback(['Error', 'Missing', { str: (response.message + '').slice(0, 40) }]) // Put 'error' to right of equal sign
+            command?.callback(new Error(response.message))
             commands.delete(response.id)
           } else {
             console.error('Unknown response type', response)
@@ -394,8 +392,6 @@ export function usePyodide() {
     const innerExpression = command.expression[1]
 
     let pythonExpression = ''
-    // For now, only parse the expression if there is an "Equal" or "Solve" or "Apply" at the root
-    // TODO: Handle nested "Equal", "Solve", "Apply"s. For example, 3x=5 -> computed solution goes here = numerical solution goes here
     if (command.expression[0] == 'Equal') {
       // TODO: If the expression is only a single getter or something simple, don't call the CAS
       pythonExpression = `${expressionToPython(innerExpression)}\n\t.subs({${substitutions}})\n\t.evalf()`

@@ -8,6 +8,7 @@ import { getGetterNames } from '../../../cas/cas-math'
 import { Expression, match, substitute } from '@cortex-js/compute-engine'
 import { Vector2 } from '../../vectors'
 import { getExpressionValue, handleExpressionValue } from './../../../cas/mathjson-utils'
+import * as Notification from '../../../ui/notification'
 
 export const ElementType = 'expression-element'
 
@@ -179,6 +180,12 @@ export class ExpressionElement extends QuantumElement {
           gettersData, // TODO: Don't pass in all getters (or pass in a reference to the getters?)
           computeExpression,
           (result) => {
+            if (result instanceof Error) {
+              // TODO: Show the errors inline instead of using a big notification
+              Notification.error('CAS error', result.message)
+              result = ['Error', 'Missing', { str: (result.message + '').slice(0, 40) }] // Put 'error' to right of equal sign
+            }
+
             const output = expression.slice()
             if (expression[0] === 'Evaluate') {
               output[3] = ['\\mathinner', result] // ["Evaluate", lhs, solve arguments, rhs]
@@ -195,6 +202,11 @@ export class ExpressionElement extends QuantumElement {
         gettersData, // TODO: Don't pass in all getters (or pass in a reference to the getters?)
         expression,
         (result) => {
+          if (result instanceof Error) {
+            // TODO: Show the errors inline instead of using a big notification
+            Notification.error('CAS error', result.message)
+            result = ['Error', 'Missing', { str: (result.message + '').slice(0, 40) }] // Put 'error' to right of equal sign
+          }
           const output = expression.slice()
           if (expression[0] === 'Evaluate') {
             output[3] = ['\\mathinner', result] // ["Evaluate", lhs, solve arguments, rhs]
