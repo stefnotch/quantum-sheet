@@ -115,10 +115,10 @@ import { Icon } from './icon'
 import { cas } from './../model/cas'
 
 function useDocActions() {
-  function handleChangeNformat() {
+  function handleChangeNumberFormat() {
     return
   }
-  function handleChangeOUTformat(value: any) {
+  function handleChangeOutputFormat(value: any) {
     return
   }
   function handleChangeDecimalPlaces(value: any) {
@@ -128,8 +128,8 @@ function useDocActions() {
     return
   }
   return {
-    handleChangeNformat,
-    handleChangeOUTformat,
+    handleChangeNumberFormat,
+    handleChangeOutputFormat,
     handleChangeDecimalPlaces,
   }
 }
