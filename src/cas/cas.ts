@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { usePyodide } from './pyodide-cas'
 
 export interface UseCas {
+  doneLoading: Promise<void>
   executeCommand(command: CasCommand): void
   cancelCommand(command: CasCommand): void
 }
@@ -12,9 +13,9 @@ export class CasCommand {
   readonly gettersData: Map<string, any>
   readonly expression: Expression
 
-  readonly callback: (result: any) => void
+  readonly callback: (result: any | Error) => void
 
-  constructor(gettersData: Map<string, any>, expression: Expression, callback: (result: any) => void) {
+  constructor(gettersData: Map<string, any>, expression: Expression, callback: (result: any | Error) => void) {
     this.id = uuidv4()
     this.gettersData = gettersData
     this.expression = expression
@@ -41,7 +42,8 @@ export function useCas(): UseCas {
   }
 
   return {
+    doneLoading: cas.doneLoading,
     executeCommand,
-    cancelCommand
+    cancelCommand,
   }
 }

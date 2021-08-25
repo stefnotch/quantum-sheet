@@ -1,15 +1,13 @@
 import type {} from 'vite'
 import type { CasCommand } from './cas'
-import { getGetterNames, useEncoder } from './cas-math'
+import { getAllGetterNames, getGetterNames, useEncoder } from './cas-math'
 import { Expression, format } from '@cortex-js/compute-engine'
+import * as UI from '../ui/notification'
 
 export type WorkerMessage =
   | {
       type: 'python'
       id: string
-      data: {
-        [key: string]: any
-      }
       command: any
     }
   | {
@@ -65,7 +63,7 @@ function usePythonConverter() {
       }
       return output
     } else if (typeof expression === 'string') {
-      return decodeName(expression)
+      return expression.startsWith('_') ? decodeName(expression) : expression
     } else {
       return expression
     }
@@ -330,46 +328,62 @@ export function usePyodide() {
   const commandBuffer: WorkerMessage[] = []
   const { encodeName, decodeNames, expressionToPython, KnownLatexFunctions } = usePythonConverter()
   const commands = new Map<string, CasCommand>()
+  const doneLoading = new Promise<void>((resolve, reject) => {
+    getOrCreateWorker().then(
+      (result) => {
+        console.log('Done creating worker!')
+        worker = result
 
-  getOrCreateWorker().then(
-    (result) => {
-      console.log('Done creating worker!')
-      worker = result
+        worker.onmessage = (e) => {
+          let response = e.data as WorkerResponse
+          console.log('Response', response)
 
-      worker.onmessage = (e) => {
-        let response = e.data as WorkerResponse
-        console.log('Response', response)
-
-        if (response.type == 'result') {
-          const command = commands.get(response.id)
-          command?.callback(decodeNames(JSON.parse(response.data)))
-          commands.delete(response.id)
-        } else if (response.type == 'error') {
-          console.warn(response)
-          commands.delete(response.id)
-        } else {
-          console.error('Unknown response type', response)
+          if (response.type == 'result') {
+            const command = commands.get(response.id)
+            command?.callback(decodeNames(JSON.parse(response.data)))
+            commands.delete(response.id)
+          } else if (response.type == 'error') {
+            console.warn(response)
+            UI.error('CAS error', response.message) // TODO: Make CAS independent of UI
+            const command = commands.get(response.id)
+            command?.callback(['Error', 'Missing', { str: (response.message + '').slice(0, 40) }]) // Put 'error' to right of equal sign
+            commands.delete(response.id)
+          } else {
+            console.error('Unknown response type', response)
+            setTimeout(() => {
+              throw new Error('Unknown response type ' + response)
+            }, 0)
+          }
         }
+        worker.onerror = (e) => {
+          // If this happens, it's a bug
+          console.error('Worker error', e)
+          setTimeout(() => {
+            throw new Error('Worker Error: ' + e.message)
+          }, 0)
+        }
+        worker.onmessageerror = (e) => {
+          // If this happens, it's a bug
+          console.error('Message error', e)
+          setTimeout(() => {
+            throw new Error('Worker Message Error')
+          }, 0)
+        }
+        resolve()
+        commandBuffer.forEach((v) => sendCommand(v))
+        commandBuffer.length = 0
+      },
+      (error) => {
+        console.error(error)
+        reject(error instanceof Error ? error : new Error(error))
       }
-      worker.onerror = (e) => {
-        console.warn('Worker error', e)
-      }
-      worker.onmessageerror = (e) => {
-        console.error('Message error', e)
-      }
-
-      commandBuffer.forEach((v) => sendCommand(v))
-      commandBuffer.length = 0
-    },
-    (error) => {
-      throw new Error(error)
-    }
-  )
+    )
+  })
 
   function executeCommand(command: CasCommand) {
     commands.set(command.id, command)
 
-    const getterNames = getGetterNames(command.expression)
+    const getterNames = getAllGetterNames(command.expression, command.gettersData)
     const symbolNames = Array.from(getterNames).map((key) => encodeName(key))
 
     const substitutions = Array.from(command.gettersData.entries())
@@ -449,14 +463,13 @@ export function usePyodide() {
       return
     }
 
-    console.log('Python expression', pythonExpression)
+    console.log('Python expression', pythonExpression, ' symbols', symbolNames)
     sendCommand({
       type: 'expression',
       id: command.id,
-      data: {},
       symbols: symbolNames,
       command: pythonExpression,
-    } as WorkerMessage)
+    })
   }
 
   function cancelCommand(command: CasCommand) {
@@ -474,6 +487,7 @@ export function usePyodide() {
   }
 
   return {
+    doneLoading,
     executeCommand,
     cancelCommand,
   }

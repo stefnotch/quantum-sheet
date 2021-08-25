@@ -5,49 +5,22 @@
 </template>
 <script lang="ts">
 import { defineComponent, PropType, ref, watch, shallowRef } from 'vue'
-import { ExpressionElement, ExpressionElementType, ElementType } from '../../model/document/elements/expression-element'
+import { LatexElement, LatexElementType, ElementType } from '../../model/document/elements/latex-element'
 import 'mathlive/dist/mathlive-fonts.css'
 import MathLive, { MathfieldElement } from 'mathlive'
 import { ElementCommands } from './element-commands'
 import { Vector2 } from '../../model/vectors'
-import { parse, serialize } from '@cortex-js/compute-engine'
-import { dictionary } from '../../model/mathjson-custom-dictionary'
 
-export { ExpressionElementType }
+export { LatexElementType }
 
-function setMathfieldOptions(mathfield: MathfieldElement) {
-  const keybindings = mathfield.getOption('keybindings').concat([
-    {
-      key: 'ctrl+[Period]',
-      ifMode: 'math',
-      command: ['insert', '\\xrightarrow{\\placeholder{}}'],
-    },
-  ])
-
-  // https://cortexjs.io/mathlive/guides/shortcuts/
-  const shortcuts = mathfield.getOption('inlineShortcuts')
-  shortcuts['->'] = {
-    mode: 'math',
-    value: '\\xrightarrow{\\placeholder{}}',
-  }
-  shortcuts[':'] = {
-    mode: 'math',
-    value: '\\coloneq',
-  }
-
-  mathfield.setOptions({
-    inlineShortcuts: shortcuts,
-    keybindings: keybindings,
-  })
-}
-
+// TODO: Reduce code duplication with ExpressionElement.vue
 export default defineComponent({
   props: {
     /**
      * Gets the associated document-element
      */
     modelGetter: {
-      type: Function as PropType<() => ExpressionElement>,
+      type: Function as PropType<() => LatexElement>,
       required: true,
     },
   },
@@ -71,41 +44,13 @@ export default defineComponent({
       }
     })
 
-    // Show expression when the document-expression changes
-    watch([expressionElement.expression, mathfield], ([value, _]) => {
-      const latex = serialize(value, {
-        multiply: '\\cdot',
-        invisibleMultiply: '\\cdot',
-        invisiblePlus: '+',
-        dictionary: dictionary,
-        groupSeparator: '',
-      })
-
-      mathfield.value?.setValue(latex, {
+    // Show expression when the document-latex changes
+    watch([expressionElement.latex, mathfield], ([value, _]) => {
+      mathfield.value?.setValue(value, {
         suppressChangeNotifications: true,
         mode: 'math', // TODO: Why is this needed for `\text{}` to work?
       })
     })
-
-    /**
-     * Evaluate the expression that the user has typed
-     */
-    function evaluateExpression() {
-      const expression = parse(mathfield.value?.getValue?.('latex') ?? '', {
-        dictionary: dictionary,
-        promoteUnknownFunctions: /$^/,
-      })
-
-      console.log('Evaluating ', mathfield.value?.getValue?.('latex'), '(Mathjson form: ', expression, ')')
-      // TODO: Verify that the expression has no issues
-      // TODO: Regarding multi letter variables
-      // - Add all known variables point to dictionary
-      // - If it was none if them, interpret it as separate, 1 letter variables
-      // TODO: What about multi letter functions?
-      // TODO: Add user-defined stuff to dictionary
-
-      expressionElement.inputExpression(expression)
-    }
 
     // Create the mathfield
     watch(
@@ -120,9 +65,6 @@ export default defineComponent({
           smartFence: true,
           plonkSound: null,
           keypressSound: null,
-          onContentDidChange: (mathfield: MathLive.Mathfield) => {
-            // TODO: If the expression is simple enough, we can optionally show a preview of the result
-          },
           onFocus: (mathfield: MathLive.Mathfield) => {
             expressionElement.setFocused(true)
             context.emit('focused-element-commands', {
@@ -145,7 +87,7 @@ export default defineComponent({
             if (mathfield.getValue('latex').length == 0) {
               context.emit('delete-element')
             } else {
-              evaluateExpression()
+              expressionElement.latex.value = mathfield.getValue('latex')
             }
           },
           onMoveOutOf: (mathfield: MathLive.Mathfield, direction) => {
@@ -169,8 +111,6 @@ export default defineComponent({
             context.emit('move-cursor-out', new Vector2(0, 1))
           },
         })
-
-        setMathfieldOptions(mathfield.value)
 
         mathfield.value.style.fontSize = '18px'
 
@@ -217,9 +157,3 @@ export default defineComponent({
   },
 })
 </script>
-<style>
-/** To prevent flashing https://cortexjs.io/mathlive/guides/lifecycle/ */
-math-field:not(:defined) {
-  display: none;
-}
-</style>

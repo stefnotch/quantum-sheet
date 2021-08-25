@@ -1,15 +1,22 @@
 // Not recursive! The expression tree on the other hand will be recursive.
 
-import { QuantumElementCreationOptions, QuantumElementType, QuantumElement } from './document-element'
+import { QuantumElementCreationOptions, QuantumElementType, QuantumElement, JsonType } from './document-element'
 import { Vector2 } from '../vectors'
-import { readonly, shallowReactive, shallowRef, ref, watch } from 'vue'
+import { readonly, shallowReactive, shallowRef, ref, watch, reactive } from 'vue'
 import arrayUtils from '../array-utils'
-import { ScopeElement, ScopeElementType } from './elements/scope-element'
-import { ExpressionElement, ExpressionElementType } from './elements/expression-element'
+import { ScopeElementType } from './elements/scope-element'
+import type { ScopeElement } from './elements/scope-element'
+import { ExpressionElementType } from './elements/expression-element'
+import { watchImmediate } from '../reactivity-utils'
+import { deserializeOptions, DocumentOptions, serializeOptions } from './document-options'
+import pkg from '../../../package.json'
 
-type JsonType = undefined | null | boolean | number | string | JsonType[] | { [prop: string]: JsonType }
-
-type SerializedDataType = {
+type SerializedDocument = {
+  /**
+   * Used so that we can distinguish between different document versions/formats.
+   */
+  version: string
+  options: JsonType
   elements: JsonType[]
 }
 
@@ -24,9 +31,9 @@ type GetQuantumElement<Type> = Type extends QuantumElementType<infer X> ? X : ne
  */
 export interface UseQuantumDocument<TElements extends QuantumDocumentElementTypes<readonly QuantumElementType[]>> {
   /**
-   * How large the grid cells are, in pixels
+   * Document options
    */
-  readonly gridCellSize: Readonly<Vector2>
+  readonly options: DocumentOptions
 
   /**
    * Which elements the document contains
@@ -82,9 +89,13 @@ export interface UseQuantumDocument<TElements extends QuantumDocumentElementType
   setFocus(element?: QuantumElement): void
 
   /**
-   * Serialize & Deserialize a document
+   * Serialize a document
    */
   serializeDocument(): JsonType
+
+  /**
+   * Deserialize a document's elements
+   */
   deserializeDocument(serializedData: JsonType): void
 }
 
@@ -98,32 +109,26 @@ function useElementList() {
 
   /** Watches an element's position. Returns a function to stop the watcher. */
   function watchElement(element: QuantumElement) {
-    const stopWatcher = watch(
-      element.position,
-      (value, oldValue) => {
-        // New index
-        let { index } = arrayUtils.getBinaryInsertIndex(elements, (a) => a.position.value.compareTo(value))
+    const stopWatcher = watchImmediate(element.position, (value) => {
+      // New index
+      let { index } = arrayUtils.getBinaryInsertIndex(elements, (a) => a.position.value.compareTo(value))
 
-        // Element is still in the same position
-        if (arrayUtils.get(elements, index) === element) {
-          return
-        }
-
-        const prev = arrayUtils.get(elements, index - 1)
-        if (prev?.typeName == ScopeElementType.typeName) {
-          element.setScope(prev as ScopeElement)
-        } else {
-          element.setScope(prev?.scope.value)
-        }
-
-        // Move by remove-adding the element
-        arrayUtils.remove(elements, element)
-        elements.splice(index, 0, element)
-      },
-      {
-        immediate: true,
+      // Element is still in the same position
+      if (arrayUtils.at(elements, index) === element) {
+        return
       }
-    )
+
+      const prev = arrayUtils.at(elements, index - 1)
+      if (prev?.typeName == ScopeElementType.typeName) {
+        element.setScope(prev as ScopeElement)
+      } else {
+        element.setScope(prev?.scope.value)
+      }
+
+      // Move by remove-adding the element
+      arrayUtils.remove(elements, element)
+      elements.splice(index, 0, element)
+    })
 
     return () => {
       stopWatcher()
@@ -159,19 +164,13 @@ function useElementSelection() {
   const selectedElements = shallowReactive<Set<QuantumElement>>(new Set())
 
   function watchElement(element: QuantumElement) {
-    const stopHandle = watch(
-      element.selected,
-      (value) => {
-        if (value) {
-          selectedElements.add(element)
-        } else {
-          selectedElements.delete(element)
-        }
-      },
-      {
-        immediate: true,
+    const stopHandle = watchImmediate(element.selected, (value) => {
+      if (value) {
+        selectedElements.add(element)
+      } else {
+        selectedElements.delete(element)
       }
-    )
+    })
 
     return () => {
       element.selected.value = false
@@ -195,24 +194,18 @@ function useElementFocus() {
   const focusedElement = shallowRef<QuantumElement>()
 
   function watchElement(element: QuantumElement) {
-    const stopHandle = watch(
-      element.focused,
-      (value) => {
-        if (value) {
-          if (focusedElement.value?.focused) {
-            focusedElement.value.setFocused(false)
-          }
-          focusedElement.value = element
-        } else {
-          if (focusedElement.value == element) {
-            focusedElement.value = undefined
-          }
+    const stopHandle = watchImmediate(element.focused, (value) => {
+      if (value) {
+        if (focusedElement.value?.focused) {
+          focusedElement.value.setFocused(false)
         }
-      },
-      {
-        immediate: true,
+        focusedElement.value = element
+      } else {
+        if (focusedElement.value == element) {
+          focusedElement.value = undefined
+        }
       }
-    )
+    })
 
     return () => {
       element.focused.value = false
@@ -242,7 +235,11 @@ function useElementFocus() {
 export function useDocument<TElements extends QuantumDocumentElementTypes<readonly QuantumElementType[]>>(
   elementTypes: TElements
 ): UseQuantumDocument<TElements> {
-  const gridCellSize = readonly(new Vector2(20, 20))
+  const options = reactive<DocumentOptions>({
+    gridCellSize: readonly(new Vector2(20, 20)),
+    paperStyle: 'standard',
+    paperSize: 'A4',
+  })
 
   const elementRemoveCallbacks = new Map<string, () => void>()
   const elementList = useElementList()
@@ -303,7 +300,9 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
   }
 
   function serializeDocument() {
-    let serializedData: SerializedDataType = {
+    let serializedData: SerializedDocument = {
+      version: pkg.version,
+      options: serializeOptions(options),
       elements: [],
     }
     elementList.elements.forEach((element: QuantumElement) => {
@@ -313,9 +312,13 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
     return serializedData
   }
 
-  function deserializeDocument(serializedData: SerializedDataType) {
-    console.log('DeSerializing file', serializedData)
-    // Expression-Elements
+  function deserializeDocument(serializedData: SerializedDocument) {
+    if (serializedData?.options) {
+      const deserializedOptions = deserializeOptions(serializedData?.options)
+      options.gridCellSize = deserializedOptions.gridCellSize ?? options.gridCellSize
+      options.paperStyle = deserializedOptions.paperStyle ?? options.paperStyle
+      options.paperSize = deserializedOptions.paperSize ?? options.paperSize
+    }
     serializedData?.elements?.forEach((elementData: JsonType) => {
       let elementType = elementTypes[(elementData as any).typeName]
       if (!elementType) {
@@ -328,7 +331,7 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
   }
 
   return {
-    gridCellSize,
+    options,
     elementTypes: elementTypes,
     elements: elementList.elements,
     createElement,

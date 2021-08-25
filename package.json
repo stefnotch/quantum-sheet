@@ -1,6 +1,6 @@
 {
   "name": "quantum-sheet",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "type": "module",
   "license": "GPL-3.0-only",
   "repository": {
@@ -25,22 +25,27 @@
     "download:pyodide": "node ./utils/download-pyodide.js"
   },
   "dependencies": {
+    "@ant-design/icons-vue": "^6.0.1",
     "@cortex-js/compute-engine": "^0.4.2",
-    "@vueuse/core": "^5.3.0",
+    "@vueuse/core": "^6.0.0",
+    "ant-design-vue": "^2.2.6",
+    "browser-fs-access": "^0.20.4",
+    "idb-keyval": "^5.1.3",
     "interactjs": "^1.10.11",
     "mathlive": "0.69.5",
+    "selecto": "^1.12.1",
     "uuid": "^8.3.2",
-    "vue": "^3.2.1"
+    "vue": "^3.2.4"
   },
   "devDependencies": {
     "@interactjs/types": "^1.10.11",
     "@shockpkg/archive-files": "^1.11.1",
     "@types/uuid": "^8.3.1",
     "@vitejs/plugin-vue": "^1.4.0",
-    "@vue/compiler-sfc": "^3.2.1",
+    "@vue/compiler-sfc": "^3.2.4",
     "fs-extra": "^10.0.0",
     "gh-pages": "^3.2.3",
     "node-fetch": "3.0.0-beta.10",
-    "vite": "^2.4.4"
+    "vite": "^2.5.0"
   }
 }

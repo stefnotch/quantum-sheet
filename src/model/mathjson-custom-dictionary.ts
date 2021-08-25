@@ -51,7 +51,6 @@ dictionary.push({
   associativity: 'left',
   trigger: { infix: '\\xrightarrow' },
   serialize: <SerializerFunction<number>>function (emitter, expr) {
-    console.log(expr)
     if (!Array.isArray(expr)) throw new Error('Expect array expression')
 
     return (
@@ -95,12 +94,38 @@ dictionary.push({
   },
 })
 
-// TODO: Add a proper text parser
+// TODO: This is a bit of a hack
 dictionary.push({
-  name: '\\text',
-  parse: '\\text',
+  precedence: 260,
+  name: 'Text',
+  requiredLatexArg: 1,
+  associativity: 'non',
+  trigger: { symbol: '\\text' },
   serialize: function (emitter, expr) {
     if (!Array.isArray(expr)) throw new Error('Expect array expression')
-    return `\\text{${expr[1]}}`
+    return ` \\text{${expr[1].str}} `
+  },
+  parse: <ParserFunction<number>>function (lhs, scanner, minPrec) {
+    if (260 < minPrec) return [lhs, null]
+    if (!scanner.match('\\text')) return [lhs, null]
+
+    let text: string = ''
+    scanner.skipSpace()
+    if (scanner.match('<{>')) {
+      let level = 1
+      while (!scanner.atEnd && level !== 0) {
+        if (scanner.match('<{>')) {
+          level += 1
+        } else if (scanner.match('<}>')) {
+          level -= 1
+        } else if (scanner.match('<space>')) {
+          text += ' '
+        } else {
+          text += scanner.next()
+        }
+      }
+    }
+
+    return [null, ['Text', { str: text }]]
   },
 })
