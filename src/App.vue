@@ -69,12 +69,12 @@ export default defineComponent({
   background-color: #f1f1f1;
   display: flex;
   /* Header and footer */
-  padding-top: 36px;
-  padding-bottom: 36px;
+  overflow-y: scroll;
+  height: calc(100vh - 36px - 36px);
   /* Sides */
   padding-left: 12px;
   padding-right: 12px;
-  overflow: auto;
+  overflow-x: auto;
 }
 
 .drawingtable {
