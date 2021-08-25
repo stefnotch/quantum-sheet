@@ -93,7 +93,6 @@
             <!-- Paper Style: -->
             <a-select
               v-model:value="docManager.currentDocument.value.options.paperStyle"
-              style="width: 120px"
               @change="(value) => (docManager.currentDocument.value.options.paperStyle = value)"
             >
               <a-select-option value="standard">Standard</a-select-option>
@@ -107,12 +106,16 @@
             <!-- Paper Size: -->
             <a-select
               v-model:value="docManager.currentDocument.value.options.paperSize"
-              style="width: 120px"
               @change="(value) => (docManager.currentDocument.value.options.paperSize = value)"
             >
+              <a-select-option value="A3">A3</a-select-option>
               <a-select-option value="A4">A4</a-select-option>
-              <a-select-option value="Letter">Letter</a-select-option>
-              <a-select-option value="Legal">Legal</a-select-option>
+              <a-select-option value="A5">A5</a-select-option>
+              <a-select-option value="ANSI_A">ANSI A (US Letter)</a-select-option>
+              <a-select-option value="ANSI_B">ANSI B</a-select-option>
+              <a-select-option value="ARCH_A">Arch A</a-select-option>
+              <a-select-option value="ARCH_B">Arch B</a-select-option>
+              <!-- <a-select-option value="Legal">Legal</a-select-option> -->
             </a-select>
           </div>
         </a-form-item>

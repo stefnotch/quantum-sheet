@@ -347,9 +347,14 @@ function useEvents<T extends QuantumDocumentElementTypes>(
 function usePages<T extends QuantumDocumentElementTypes>(quantumDocument: UseQuantumDocument<T>) {
   const pageCount = ref(1)
   const sheetSizes: any = {
+    A3: { width: 297, height: 420 },
     A4: { width: 210, height: 297 },
-    Letter: { width: 216, height: 279 },
-    Legal: { width: 216, height: 356 },
+    A5: { width: 148, height: 210 },
+    ANSI_A: { width: 216, height: 279 },
+    ANSI_B: { width: 279, height: 432 },
+    ARCH_A: { width: 229, height: 305 },
+    ARCH_B: { width: 305, height: 457 },
+    // Legal: { width: 216, height: 356 },
   }
 
   const width = ref(0)
