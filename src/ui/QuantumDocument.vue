@@ -283,7 +283,6 @@ function useElementDrag<T extends QuantumDocumentElementTypes>(
       })
 
     document.querySelector('.content')?.addEventListener('scroll', function (e) {
-      console.log('scroll', e, e.target.scrollTop)
       if (e.target && dragging) {
         let scrollLeft = e.target.scrollLeft != 0 ? e.target.scrollLeft / quantumDocument.options.gridCellSize.x : 0
         let scrollTop = e.target.scrollTop != 0 ? e.target.scrollTop / quantumDocument.options.gridCellSize.y : 0
