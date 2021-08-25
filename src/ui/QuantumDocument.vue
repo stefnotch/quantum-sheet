@@ -256,6 +256,7 @@ function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: 
     })
 
   function moveElementsByID(IDs: string[], delta: Vector2) {
+    // TODO: dont let it move outside sheet (thus no longer needing 'interact.modifiers.restrict')
     IDs.forEach((id) => {
       const quantumElement = quantumDocument.getElementById(id)
       let newPos = quantumElement?.position.value.add(delta)
