@@ -41,6 +41,10 @@ function setMathfieldOptions(mathfield: MathfieldElement) {
     mode: 'math',
     value: '\\coloneq',
   }
+  shortcuts['from'] = {
+    mode: 'math',
+    value: '\\operatorname{from}',
+  }
 
   mathfield.setOptions({
     inlineShortcuts: shortcuts,
