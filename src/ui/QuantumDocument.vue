@@ -94,6 +94,7 @@ function useClipboard<T extends QuantumDocumentElementTypes>(document: UseQuantu
       Notification.warn('Failed to copy', 'Event clipboardData was null')
       return
     }
+    // Doesn't really work, since the 'selection' code doesn't select the underlying document elements
     const selectedElements = document.getSelection()
     const serializedElements = selectedElements.map((v) => document.elementTypes[v.typeName].serializeElement(v))
 
