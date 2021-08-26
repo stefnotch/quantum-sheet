@@ -246,6 +246,7 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
   const elementSelection = useElementSelection()
   const elementFocus = useElementFocus()
 
+  // TODO: Prevent this from being moved
   const rootScope = createElement(ScopeElementType.typeName, {
     position: Vector2.zero,
     size: Vector2.zero,

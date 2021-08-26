@@ -23,6 +23,13 @@ function setMathfieldOptions(mathfield: MathfieldElement) {
       command: ['insert', '\\xrightarrow{\\placeholder{}}'],
     },
   ])
+  // Override the default escape keybinding
+  // https://github.com/arnog/mathlive/blob/bbe76e24991ae9de3a14d0f79ceb5ad81ec9c8b6/src/editor/keybindings-definitions.ts#L62
+  keybindings.unshift({
+    key: '[Escape]',
+    ifMode: 'math',
+    command: ['commit'],
+  })
 
   // https://cortexjs.io/mathlive/guides/shortcuts/
   const shortcuts = mathfield.getOption('inlineShortcuts')
