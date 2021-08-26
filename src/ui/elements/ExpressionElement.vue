@@ -23,6 +23,13 @@ function setMathfieldOptions(mathfield: MathfieldElement) {
       command: ['insert', '\\xrightarrow{\\placeholder{}}'],
     },
   ])
+  // Override the default escape keybinding
+  // https://github.com/arnog/mathlive/blob/bbe76e24991ae9de3a14d0f79ceb5ad81ec9c8b6/src/editor/keybindings-definitions.ts#L62
+  keybindings.unshift({
+    key: '[Escape]',
+    ifMode: 'math',
+    command: ['commit'],
+  })
 
   // https://cortexjs.io/mathlive/guides/shortcuts/
   const shortcuts = mathfield.getOption('inlineShortcuts')
@@ -132,8 +139,11 @@ export default defineComponent({
               insert: (text: string) => {
                 if (text.startsWith('\\')) {
                   mathfield.insert(text, { mode: 'latex' })
+                  ;(mathfield as any).keystrokeBuffer += text
                 } else {
                   mathfield.insert(text)
+                  // Hack for https://github.com/stefnotch/quantum-sheet/issues/13#issuecomment-894781854
+                  ;(mathfield as any).keystrokeBuffer += text
                 }
               },
             })

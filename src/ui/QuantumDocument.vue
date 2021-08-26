@@ -17,7 +17,6 @@
         return false
       }
     "
-    @paste="clipboard.paste"
     @focus="documentInputElement.focus({ preventScroll: true })"
   >
     <!-- prettier-ignore -->
@@ -31,6 +30,9 @@
       @input="events.handleInputEvent($event)"
       @keydown="events.handleKeyboardEvent($event)"
       @keyup="events.handleKeyboardEvent($event)"
+      @copy="clipboard.copy"
+      @cut="clipboard.cut"
+      @paste="clipboard.paste"
       @focus="
         document.setSelection();
         grid.showCrosshair.value = true;
@@ -78,13 +80,30 @@ import { Vector2 } from '../model/vectors'
 import { QuantumElement, JsonType } from '../model/document/document-element'
 import { watchImmediate } from '../model/reactivity-utils'
 import * as UI from './ui'
+import * as Notification from './notification'
 import interact from 'interactjs'
 import Selecto from 'selecto'
 
 function useClipboard<T extends QuantumDocumentElementTypes>(document: UseQuantumDocument<T>) {
-  function cut(ev: ClipboardEvent) {}
-  function copy(ev: ClipboardEvent) {}
-  function paste(ev: ClipboardEvent) {}
+  function cut(ev: ClipboardEvent) {
+    console.log('cut happened', ev)
+  }
+  function copy(ev: ClipboardEvent) {
+    console.log('copy happened', ev)
+    if (!ev.clipboardData) {
+      Notification.warn('Failed to copy', 'Event clipboardData was null')
+      return
+    }
+    // Doesn't really work, since the 'selection' code doesn't select the underlying document elements
+    const selectedElements = document.getSelection()
+    const serializedElements = selectedElements.map((v) => document.elementTypes[v.typeName].serializeElement(v))
+
+    ev.clipboardData.setData('text/plain', JSON.stringify(serializedElements))
+    ev.preventDefault()
+  }
+  function paste(ev: ClipboardEvent) {
+    console.log('paste happened', ev)
+  }
   return {
     cut,
     copy,
@@ -314,7 +333,6 @@ function useEvents<T extends QuantumDocumentElementTypes>(
   focusedElementCommands: Ref<ElementCommands | undefined>,
   grid: ReturnType<typeof useGrid>,
   selection: ReturnType<typeof useElementSelection>,
-  UI,
   elementDrag: ReturnType<typeof useElementDrag>
 ) {
   function createElementAtEvent(ev: InputEvent) {
@@ -385,7 +403,7 @@ function useEvents<T extends QuantumDocumentElementTypes>(
           grid.keydown(event)
         }
       } else if (event.code === 'KeyZ' && event.ctrlKey) {
-        UI.warn('Unsupported Action', 'Undo/Redo unsupported at the moment')
+        Notification.warn('Unsupported Action', 'Undo/Redo unsupported at the moment')
       } else {
         // Nothing, pass along to potential InputEvents
       }
@@ -516,7 +534,7 @@ export default defineComponent({
     const clipboard = useClipboard(document)
     const selection = useElementSelection(document)
     const elementDrag = useElementDrag(document, pages, selection.selectedIDs)
-    const events = useEvents(document, focusedElementCommands.commands, grid, selection, UI, elementDrag)
+    const events = useEvents(document, focusedElementCommands.commands, grid, selection, elementDrag)
 
     function log(ev: any) {
       console.log(ev)
@@ -524,18 +542,6 @@ export default defineComponent({
 
     function getTypeComponent(typeName: string) {
       return (typeComponents as any)[typeName]
-    }
-
-    function serialize() {
-      let serializedData = document.serializeDocument()
-      // return JSON.stringify(serializedData)
-      return serializedData
-    }
-
-    function deserialize(documentObject: JsonType) {
-      // convert from string here : JSON.parse()
-      // let documentObject = JSON.parse(serializedDocument)
-      document.deserializeDocument(documentObject)
     }
 
     context.emit('quantum-document', document)
@@ -555,8 +561,6 @@ export default defineComponent({
 
       getTypeComponent,
       log,
-      serialize,
-      deserialize,
     }
   },
 })
@@ -600,25 +604,22 @@ export default defineComponent({
 .quantum-block {
   position: absolute;
   min-width: 50px;
+  min-height: 1px;
   padding: 0px 4px;
-  /* outline-offset: -1px; */
-  margin: 1px;
+  outline-offset: -1px;
 }
 
 .quantum-block:hover {
-  border: 1px solid var(--selected-color);
-  margin: 0px;
+  outline: 1px solid var(--selected-color);
 }
 /* .quantum-block.dragging {
   outline: 1px solid var(--selected-color);
 } */
 .quantum-block:focus-within {
-  border: 1px solid var(--selected-color);
-  margin: 0px;
+  outline: 1px dashed var(--selected-color);
 }
 .quantum-block.selected {
-  border: 1px solid var(--selected-color);
-  margin: 0px;
+  outline: 1px solid var(--selected-color);
   background: var(--selected-background-color);
 }
 

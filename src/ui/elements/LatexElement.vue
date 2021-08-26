@@ -14,6 +14,7 @@ import { Vector2 } from '../../model/vectors'
 export { LatexElementType }
 
 // TODO: Reduce code duplication with ExpressionElement.vue
+// Also note that the LatexElement is a bit behind in terms of features
 export default defineComponent({
   props: {
     /**

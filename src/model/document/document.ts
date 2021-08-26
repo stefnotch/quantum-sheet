@@ -78,6 +78,11 @@ export interface UseQuantumDocument<TElements extends QuantumDocumentElementType
   // getElementsByType<T extends keyof TElements>(id: string, typeName: T): GetQuantumElement<TElements[T]>[] | undefined
 
   /**
+   * Gets the selected elements
+   */
+  getSelection(): QuantumElement[]
+
+  /**
    * Set the element selection
    * @param elements Elements to select
    */
@@ -246,6 +251,7 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
   const elementSelection = useElementSelection()
   const elementFocus = useElementFocus()
 
+  // TODO: Prevent this from being moved
   const rootScope = createElement(ScopeElementType.typeName, {
     position: Vector2.zero,
     size: Vector2.zero,
@@ -338,6 +344,7 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
     deleteElement,
     getElementAt: elementList.getElementAt,
     getElementById,
+    getSelection: () => [...elementSelection.selectedElements],
     setSelection: elementSelection.setSelection,
     setFocus: elementFocus.setFocus,
 
