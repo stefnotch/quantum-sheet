@@ -45,6 +45,10 @@ function setMathfieldOptions(mathfield: MathfieldElement) {
     mode: 'math',
     value: '\\operatorname{from}',
   }
+  shortcuts['import'] = {
+    mode: 'math',
+    value: '\\operatorname{import}',
+  }
 
   mathfield.setOptions({
     inlineShortcuts: shortcuts,

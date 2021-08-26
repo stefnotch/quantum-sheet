@@ -105,10 +105,37 @@ export function createDictionary(dictionary?: LatexDictionaryEntry<any>[]) {
     },
   })
 
+  // TODO: Autocomplete would be really neat, but for now we are poor peasants
   dictionary.unshift({
     name: 'From',
     trigger: { symbol: ['\\operatorname', '<{>', 'f', 'r', 'o', 'm', '<}>'] },
     //arguments: 'implicit',
+  })
+
+  const importSymbols = ['\\operatorname', '<{>', 'i', 'm', 'p', 'o', 'r', 't', '<}>']
+  dictionary.unshift({
+    name: 'Import',
+    trigger: { symbol: importSymbols },
+    serialize: <SerializerFunction<number>>function (emitter, expr) {
+      if (!Array.isArray(expr)) throw new Error('Expect array expression')
+
+      return `\\operatorname{import}${expr[1]}`
+    },
+    parse: <ParserFunction<number>>function (lhs, scanner, minPrec) {
+      for (const symbol of importSymbols) {
+        if (!scanner.match(symbol)) return [lhs, null]
+      }
+      let text = ''
+      scanner.skipSpace()
+      while (!scanner.atEnd) {
+        if (scanner.match('<space>')) {
+          text += ' '
+        } else {
+          text += scanner.next()
+        }
+      }
+      return [null, ['Import', text]]
+    },
   })
 
   // TODO: This is a bit of a hack
