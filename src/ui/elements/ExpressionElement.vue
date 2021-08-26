@@ -132,8 +132,11 @@ export default defineComponent({
               insert: (text: string) => {
                 if (text.startsWith('\\')) {
                   mathfield.insert(text, { mode: 'latex' })
+                  ;(mathfield as any).keystrokeBuffer += text
                 } else {
                   mathfield.insert(text)
+                  // Hack for https://github.com/stefnotch/quantum-sheet/issues/13#issuecomment-894781854
+                  ;(mathfield as any).keystrokeBuffer += text
                 }
               },
             })
