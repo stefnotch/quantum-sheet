@@ -573,25 +573,22 @@ export default defineComponent({
 .quantum-block {
   position: absolute;
   min-width: 50px;
+  min-height: 1px;
   padding: 0px 4px;
-  /* outline-offset: -1px; */
-  margin: 1px;
+  outline-offset: -1px;
 }
 
 .quantum-block:hover {
-  border: 1px solid var(--selected-color);
-  margin: 0px;
+  outline: 1px solid var(--selected-color);
 }
 /* .quantum-block.dragging {
   outline: 1px solid var(--selected-color);
 } */
 .quantum-block:focus-within {
-  border: 1px solid var(--selected-color);
-  margin: 0px;
+  outline: 1px dashed var(--selected-color);
 }
 .quantum-block.selected {
-  border: 1px solid var(--selected-color);
-  margin: 0px;
+  outline: 1px solid var(--selected-color);
   background: var(--selected-background-color);
 }
 
