@@ -499,18 +499,6 @@ export default defineComponent({
       return (typeComponents as any)[typeName]
     }
 
-    function serialize() {
-      let serializedData = document.serializeDocument()
-      // return JSON.stringify(serializedData)
-      return serializedData
-    }
-
-    function deserialize(documentObject: JsonType) {
-      // convert from string here : JSON.parse()
-      // let documentObject = JSON.parse(serializedDocument)
-      document.deserializeDocument(documentObject)
-    }
-
     context.emit('quantum-document', document)
 
     return {
@@ -528,8 +516,6 @@ export default defineComponent({
 
       getTypeComponent,
       log,
-      serialize,
-      deserialize,
     }
   },
 })
