@@ -111,7 +111,7 @@ export interface UseQuantumDocument<TElements extends QuantumDocumentElementType
   /**
    * Move selected Elements by specified distance
    */
-  moveSelectedElements(delta: Vector2): void
+  moveSelectedElements(delta: Vector2, limit?: Vector2): void
 }
 
 /**
@@ -346,20 +346,31 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
     })
   }
 
-  function moveElementsByID(elements: QuantumElement[], delta: Vector2) {
+  function moveElementsByID(elements: QuantumElement[], delta: Vector2, limit?: Vector2) {
     // TODO: dont let it move outside sheet (thus no longer needing 'interact.modifiers.restrict'?)
-    elements.forEach((element) => {
+    let limited = false
+    elements.forEach((element: QuantumElement) => {
+      let newPos = element?.position.value.add(delta)
+      if (limit) {
+        if (
+          newPos.x < 0 ||
+          newPos.y < 0 ||
+          limit.subtract(newPos.add(element.size.value)).x < 0 ||
+          limit.subtract(newPos.add(element.size.value)).y < 0
+        ) {
+          limited = true
+        }
+      }
+    })
+    if (limited) return
+    elements.forEach((element: QuantumElement) => {
       let newPos = element?.position.value.add(delta)
       if (newPos) element?.setPosition(newPos)
     })
   }
 
-  function moveSelectedElements(delta: Vector2) {
-    // TODO: dont let it move outside sheet (thus no longer needing 'interact.modifiers.restrict'?)
-    elementSelection.selectedElements.forEach((element) => {
-      let newPos = element?.position.value.add(delta)
-      if (newPos) element?.setPosition(newPos)
-    })
+  function moveSelectedElements(delta: Vector2, limit?: Vector2) {
+    moveElementsByID(elementSelection.selectedElements, delta, limit)
   }
 
   return {

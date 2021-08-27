@@ -69,7 +69,7 @@
   <!-- <a-button @click="pages.addPage()">+ Page</a-button> -->
 </template>
 <script lang="ts">
-import { defineComponent, readonly, ref, Ref, nextTick, unref, watch } from 'vue'
+import { defineComponent, readonly, ref, Ref, nextTick, unref, watch, watchEffect } from 'vue'
 import { useDocument, UseQuantumDocument, QuantumDocumentElementTypes } from '../model/document/document'
 import ExpressionElement, { ExpressionElementType } from './elements/ExpressionElement.vue'
 import ScopeElement, { ScopeElementType } from './elements/ScopeStartElement.vue'
@@ -277,6 +277,7 @@ function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: 
       .on('dragmove', (event) => {
         let delta = new Vector2(event.dx / quantumDocument.options.gridCellSize.x, event.dy / quantumDocument.options.gridCellSize.y)
         quantumDocument.moveSelectedElements(delta)
+        // quantumDocument.moveSelectedElements(delta, pages.getPageLimits())
         event.preventDefault()
       })
       .on('dragend', (event) => {
@@ -303,7 +304,8 @@ function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: 
 function useEvents<T extends QuantumDocumentElementTypes>(
   quantumDocument: UseQuantumDocument<T>,
   focusedElementCommands: Ref<ElementCommands | undefined>,
-  grid: ReturnType<typeof useGrid>
+  grid: ReturnType<typeof useGrid>,
+  pages
 ) {
   function createElementAtEvent(ev: InputEvent) {
     let elementType: string = ExpressionElementType.typeName
@@ -367,7 +369,7 @@ function useEvents<T extends QuantumDocumentElementTypes>(
               ArrowUp: new Vector2(0, -1),
               ArrowDown: new Vector2(0, 1),
             }[event.key] ?? Vector2.zero
-          quantumDocument.moveSelectedElements(direction)
+          quantumDocument.moveSelectedElements(direction, pages.getPageLimits())
         } else {
           grid.keydown(event)
         }
@@ -429,6 +431,13 @@ function usePages<T extends QuantumDocumentElementTypes>(quantumDocument: UseQua
     return largest
   }
 
+  function getPageLimits() {
+    return new Vector2(
+      (width.value * (96 / 25.4)) / quantumDocument.options.gridCellSize.x,
+      (pageCount.value * height.value * (96 / 25.4)) / quantumDocument.options.gridCellSize.y
+    )
+  }
+
   function updatePageCount() {
     const maxElPos = getPageNumberOfPosition(lowestElementPosition(quantumDocument.elements))
     pageCount.value = Math.ceil(maxElPos + 0.1)
@@ -461,6 +470,7 @@ function usePages<T extends QuantumDocumentElementTypes>(quantumDocument: UseQua
     addPage,
     width,
     height,
+    getPageLimits,
   }
 }
 
@@ -503,7 +513,7 @@ export default defineComponent({
     const clipboard = useClipboard(document)
     const selection = useElementSelection(document)
     const elementDrag = useElementDrag(document, pages)
-    const events = useEvents(document, focusedElementCommands.commands, grid)
+    const events = useEvents(document, focusedElementCommands.commands, grid, pages)
 
     function log(ev: any) {
       console.log(ev)
