@@ -155,11 +155,16 @@ function usePythonConverter() {
     ['Erf', () => 'sympy.erf'], // TODO: test
     ['Erfc', () => 'sympy.erfc'], // TODO: test
 
+    ['Factorial', () => 'sympy.factorial'],
+
+    // ['Equivalent', () => 'sympy.Equivalent'],
+
     // TODO: MathLive latex serial/parse destroys ln,log, etc? in ExpressionElement.vue line 78
     // ['log', () => 'sympy.log'],
   ])
 
   const KnownLatexFunctions = {
+    // TODO: replace with custom parser in new compute engine
     '\\sin': 'sympy.sin',
     '\\cot': 'sympy.cot',
     '\\arcctg': 'sympy.acot',
