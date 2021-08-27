@@ -106,7 +106,7 @@ export interface UseQuantumDocument<TElements extends QuantumDocumentElementType
   /**
    * Move specified Elements by specified distance
    */
-  moveElementsByID(elements: QuantumElement[], delta: Vector2): void
+  moveElements(elements: QuantumElement[], delta: Vector2): void
 
   /**
    * Move selected Elements by specified distance
@@ -346,7 +346,7 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
     })
   }
 
-  function moveElementsByID(elements: QuantumElement[], delta: Vector2, limit?: Vector2) {
+  function moveElements(elements: QuantumElement[], delta: Vector2, limit?: Vector2) {
     // TODO: dont let it move outside sheet (thus no longer needing 'interact.modifiers.restrict'?)
     let limited = false
     elements.forEach((element: QuantumElement) => {
@@ -370,7 +370,7 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
   }
 
   function moveSelectedElements(delta: Vector2, limit?: Vector2) {
-    moveElementsByID(elementSelection.selectedElements, delta, limit)
+    moveElements(elementSelection.selectedElements, delta, limit)
   }
 
   return {
@@ -384,7 +384,7 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
     getSelection: () => [...elementSelection.selectedElements],
     setSelection: elementSelection.setSelection,
     setFocus: elementFocus.setFocus,
-    moveElementsByID,
+    moveElements,
     moveSelectedElements,
 
     serializeDocument,
