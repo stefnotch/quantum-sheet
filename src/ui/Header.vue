@@ -1,8 +1,8 @@
 <template>
   <header class="header">
     <a-row type="flex" justify="space-between" :style="{ height: '36px', lineHeight: '36px', paddingLeft: '20px' }">
-      <a-col :span="4">
-        <a-space :style="{ height: '36px', alignItems: 'revert' }">
+      <a-col :span="8" :style="{ height: '36px' }">
+        <a-space :style="{ height: '36px', alignItems: 'revert', gap: '0px' }" :size="0">
           <div :style="{ width: '10px' }" />
           <h3 @click="() => {}" :style="{ cursor: 'pointer', margin: 0, width: '110px' }">QuantumSheet</h3>
           <div :style="{ width: '16px' }" />
@@ -38,7 +38,7 @@
         </a-space>
       </a-col>
 
-      <a-col>
+      <a-col :style="{ height: '36px' }">
         <a-space :style="{ height: '36px' }">
           <p>v{{ pkg.version }} - <a href="https://github.com/stefnotch/quantum-sheet">View on GitHub</a></p>
           <div :style="{ width: '20px' }" />
