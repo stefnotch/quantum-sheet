@@ -215,7 +215,6 @@ function useElementSelection<T extends QuantumDocumentElementTypes>(quantumDocum
             // selection-region is the child element, we want the id of the parent, quantum-element
             el = el.parentElement as HTMLElement
           }
-          console.log('selected q-el', quantumDocument.getElementById(el.id))
           quantumDocument.getElementById(el.id)?.setSelected(true)
         })
         e.removed.forEach((el) => {
@@ -223,7 +222,6 @@ function useElementSelection<T extends QuantumDocumentElementTypes>(quantumDocum
             // selection-region is the child element, we want the id of the parent, quantum-element
             el = el.parentElement as HTMLElement
           }
-          console.log('unselected q-el', quantumDocument.getElementById(el.id))
           quantumDocument.getElementById(el.id)?.setSelected(false)
         })
       })
@@ -278,7 +276,6 @@ function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: 
       })
       .on('dragmove', (event) => {
         let delta = new Vector2(event.dx / quantumDocument.options.gridCellSize.x, event.dy / quantumDocument.options.gridCellSize.y)
-        console.log('dragging', quantumDocument.getSelection())
         quantumDocument.moveSelectedElements(delta)
         event.preventDefault()
       })
@@ -370,7 +367,6 @@ function useEvents<T extends QuantumDocumentElementTypes>(
               ArrowUp: new Vector2(0, -1),
               ArrowDown: new Vector2(0, 1),
             }[event.key] ?? Vector2.zero
-          console.log('moving', quantumDocument.getSelection())
           quantumDocument.moveSelectedElements(direction)
         } else {
           grid.keydown(event)
