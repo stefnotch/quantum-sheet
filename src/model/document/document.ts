@@ -356,7 +356,7 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
 
   function moveSelectedElements(delta: Vector2) {
     // TODO: dont let it move outside sheet (thus no longer needing 'interact.modifiers.restrict'?)
-    elementList.elements.forEach((element) => {
+    elementSelection.selectedElements.forEach((element) => {
       let newPos = element?.position.value.add(delta)
       if (newPos) element?.setPosition(newPos)
     })
