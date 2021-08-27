@@ -102,6 +102,16 @@ export interface UseQuantumDocument<TElements extends QuantumDocumentElementType
    * Deserialize a document's elements
    */
   deserializeDocument(serializedData: JsonType): void
+
+  /**
+   * Move specified Elements by specified distance
+   */
+  moveElementsByID(elements: QuantumElement[], delta: Vector2): void
+
+  /**
+   * Move selected Elements by specified distance
+   */
+  moveSelectedElements(delta: Vector2): void
 }
 
 /**
@@ -336,6 +346,22 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
     })
   }
 
+  function moveElementsByID(elements: QuantumElement[], delta: Vector2) {
+    // TODO: dont let it move outside sheet (thus no longer needing 'interact.modifiers.restrict'?)
+    elements.forEach((element) => {
+      let newPos = element?.position.value.add(delta)
+      if (newPos) element?.setPosition(newPos)
+    })
+  }
+
+  function moveSelectedElements(delta: Vector2) {
+    // TODO: dont let it move outside sheet (thus no longer needing 'interact.modifiers.restrict'?)
+    elementList.elements.forEach((element) => {
+      let newPos = element?.position.value.add(delta)
+      if (newPos) element?.setPosition(newPos)
+    })
+  }
+
   return {
     options,
     elementTypes: elementTypes,
@@ -347,6 +373,8 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
     getSelection: () => [...elementSelection.selectedElements],
     setSelection: elementSelection.setSelection,
     setFocus: elementFocus.setFocus,
+    moveElementsByID,
+    moveSelectedElements,
 
     serializeDocument,
     deserializeDocument,
