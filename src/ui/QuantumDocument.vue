@@ -287,8 +287,10 @@ function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: 
 
     document.querySelector('.content')?.addEventListener('scroll', function (e) {
       if (e.target && dragging) {
-        let scrollLeft = e.target.scrollLeft != 0 ? e.target.scrollLeft / quantumDocument.options.gridCellSize.x : 0
-        let scrollTop = e.target.scrollTop != 0 ? e.target.scrollTop / quantumDocument.options.gridCellSize.y : 0
+        let scrollLeft =
+          (e.target as HTMLDivElement).scrollLeft != 0 ? (e.target as HTMLDivElement).scrollLeft / quantumDocument.options.gridCellSize.x : 0
+        let scrollTop =
+          (e.target as HTMLDivElement).scrollTop != 0 ? (e.target as HTMLDivElement).scrollTop / quantumDocument.options.gridCellSize.y : 0
         let delta = new Vector2(scrollLeft - previousScrollLeft, scrollTop - previousScrollTop)
         quantumDocument.moveSelectedElements(delta)
 
@@ -305,7 +307,7 @@ function useEvents<T extends QuantumDocumentElementTypes>(
   quantumDocument: UseQuantumDocument<T>,
   focusedElementCommands: Ref<ElementCommands | undefined>,
   grid: ReturnType<typeof useGrid>,
-  pages
+  pages: ReturnType<typeof usePages>
 ) {
   function createElementAtEvent(ev: InputEvent) {
     let elementType: string = ExpressionElementType.typeName
@@ -398,7 +400,7 @@ function useEvents<T extends QuantumDocumentElementTypes>(
 function usePages<T extends QuantumDocumentElementTypes>(quantumDocument: UseQuantumDocument<T>) {
   const pageCount = ref(1)
   const defaultSheetSize = 'A4'
-  const sheetSizes = {
+  const sheetSizes: any = {
     A3: { width: 297, height: 420 },
     A4: { width: 210, height: 297 },
     A5: { width: 148, height: 210 },
