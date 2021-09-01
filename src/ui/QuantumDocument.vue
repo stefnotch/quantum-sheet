@@ -276,17 +276,20 @@ function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: 
           }),
         ],
         inertia: false,
-        // autoScroll: {
-        //   container: document.querySelector('.content') as HTMLElement,
-        //   margin: 50,
-        //   distance: 5,
-        //   interval: 10,
-        //   speed: 500,
-        // },
-        autoScroll: false,
+        autoScroll: {
+          container: document.querySelector('.content') as HTMLElement,
+          margin: 50,
+          distance: 5,
+          interval: 10,
+          speed: 500,
+        },
+        // autoScroll: false,
       })
       .on('down', (event) => {
         dragging = true
+        let target = document.querySelector('.content') as HTMLElement
+        previousScrollLeft = target.scrollLeft
+        previousScrollTop = target.scrollTop
       })
       .on('dragmove', (event) => {
         let delta = new Vector2(event.dx / quantumDocument.options.gridCellSize.x, event.dy / quantumDocument.options.gridCellSize.y)
@@ -301,11 +304,11 @@ function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: 
 
     document.querySelector('.content')?.addEventListener('scroll', function (e) {
       if (e.target && dragging) {
-        let scrollLeft =
-          (e.target as HTMLDivElement).scrollLeft != 0 ? (e.target as HTMLDivElement).scrollLeft / quantumDocument.options.gridCellSize.x : 0
-        let scrollTop =
-          (e.target as HTMLDivElement).scrollTop != 0 ? (e.target as HTMLDivElement).scrollTop / quantumDocument.options.gridCellSize.y : 0
-        let delta = new Vector2(scrollLeft - previousScrollLeft, scrollTop - previousScrollTop)
+        let scrollLeft = (e.target as HTMLDivElement).scrollLeft
+        let scrollTop = (e.target as HTMLDivElement).scrollTop
+        let deltax = scrollLeft - previousScrollLeft != 0 ? (scrollLeft - previousScrollLeft) / quantumDocument.options.gridCellSize.x : 0
+        let deltay = scrollTop - previousScrollTop != 0 ? (scrollTop - previousScrollTop) / quantumDocument.options.gridCellSize.y : 0
+        let delta = new Vector2(deltax, deltay)
         quantumDocument.moveSelectedElements(delta)
 
         previousScrollTop = scrollTop
@@ -467,9 +470,10 @@ function usePages<T extends QuantumDocumentElementTypes>(quantumDocument: UseQua
   }
 
   // Element Added/Removed
-  watch(quantumDocument.elements, (value) => {
-    updatePageCount()
-  })
+  // watch(quantumDocument.elements, (value) => {
+  //   console.log('yoo, something changed')
+  //   updatePageCount()
+  // })
 
   watchImmediate(
     () => quantumDocument.options.paperSize,
