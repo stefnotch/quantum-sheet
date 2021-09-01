@@ -110,7 +110,11 @@ function useClipboard<T extends QuantumDocumentElementTypes>(document: UseQuantu
   }
 }
 
-function useGrid<T extends QuantumDocumentElementTypes>(document: UseQuantumDocument<T>, inputElement: Ref<HTMLElement | undefined>) {
+function useGrid<T extends QuantumDocumentElementTypes>(
+  document: UseQuantumDocument<T>,
+  inputElement: Ref<HTMLElement | undefined>,
+  pages: ReturnType<typeof usePages>
+) {
   const crosshairPosition = ref<Vector2>(new Vector2(2, 10))
   const showCrosshair = ref(true)
 
@@ -144,6 +148,15 @@ function useGrid<T extends QuantumDocumentElementTypes>(document: UseQuantumDocu
         ArrowUp: new Vector2(0, -1),
         ArrowDown: new Vector2(0, 1),
       }[ev.key] ?? Vector2.zero
+
+    let limited = false
+    let limit = pages.getPageLimits()
+    let newPos = crosshairPosition.value.add(direction)
+    if (newPos.x < 0 || newPos.y < 0 || limit.subtract(newPos).x < 0 || limit.subtract(newPos).y < 0) {
+      limited = true
+    }
+
+    if (limited) return
 
     crosshairPosition.value = crosshairPosition.value.add(direction)
     focusUnderCrosshair()
@@ -263,13 +276,14 @@ function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: 
           }),
         ],
         inertia: false,
-        autoScroll: {
-          container: document.querySelector('.content') as HTMLElement,
-          margin: 50,
-          distance: 5,
-          interval: 10,
-          speed: 500,
-        },
+        // autoScroll: {
+        //   container: document.querySelector('.content') as HTMLElement,
+        //   margin: 50,
+        //   distance: 5,
+        //   interval: 10,
+        //   speed: 500,
+        // },
+        autoScroll: false,
       })
       .on('down', (event) => {
         dragging = true
@@ -510,8 +524,8 @@ export default defineComponent({
 
     // const UI = useUI()
     const focusedElementCommands = useFocusedElementCommands()
-    const grid = useGrid(document, documentInputElement)
     const pages = usePages(document)
+    const grid = useGrid(document, documentInputElement, pages)
     const clipboard = useClipboard(document)
     const selection = useElementSelection(document)
     const elementDrag = useElementDrag(document, pages)
