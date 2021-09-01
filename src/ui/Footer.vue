@@ -12,9 +12,10 @@
               :danger="UI.casStatus.casState.value === 'error'"
               @click="appActions.compute"
             >
-              <!-- <CalculatorOutlined /> -->
-              <!-- <a-icon :type="UI.casStatus.icon.value" /> -->
-              <Icon :icon="UI.casStatus.casIcon.value" :id="UI.casStatus.casIcon.value" />
+              <CalculatorOutlined v-if="UI.casStatus.casState.value == 'ready'" />
+              <ApiOutlined v-else-if="UI.casStatus.casState.value == 'disconnected'" />
+              <LoadingOutlined v-else-if="UI.casStatus.casState.value == 'loading'" />
+              <WarningOutlined v-else-if="UI.casStatus.casState.value == 'error'" />
             </a-button>
           </a-tooltip>
           <!-- Auto Calculate -->
@@ -108,10 +109,10 @@
 
 <script lang="ts">
 import { defineComponent, ref, reactive, inject, watch } from 'vue'
-import { ExportOutlined, CalculatorOutlined, AppstoreOutlined } from '@ant-design/icons-vue'
+import { Button, Grid, Row, Col, Space, Dropdown, Select, SelectOption, Modal } from 'ant-design-vue'
+import { ExportOutlined, CalculatorOutlined, AppstoreOutlined, ApiOutlined, LoadingOutlined, WarningOutlined } from '@ant-design/icons-vue'
 import * as UI from './ui'
 import * as Notification from './notification'
-import { Icon } from './icon'
 import { cas } from './../model/cas'
 
 function useDocActions() {
@@ -155,7 +156,18 @@ export default defineComponent({
     ExportOutlined,
     CalculatorOutlined,
     AppstoreOutlined,
-    Icon,
+    ApiOutlined,
+    LoadingOutlined,
+    WarningOutlined,
+    'a-row': Row,
+    'a-col': Col,
+    'a-grid': Grid,
+    'a-space': Space,
+    'a-dropdown': Dropdown,
+    'a-select': Select,
+    'a-select-option': SelectOption,
+    'a-button': Button,
+    'a-modal': Modal,
   },
   props: {},
   setup(props, context) {
@@ -166,7 +178,6 @@ export default defineComponent({
     cas.doneLoading.then(
       () => {
         // TODO: Maybe make this notification a bit more subtle? And instead make the loading indicator somewhat more obvious?
-        Notification.notify('success', 'Pyodide worker created', 'You can use QuantumSheet now')
         UI.casStatus.setReady()
       },
       (error) => {

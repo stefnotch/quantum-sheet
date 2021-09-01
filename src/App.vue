@@ -14,6 +14,7 @@
 
 <script lang="ts">
 import { defineComponent, ref, provide, nextTick, onMounted, Ref } from 'vue'
+import { Button, Layout, LayoutContent, Grid, Row, Col, Space } from 'ant-design-vue'
 import pkg from './../package.json'
 import QuantumDocument from './ui/QuantumDocument.vue'
 import Header from './ui/Header.vue'
@@ -39,6 +40,8 @@ export default defineComponent({
     QuantumDocument,
     Header,
     Footer,
+    'a-layout': Layout,
+    'a-layout-content': LayoutContent
   },
   setup(props, context) {
     if (import.meta.env.PROD) {

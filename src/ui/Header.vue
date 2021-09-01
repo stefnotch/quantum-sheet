@@ -126,6 +126,23 @@
 
 <script lang="ts">
 import { defineComponent, ref, inject, reactive } from 'vue'
+import {
+  Button,
+  Grid,
+  Row,
+  Col,
+  Space,
+  Dropdown,
+  Select,
+  SelectOption,
+  Form,
+  FormItem,
+  Modal,
+  Menu,
+  MenuItem,
+  UploadDragger,
+  Textarea,
+} from 'ant-design-vue'
 import { InboxOutlined, DownloadOutlined } from '@ant-design/icons-vue'
 import pkg from '../../package.json'
 
@@ -136,6 +153,21 @@ export default defineComponent({
   components: {
     InboxOutlined,
     DownloadOutlined,
+    'a-row': Row,
+    'a-col': Col,
+    'a-grid': Grid,
+    'a-space': Space,
+    'a-dropdown': Dropdown,
+    'a-select': Select,
+    'a-select-option': SelectOption,
+    'a-form': Form,
+    'a-form-item': FormItem,
+    'a-button': Button,
+    'a-modal': Modal,
+    'a-menu': Menu,
+    'a-menu-item': MenuItem,
+    'a-upload-dragger': UploadDragger,
+    'a-textarea': Textarea,
   },
   setup(props, context) {
     // const UI = useUI()
