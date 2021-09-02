@@ -39,7 +39,6 @@ function useCasStatus() {
 
   return {
     casState,
-    // casIcon,
     setStatus,
     setReady,
     setLoading,

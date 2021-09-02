@@ -257,51 +257,51 @@ function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: 
   let previousScrollLeft = 0
   let dragging = false
 
-  nextTick(function () {
-    interact('.quantum-block')
-      .draggable({
-        ignoreFrom: '.quantum-element',
-        modifiers: [
-          interact.modifiers.snap({
-            targets: [interact.snappers.grid({ x: quantumDocument.options.gridCellSize.x, y: quantumDocument.options.gridCellSize.y })],
-            range: Infinity,
-            relativePoints: [{ x: 0, y: 0 }],
-            offset: 'parent',
-            // endOnly: true,
-          }),
-          interact.modifiers.restrict({
-            restriction: '.quantum-document',
-            elementRect: { top: 0, left: 0, bottom: 1, right: 1 },
-            // endOnly: true,
-          }),
-        ],
-        inertia: false,
-        autoScroll: {
-          container: document.querySelector('.content') as HTMLElement,
-          margin: 50,
-          distance: 5,
-          interval: 10,
-          speed: 500,
-        },
-        // autoScroll: false,
-      })
-      .on('down', (event) => {
-        dragging = true
-        let target = document.querySelector('.content') as HTMLElement
-        previousScrollLeft = target.scrollLeft
-        previousScrollTop = target.scrollTop
-      })
-      .on('dragmove', (event) => {
-        let delta = new Vector2(event.dx / quantumDocument.options.gridCellSize.x, event.dy / quantumDocument.options.gridCellSize.y)
-        quantumDocument.moveSelectedElements(delta)
-        // quantumDocument.moveSelectedElements(delta, pages.getPageLimits())
-        event.preventDefault()
-      })
-      .on('dragend', (event) => {
-        pages.updatePageCount()
-        dragging = false
-      })
+  interact('.quantum-block')
+    .draggable({
+      ignoreFrom: '.quantum-element',
+      modifiers: [
+        interact.modifiers.snap({
+          targets: [interact.snappers.grid({ x: quantumDocument.options.gridCellSize.x, y: quantumDocument.options.gridCellSize.y })],
+          range: Infinity,
+          relativePoints: [{ x: 0, y: 0 }],
+          offset: 'parent',
+          // endOnly: true,
+        }),
+        interact.modifiers.restrict({
+          restriction: '.quantum-document',
+          elementRect: { top: 0, left: 0, bottom: 1, right: 1 },
+          // endOnly: true,
+        }),
+      ],
+      inertia: false,
+      autoScroll: {
+        container: document.querySelector('.content') as HTMLElement,
+        margin: 50,
+        distance: 5,
+        interval: 10,
+        speed: 500,
+      },
+      // autoScroll: false,
+    })
+    .on('down', (event) => {
+      dragging = true
+      let target = document.querySelector('.content') as HTMLElement
+      previousScrollLeft = target.scrollLeft
+      previousScrollTop = target.scrollTop
+    })
+    .on('dragmove', (event) => {
+      let delta = new Vector2(event.dx / quantumDocument.options.gridCellSize.x, event.dy / quantumDocument.options.gridCellSize.y)
+      quantumDocument.moveSelectedElements(delta)
+      // quantumDocument.moveSelectedElements(delta, pages.getPageLimits())
+      event.preventDefault()
+    })
+    .on('dragend', (event) => {
+      pages.updatePageCount()
+      dragging = false
+    })
 
+  nextTick(function () {
     document.querySelector('.content')?.addEventListener('scroll', function (e) {
       if (e.target && dragging) {
         let scrollLeft = (e.target as HTMLDivElement).scrollLeft
@@ -470,10 +470,9 @@ function usePages<T extends QuantumDocumentElementTypes>(quantumDocument: UseQua
   }
 
   // Element Added/Removed
-  // watch(quantumDocument.elements, (value) => {
-  //   console.log('yoo, something changed')
-  //   updatePageCount()
-  // })
+  watch(quantumDocument.elements, (value) => {
+    updatePageCount()
+  })
 
   watchImmediate(
     () => quantumDocument.options.paperSize,
