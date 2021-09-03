@@ -19,6 +19,9 @@
                 <a-menu-item @click="UI.fileInterface.openFileSaveModal()">
                   <a :style="{ color: 'black' }">Save as...</a>
                 </a-menu-item>
+                <a-menu-item @click="print()">
+                  <a :style="{ color: 'black' }">Print...</a>
+                </a-menu-item>
                 <!-- <a-menu-item @click="UI.promptCloseFile()">
                   <a :style="{ color: 'black' }">Close</a>
                 </a-menu-item> -->
@@ -202,12 +205,17 @@ export default defineComponent({
       return false // to prevent antd fron trying to upload somewhere
     }
 
+    function print() {
+      window.print()
+    }
+
     return {
       UI,
       docManager,
       download,
       beforeUpload,
       pkg,
+      print,
     }
   },
 })
