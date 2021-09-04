@@ -1,8 +1,8 @@
 <template>
   <header class="header">
     <a-row type="flex" justify="space-between" :style="{ height: '36px', lineHeight: '36px', paddingLeft: '20px' }">
-      <a-col :span="4">
-        <a-space :style="{ height: '36px', alignItems: 'revert' }">
+      <a-col :span="8" :style="{ height: '36px' }">
+        <a-space :style="{ height: '36px', alignItems: 'revert', gap: '0px' }" :size="0">
           <div :style="{ width: '10px' }" />
           <h3 @click="() => {}" :style="{ cursor: 'pointer', margin: 0, width: '110px' }">QuantumSheet</h3>
           <div :style="{ width: '16px' }" />
@@ -18,6 +18,9 @@
                 </a-menu-item>
                 <a-menu-item @click="UI.fileInterface.openFileSaveModal()">
                   <a :style="{ color: 'black' }">Save as...</a>
+                </a-menu-item>
+                <a-menu-item @click="print()">
+                  <a :style="{ color: 'black' }">Print...</a>
                 </a-menu-item>
                 <!-- <a-menu-item @click="UI.promptCloseFile()">
                   <a :style="{ color: 'black' }">Close</a>
@@ -38,7 +41,7 @@
         </a-space>
       </a-col>
 
-      <a-col>
+      <a-col :style="{ height: '36px' }">
         <a-space :style="{ height: '36px' }">
           <p>v{{ pkg.version }} - <a href="https://github.com/stefnotch/quantum-sheet">View on GitHub</a></p>
           <div :style="{ width: '20px' }" />
@@ -126,6 +129,23 @@
 
 <script lang="ts">
 import { defineComponent, ref, inject, reactive } from 'vue'
+import {
+  Button,
+  Grid,
+  Row,
+  Col,
+  Space,
+  Dropdown,
+  Select,
+  SelectOption,
+  Form,
+  FormItem,
+  Modal,
+  Menu,
+  MenuItem,
+  UploadDragger,
+  Textarea,
+} from 'ant-design-vue'
 import { InboxOutlined, DownloadOutlined } from '@ant-design/icons-vue'
 import pkg from '../../package.json'
 
@@ -136,6 +156,21 @@ export default defineComponent({
   components: {
     InboxOutlined,
     DownloadOutlined,
+    'a-row': Row,
+    'a-col': Col,
+    'a-grid': Grid,
+    'a-space': Space,
+    'a-dropdown': Dropdown,
+    'a-select': Select,
+    'a-select-option': SelectOption,
+    'a-form': Form,
+    'a-form-item': FormItem,
+    'a-button': Button,
+    'a-modal': Modal,
+    'a-menu': Menu,
+    'a-menu-item': MenuItem,
+    'a-upload-dragger': UploadDragger,
+    'a-textarea': Textarea,
   },
   setup(props, context) {
     // const UI = useUI()
@@ -170,12 +205,17 @@ export default defineComponent({
       return false // to prevent antd fron trying to upload somewhere
     }
 
+    function print() {
+      window.print()
+    }
+
     return {
       UI,
       docManager,
       download,
       beforeUpload,
       pkg,
+      print,
     }
   },
 })
@@ -183,7 +223,6 @@ export default defineComponent({
 
 <style scoped>
 .header {
-  position: fixed;
   z-index: 1;
   width: 100%;
   box-shadow: 0px 0px 5px 0.1px #ccc;

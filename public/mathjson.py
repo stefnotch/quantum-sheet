@@ -221,7 +221,7 @@ class MathJsonPrinter(Printer):
     # TODO: Important Update
     def _print_Exp1(self, expr):
         print("Warning: _print_Exp1 was called")
-        return 'E'
+        return self._print('"ExponentialE"')
 
     # TODO: Update
     def _print_ExprCondPair(self, expr):

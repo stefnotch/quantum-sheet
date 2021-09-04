@@ -2,7 +2,7 @@
   <a-layout>
     <Header />
     <a-layout class="content">
-      <a-layout-content class="drawingtable center">
+      <a-layout-content class="drawingtable center print-area">
         <!-- TODO: Add an "id" property (with a uuid) so that we can recreate the document whenever we want a new document -->
         <quantum-document @quantum-document="(v) => docManager.registerQuantumDocument(v)"></quantum-document>
         <!-- <LandingPage /> -->
@@ -14,6 +14,7 @@
 
 <script lang="ts">
 import { defineComponent, ref, provide, nextTick, onMounted, Ref } from 'vue'
+import { Button, Layout, LayoutContent, Grid, Row, Col, Space } from 'ant-design-vue'
 import pkg from './../package.json'
 import QuantumDocument from './ui/QuantumDocument.vue'
 import Header from './ui/Header.vue'
@@ -39,6 +40,8 @@ export default defineComponent({
     QuantumDocument,
     Header,
     Footer,
+    'a-layout': Layout,
+    'a-layout-content': LayoutContent
   },
   setup(props, context) {
     if (import.meta.env.PROD) {
@@ -69,12 +72,12 @@ export default defineComponent({
   background-color: #f1f1f1;
   display: flex;
   /* Header and footer */
-  padding-top: 36px;
-  padding-bottom: 36px;
+  overflow-y: auto;
+  height: calc(100vh - 36px - 36px);
   /* Sides */
   padding-left: 12px;
   padding-right: 12px;
-  overflow: auto;
+  overflow-x: auto;
 }
 
 .drawingtable {
@@ -97,5 +100,29 @@ export default defineComponent({
 .center {
   margin-left: auto;
   margin-right: auto;
+}
+</style>
+
+<style>
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    margin-top: 0px !important;
+    margin-bottom: 0px !important;
+    margin-left: 0px !important;
+    margin-right: 0px !important;
+  }
+  .page-divider * {
+    visibility: hidden;
+    display: none;
+  }
 }
 </style>

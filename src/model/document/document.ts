@@ -102,6 +102,16 @@ export interface UseQuantumDocument<TElements extends QuantumDocumentElementType
    * Deserialize a document's elements
    */
   deserializeDocument(serializedData: JsonType): void
+
+  /**
+   * Move specified Elements by specified distance
+   */
+  moveElements(elements: QuantumElement[], delta: Vector2): void
+
+  /**
+   * Move selected Elements by specified distance
+   */
+  moveSelectedElements(delta: Vector2, limit?: Vector2): void
 }
 
 /**
@@ -114,7 +124,7 @@ function useElementList() {
 
   /** Watches an element's position. Returns a function to stop the watcher. */
   function watchElement(element: QuantumElement) {
-    const stopWatcher = watchImmediate(element.position, (value) => {
+    const stopWatcher = watchImmediate(element.position, (value: Vector2) => {
       // New index
       let { index } = arrayUtils.getBinaryInsertIndex(elements, (a) => a.position.value.compareTo(value))
 
@@ -169,7 +179,7 @@ function useElementSelection() {
   const selectedElements = shallowReactive<Set<QuantumElement>>(new Set())
 
   function watchElement(element: QuantumElement) {
-    const stopHandle = watchImmediate(element.selected, (value) => {
+    const stopHandle = watchImmediate(element.selected, (value: boolean) => {
       if (value) {
         selectedElements.add(element)
       } else {
@@ -184,7 +194,7 @@ function useElementSelection() {
   }
 
   function setSelection(...elements: QuantumElement[]) {
-    selectedElements.forEach((e) => e.setSelected(false))
+    selectedElements.forEach((e: QuantumElement) => e.setSelected(false))
     elements.forEach((e) => e.setSelected(true))
   }
 
@@ -199,7 +209,7 @@ function useElementFocus() {
   const focusedElement = shallowRef<QuantumElement>()
 
   function watchElement(element: QuantumElement) {
-    const stopHandle = watchImmediate(element.focused, (value) => {
+    const stopHandle = watchImmediate(element.focused, (value: Boolean) => {
       if (value) {
         if (focusedElement.value?.focused) {
           focusedElement.value.setFocused(false)
@@ -289,7 +299,7 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
   }
 
   function getElementById<T extends keyof TElements>(id: string, typeName?: T): GetQuantumElement<TElements[T]> | undefined {
-    let element = elementList.elements.find((e) => e.id == id)
+    let element = elementList.elements.find((e: QuantumElement) => e.id == id)
     if (element && typeName && element.typeName != typeName) {
       throw new Error(`Wrong type, passed ${typeName} but element has ${element.typeName}`)
     }
@@ -299,7 +309,7 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
   }
 
   function getElementsByType<T extends keyof TElements>(typeName: T): GetQuantumElement<TElements[T]>[] | undefined {
-    let elements = elementList.elements.filter((e) => e.typeName == typeName)
+    let elements = elementList.elements.filter((e: QuantumElement) => e.typeName == typeName)
 
     // Yeah, Typescript really does dislike this XD
     return elements as any[]
@@ -336,6 +346,33 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
     })
   }
 
+  function moveElements(elements: QuantumElement[], delta: Vector2, limit?: Vector2) {
+    // TODO: dont let it move outside sheet (thus no longer needing 'interact.modifiers.restrict'?)
+    let limited = false
+    elements.forEach((element: QuantumElement) => {
+      let newPos = element?.position.value.add(delta)
+      if (limit) {
+        if (
+          newPos.x < 0 ||
+          newPos.y < 0 ||
+          limit.subtract(newPos.add(element.size.value)).x < 0 ||
+          limit.subtract(newPos.add(element.size.value)).y < 0
+        ) {
+          limited = true
+        }
+      }
+    })
+    if (limited) return
+    elements.forEach((element: QuantumElement) => {
+      let newPos = element?.position.value.add(delta)
+      if (newPos) element?.setPosition(newPos)
+    })
+  }
+
+  function moveSelectedElements(delta: Vector2, limit?: Vector2) {
+    moveElements(elementSelection.selectedElements, delta, limit)
+  }
+
   return {
     options,
     elementTypes: elementTypes,
@@ -347,6 +384,8 @@ export function useDocument<TElements extends QuantumDocumentElementTypes<readon
     getSelection: () => [...elementSelection.selectedElements],
     setSelection: elementSelection.setSelection,
     setFocus: elementFocus.setFocus,
+    moveElements,
+    moveSelectedElements,
 
     serializeDocument,
     deserializeDocument,

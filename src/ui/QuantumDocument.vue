@@ -34,7 +34,6 @@
       @cut="clipboard.cut"
       @paste="clipboard.paste"
       @focus="
-        document.setSelection();
         grid.showCrosshair.value = true;
       "
       @blur="grid.showCrosshair.value = false;"
@@ -70,7 +69,7 @@
   <!-- <a-button @click="pages.addPage()">+ Page</a-button> -->
 </template>
 <script lang="ts">
-import { defineComponent, readonly, ref, Ref, nextTick, unref, watch } from 'vue'
+import { defineComponent, readonly, ref, Ref, nextTick, unref, watch, watchEffect } from 'vue'
 import { useDocument, UseQuantumDocument, QuantumDocumentElementTypes } from '../model/document/document'
 import ExpressionElement, { ExpressionElementType } from './elements/ExpressionElement.vue'
 import ScopeElement, { ScopeElementType } from './elements/ScopeStartElement.vue'
@@ -111,7 +110,11 @@ function useClipboard<T extends QuantumDocumentElementTypes>(document: UseQuantu
   }
 }
 
-function useGrid<T extends QuantumDocumentElementTypes>(document: UseQuantumDocument<T>, inputElement: Ref<HTMLElement | undefined>) {
+function useGrid<T extends QuantumDocumentElementTypes>(
+  document: UseQuantumDocument<T>,
+  inputElement: Ref<HTMLElement | undefined>,
+  pages: ReturnType<typeof usePages>
+) {
   const crosshairPosition = ref<Vector2>(new Vector2(2, 10))
   const showCrosshair = ref(true)
 
@@ -145,6 +148,15 @@ function useGrid<T extends QuantumDocumentElementTypes>(document: UseQuantumDocu
         ArrowUp: new Vector2(0, -1),
         ArrowDown: new Vector2(0, 1),
       }[ev.key] ?? Vector2.zero
+
+    let limited = false
+    let limit = pages.getPageLimits()
+    let newPos = crosshairPosition.value.add(direction)
+    if (newPos.x < 0 || newPos.y < 0 || limit.subtract(newPos).x < 0 || limit.subtract(newPos).y < 0) {
+      limited = true
+    }
+
+    if (limited) return
 
     crosshairPosition.value = crosshairPosition.value.add(direction)
     focusUnderCrosshair()
@@ -183,8 +195,6 @@ function useGrid<T extends QuantumDocumentElementTypes>(document: UseQuantumDocu
 }
 
 function useElementSelection<T extends QuantumDocumentElementTypes>(quantumDocument: UseQuantumDocument<T>) {
-  const selectedIDs = ref<string[]>([])
-  // let selecto = undefined
   nextTick(function () {
     const selecto = new Selecto({
       // The container to add a selection element
@@ -218,20 +228,14 @@ function useElementSelection<T extends QuantumDocumentElementTypes>(quantumDocum
             // selection-region is the child element, we want the id of the parent, quantum-element
             el = el.parentElement as HTMLElement
           }
-          el.classList.add('selected')
-          selectedIDs.value.push(el.id)
+          quantumDocument.getElementById(el.id)?.setSelected(true)
         })
         e.removed.forEach((el) => {
           if (el.className === 'selection-region') {
             // selection-region is the child element, we want the id of the parent, quantum-element
             el = el.parentElement as HTMLElement
           }
-          el.classList.remove('selected')
-          // remove from array
-          const index = selectedIDs.value.indexOf(el.id)
-          if (index > -1) {
-            selectedIDs.value.splice(index, 1)
-          }
+          quantumDocument.getElementById(el.id)?.setSelected(false)
         })
       })
       .on('dragStart', (e) => {
@@ -242,71 +246,85 @@ function useElementSelection<T extends QuantumDocumentElementTypes>(quantumDocum
       })
   })
 
-  return {
-    selectedIDs,
-  }
+  return {}
 }
 
-function useElementDrag<T extends QuantumDocumentElementTypes>(
-  quantumDocument: UseQuantumDocument<T>,
-  pages: ReturnType<typeof usePages>,
-  selectedIDs: Ref<string[]>
-) {
+function useElementDrag<T extends QuantumDocumentElementTypes>(quantumDocument: UseQuantumDocument<T>, pages: ReturnType<typeof usePages>) {
   // TODO: Investigate or try out Moveable.js
   // I got stuff to break by adding a few blocks, moving them around and stuff
   // Tell interactjs to make every .quantum-block interactive. This includes the ones that will get added in the future
-  interact('.quantum-block')
-    .draggable({
-      ignoreFrom: '.quantum-element',
-      modifiers: [
-        interact.modifiers.snap({
-          targets: [interact.snappers.grid({ x: quantumDocument.options.gridCellSize.x, y: quantumDocument.options.gridCellSize.y })],
-          range: Infinity,
-          relativePoints: [{ x: 0, y: 0 }],
-          offset: 'parent',
-          // endOnly: true,
-        }),
-        interact.modifiers.restrict({
-          restriction: '.quantum-document',
-          elementRect: { top: 0, left: 0, bottom: 1, right: 1 },
-          // endOnly: true,
-        }),
-      ],
-      inertia: false,
-      autoScroll: true,
-    })
-    .on('down', (event) => {})
-    .on('dragmove', (event) => {
-      // event.target?.classList.add('dragging')
-      let delta = new Vector2(event.dx / quantumDocument.options.gridCellSize.x, event.dy / quantumDocument.options.gridCellSize.y)
-      moveElementsByID(selectedIDs.value, delta)
-      event.preventDefault()
-    })
-    .on('dragend', (event) => {
-      // event.target?.classList.remove('dragging')
-      pages.updatePageCount()
-    })
+  let previousScrollTop = 0
+  let previousScrollLeft = 0
+  let dragging = false
 
-  function moveElementsByID(IDs: string[], delta: Vector2) {
-    // TODO: dont let it move outside sheet (thus no longer needing 'interact.modifiers.restrict')
-    IDs.forEach((id) => {
-      const quantumElement = quantumDocument.getElementById(id)
-      let newPos = quantumElement?.position.value.add(delta)
-      if (newPos) quantumElement?.setPosition(newPos)
-    })
-  }
+  nextTick(function () {
+    interact('.quantum-block')
+      .draggable({
+        ignoreFrom: '.quantum-element',
+        modifiers: [
+          interact.modifiers.snap({
+            targets: [interact.snappers.grid({ x: quantumDocument.options.gridCellSize.x, y: quantumDocument.options.gridCellSize.y })],
+            range: Infinity,
+            relativePoints: [{ x: 0, y: 0 }],
+            offset: 'parent',
+            // endOnly: true,
+          }),
+          interact.modifiers.restrict({
+            restriction: '.quantum-document',
+            elementRect: { top: 0, left: 0, bottom: 1, right: 1 },
+            // endOnly: true,
+          }),
+        ],
+        inertia: false,
+        autoScroll: {
+          container: document.querySelector('.content') as HTMLElement,
+          margin: 50,
+          distance: 5,
+          interval: 10,
+          speed: 500,
+        },
+        // autoScroll: false,
+      })
+      .on('down', (event) => {
+        dragging = true
+        let target = document.querySelector('.content') as HTMLElement
+        previousScrollLeft = target.scrollLeft
+        previousScrollTop = target.scrollTop
+      })
+      .on('dragmove', (event) => {
+        let delta = new Vector2(event.dx / quantumDocument.options.gridCellSize.x, event.dy / quantumDocument.options.gridCellSize.y)
+        quantumDocument.moveSelectedElements(delta)
+        // quantumDocument.moveSelectedElements(delta, pages.getPageLimits())
+        event.preventDefault()
+      })
+      .on('dragend', (event) => {
+        pages.updatePageCount()
+        dragging = false
+      })
 
-  return {
-    moveElementsByID,
-  }
+    document.querySelector('.content')?.addEventListener('scroll', function (e) {
+      if (e.target && dragging) {
+        let scrollLeft = (e.target as HTMLDivElement).scrollLeft
+        let scrollTop = (e.target as HTMLDivElement).scrollTop
+        let deltax = scrollLeft - previousScrollLeft != 0 ? (scrollLeft - previousScrollLeft) / quantumDocument.options.gridCellSize.x : 0
+        let deltay = scrollTop - previousScrollTop != 0 ? (scrollTop - previousScrollTop) / quantumDocument.options.gridCellSize.y : 0
+        let delta = new Vector2(deltax, deltay)
+        quantumDocument.moveSelectedElements(delta)
+
+        previousScrollTop = scrollTop
+        previousScrollLeft = scrollLeft
+      }
+    })
+  })
+
+  return {}
 }
 
 function useEvents<T extends QuantumDocumentElementTypes>(
   quantumDocument: UseQuantumDocument<T>,
   focusedElementCommands: Ref<ElementCommands | undefined>,
   grid: ReturnType<typeof useGrid>,
-  selection: ReturnType<typeof useElementSelection>,
-  elementDrag: ReturnType<typeof useElementDrag>
+  pages: ReturnType<typeof usePages>
 ) {
   function createElementAtEvent(ev: InputEvent) {
     let elementType: string = ExpressionElementType.typeName
@@ -358,11 +376,11 @@ function useEvents<T extends QuantumDocumentElementTypes>(
     if (event.type === 'keydown') {
       // console.log(event)
       if (event.key === 'Delete') {
-        selection.selectedIDs.value.forEach((id: string) => {
-          quantumDocument.deleteElement(quantumDocument.getElementById(id) as QuantumElement)
+        quantumDocument.getSelection().forEach((Element: QuantumElement) => {
+          quantumDocument.deleteElement(Element)
         })
       } else if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
-        if (selection.selectedIDs.value.length > 0) {
+        if (quantumDocument.getSelection().length > 0) {
           let direction =
             {
               ArrowLeft: new Vector2(-1, 0),
@@ -370,8 +388,7 @@ function useEvents<T extends QuantumDocumentElementTypes>(
               ArrowUp: new Vector2(0, -1),
               ArrowDown: new Vector2(0, 1),
             }[event.key] ?? Vector2.zero
-
-          elementDrag.moveElementsByID(selection.selectedIDs.value, direction)
+          quantumDocument.moveSelectedElements(direction, pages.getPageLimits())
         } else {
           grid.keydown(event)
         }
@@ -400,7 +417,7 @@ function useEvents<T extends QuantumDocumentElementTypes>(
 function usePages<T extends QuantumDocumentElementTypes>(quantumDocument: UseQuantumDocument<T>) {
   const pageCount = ref(1)
   const defaultSheetSize = 'A4'
-  const sheetSizes = {
+  const sheetSizes: any = {
     A3: { width: 297, height: 420 },
     A4: { width: 210, height: 297 },
     A5: { width: 148, height: 210 },
@@ -431,6 +448,13 @@ function usePages<T extends QuantumDocumentElementTypes>(quantumDocument: UseQua
     }
 
     return largest
+  }
+
+  function getPageLimits() {
+    return new Vector2(
+      (width.value * (96 / 25.4)) / quantumDocument.options.gridCellSize.x,
+      (pageCount.value * height.value * (96 / 25.4)) / quantumDocument.options.gridCellSize.y
+    )
   }
 
   function updatePageCount() {
@@ -465,6 +489,7 @@ function usePages<T extends QuantumDocumentElementTypes>(quantumDocument: UseQua
     addPage,
     width,
     height,
+    getPageLimits,
   }
 }
 
@@ -502,12 +527,12 @@ export default defineComponent({
 
     // const UI = useUI()
     const focusedElementCommands = useFocusedElementCommands()
-    const grid = useGrid(document, documentInputElement)
     const pages = usePages(document)
+    const grid = useGrid(document, documentInputElement, pages)
     const clipboard = useClipboard(document)
     const selection = useElementSelection(document)
-    const elementDrag = useElementDrag(document, pages, selection.selectedIDs)
-    const events = useEvents(document, focusedElementCommands.commands, grid, selection, elementDrag)
+    const elementDrag = useElementDrag(document, pages)
+    const events = useEvents(document, focusedElementCommands.commands, grid, pages)
 
     function log(ev: any) {
       console.log(ev)

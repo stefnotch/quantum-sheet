@@ -20,15 +20,6 @@ function useUIPreferences() {
 }
 
 function useCasStatus() {
-  const statusIcons = {
-    disconnected: 'ApiOutlined',
-    loading: 'LoadingOutlined',
-    ready: 'CalculatorOutlined',
-    error: 'WarningOutlined',
-  } as const
-
-  const casIcon = computed(() => statusIcons[casState.value])
-
   function setStatus(s: string) {
     casState.value = s
   }
@@ -48,7 +39,6 @@ function useCasStatus() {
 
   return {
     casState,
-    casIcon,
     setStatus,
     setReady,
     setLoading,
