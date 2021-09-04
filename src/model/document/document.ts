@@ -179,7 +179,7 @@ function useElementSelection() {
   const selectedElements = shallowReactive<Set<QuantumElement>>(new Set())
 
   function watchElement(element: QuantumElement) {
-    const stopHandle = watchImmediate(element.selected, (value: Boolean) => {
+    const stopHandle = watchImmediate(element.selected, (value: boolean) => {
       if (value) {
         selectedElements.add(element)
       } else {
