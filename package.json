@@ -27,7 +27,7 @@
   "dependencies": {
     "@ant-design/icons-vue": "^6.0.1",
     "@cortex-js/compute-engine": "^0.4.2",
-    "@vueuse/core": "^6.0.0",
+    "@vueuse/core": "^6.1.0",
     "ant-design-vue": "^2.2.6",
     "browser-fs-access": "^0.20.4",
     "idb-keyval": "^5.1.3",
@@ -35,17 +35,17 @@
     "mathlive": "0.69.5",
     "selecto": "^1.12.1",
     "uuid": "^8.3.2",
-    "vue": "^3.2.6"
+    "vue": "^3.2.8"
   },
   "devDependencies": {
     "@interactjs/types": "^1.10.11",
     "@shockpkg/archive-files": "^1.11.1",
     "@types/uuid": "^8.3.1",
     "@vitejs/plugin-vue": "^1.6.0",
-    "@vue/compiler-sfc": "^3.2.6",
+    "@vue/compiler-sfc": "^3.2.8",
     "fs-extra": "^10.0.0",
     "gh-pages": "^3.2.3",
-    "node-fetch": "3.0.0-beta.10",
-    "vite": "^2.5.1"
+    "node-fetch": "3.0.0",
+    "vite": "^2.5.3"
   }
 }

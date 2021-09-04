@@ -4,7 +4,7 @@
       <a-col :span="4">
         <a-space :style="{ height: '36px' }">
           <div :style="{ width: '20px' }" />
-          <a-tooltip :mouseEnterDelay="1">
+          <a-tooltip :mouseEnterDelay="0.7">
             <template #title> (Re)Calculate </template>
             <a-button
               size="small"
@@ -109,7 +109,7 @@
 
 <script lang="ts">
 import { defineComponent, ref, reactive, inject, watch } from 'vue'
-import { Button, Grid, Row, Col, Space, Dropdown, Select, SelectOption, Modal } from 'ant-design-vue'
+import { Button, Grid, Row, Col, Space, Dropdown, Select, SelectOption, Modal, Tooltip, Switch } from 'ant-design-vue'
 import { ExportOutlined, CalculatorOutlined, AppstoreOutlined, ApiOutlined, LoadingOutlined, WarningOutlined } from '@ant-design/icons-vue'
 import * as UI from './ui'
 import * as Notification from './notification'
@@ -168,6 +168,8 @@ export default defineComponent({
     'a-select-option': SelectOption,
     'a-button': Button,
     'a-modal': Modal,
+    'a-tooltip': Tooltip,
+    'a-switch': Switch,
   },
   props: {},
   setup(props, context) {
